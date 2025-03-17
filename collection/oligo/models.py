@@ -62,7 +62,7 @@ class Oligo(
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     sequence = models.CharField(
         "sequence",
-        max_length=255,
+        max_length=2048,
         unique=True,
         db_collation="case_insensitive",
         blank=False,
