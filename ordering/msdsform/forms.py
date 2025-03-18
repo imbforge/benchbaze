@@ -12,7 +12,7 @@ class MsdsFormForm(forms.ModelForm):
         # Check if the name of a MSDS form is unique before saving
         name = getattr(self.cleaned_data["name"], "name", "")
         if name:
-            qs = self.model.objects.filter(label=name)
+            qs = self._meta.model.objects.filter(label=name)
             if qs.exists():
                 self.add_error("name", "A form with this file name already exists.")
         return self.cleaned_data
