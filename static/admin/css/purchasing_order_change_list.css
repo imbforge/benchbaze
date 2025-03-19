@@ -1,0 +1,43 @@
+.order-status {
+  width: 100%;
+  height: 100%;
+  color: black;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.order-status-submitted {
+  background-color: #f5b041;
+  border: 2px solid #8f4a00;
+}
+
+.order-status-open {
+  background-color: #f9e79f;
+  border: 2px solid #938139;
+}
+
+.order-status-arranged {
+  background-color: #abebc6;
+  border: 2px solid #458560;
+}
+
+.order-status-delivered {
+  background-color: #d5d8dc;
+  border: 2px solid #6f7276;
+}
+
+.order-status-cancelled {
+  background-color: black;
+  color: white;
+  border: 2px solid #c4c4c4;
+}
+
+.order-status-used-up {
+  background-color: white;
+  border: 2px solid #7f7f7f;
+}
+
+.order-status-urgent {
+  background-color: #f5b7b1;
+  border: 2px solid #8f514b;
+}

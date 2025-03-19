@@ -27,7 +27,7 @@ from collection.models import (
     ScPombeStrain,
     WormStrain,
 )
-from ordering.models import HistoricalOrder, Order
+from purchasing.models import HistoricalOrder, Order
 
 User = get_user_model()
 SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")

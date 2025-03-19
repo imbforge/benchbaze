@@ -10,7 +10,7 @@ from common.models import (
     SaveWithoutHistoricalRecord,
 )
 from formz.models import Species
-from ordering.models import Order
+from purchasing.models import Order
 
 from ..shared.models import (
     InfoSheetMaxSizeMixin,

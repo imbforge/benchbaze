@@ -12,8 +12,8 @@ from django.conf import settings
 
 from collection.models import WormStrainAllele
 from collection.wormstrain.export import WormStrainAlleleExportResource
-from ordering.models import Order
-from ordering.order.export import OrderExportResource
+from purchasing.models import Order
+from purchasing.order.export import OrderExportResource
 
 COLLECTION_MODELS = [
     "Antibody",

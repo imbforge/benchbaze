@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     "simple_history",
     "import_export",
     "collection",
-    "ordering",
+    "purchasing",
     "guardian",
     "background_task",
     "formz",

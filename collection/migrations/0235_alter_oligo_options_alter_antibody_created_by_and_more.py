@@ -6,11 +6,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("formz", "0082_auto_20230104_1520"),
-        ("ordering", "0060_alter_orderextradoc_description"),
+        ("purchasing", "0060_alter_orderextradoc_description"),
         (
             "collection",
             "0234_remove_ecolistrain_history_formz_gentech_methods_and_more",
@@ -535,7 +534,7 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(
                 blank=True,
                 related_name="%(class)s_order",
-                to="ordering.order",
+                to="purchasing.order",
                 verbose_name="orders",
             ),
         ),

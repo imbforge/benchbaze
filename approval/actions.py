@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from ordering.models import Order
+from purchasing.models import Order
 
 from .models import Approval
 
@@ -101,7 +101,7 @@ def approve_records(modeladmin, request, queryset):
 
     # Orders
     if request.user.is_pi:
-        order_approval_records = queryset.filter(content_type__app_label="ordering")
+        order_approval_records = queryset.filter(content_type__app_label="purchasing")
         if order_approval_records:
             order_ids = order_approval_records.values_list("object_id", flat=True)
             Order.objects.filter(id__in=order_ids).update(created_approval_by_pi=True)
@@ -206,7 +206,7 @@ def approve_all_new_orders(modeladmin, request, queryset):
         orders = Order.objects.filter(created_approval_by_pi=False)
         if orders.exists():
             orders.update(created_approval_by_pi=True)
-            Approval.objects.filter(content_type__app_label="ordering").delete()
+            Approval.objects.filter(content_type__app_label="purchasing").delete()
             messages.success(request, "New orders have been approved")
         else:
             messages.warning(request, "No new orders to approve")

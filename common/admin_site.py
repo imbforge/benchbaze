@@ -83,7 +83,7 @@ from formz.models import (
 from formz.models import (
     StorageLocation as FormZStorageLocation,
 )
-from ordering.admin import (
+from purchasing.admin import (
     CostUnitAdmin,
     GhsSymbolAdmin,
     HazardStatementAdmin,
@@ -93,7 +93,7 @@ from ordering.admin import (
     OrderAdminSite,
     SignalWordAdmin,
 )
-from ordering.models import (
+from purchasing.models import (
     CostUnit,
     GhsSymbol,
     HazardStatement,

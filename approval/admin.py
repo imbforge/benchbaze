@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 
-from ordering.models import Order
+from purchasing.models import Order
 
 from .actions import approve_all_new_orders, approve_records, notify_user_edits_required
 from .search import (
