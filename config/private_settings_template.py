@@ -52,7 +52,12 @@ if ALLOW_OIDC:
     OIDC_RP_SCOPES = "openid email name groups"
     OIDC_UPN_FIELD_NAME = "upn"
     OIDC_ALLOWED_GROUPS = []
-    OIDC_ALLOWED_USER_UPNS = []  # all lowercase!
+    OIDC_ALLOWED_USER_EMAILS = []  # all lowercase!
+
+# Fail2Ban
+FAIL2BAN_ENABLE = False
+FAIL2BAN_BAN_TIME_MIN = 10
+FAIL2BAN_NUM_ATTEMPTS = 3
 
 # Others
 MS_TEAMS_WEBHOOK = "ms_teams_webhook"

@@ -1,0 +1,12 @@
+Dear lab manager(s),
+
+A new user was just automatically created via OpenID Connect{% if provider %} @ {{provider}}{% endif %}.
+
+Email address: {{user.email}}
+First name: {{user.first_name}}
+Last name: {{user.last_name}}
+
+You can amend this user's properties at {{url}}.
+
+Regards,
+The {{site_title}}

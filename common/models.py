@@ -2,6 +2,7 @@ import itertools
 import os
 
 from django.conf import settings
+from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.forms import ValidationError
@@ -9,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_str
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -19,7 +21,45 @@ MAX_UPLOAD_FILE_SIZE_MB = getattr(settings, "MAX_UPLOAD_FILE_SIZE_MB", 2)
 ALLOWED_DOC_FILE_EXTS = getattr(settings, "ALLOWED_DOC_FILE_EXTS", ["pdf"])
 
 
+class OwnUserManager(BaseUserManager):
+    """
+    Custom user model manager where email is the unique identifiers
+    for authentication instead of usernames.
+    https://tech.serhatteker.com/post/2020-01/email-as-username-django/
+    """
+
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and save a User with the given email and password.
+        """
+        if not email:
+            raise ValueError(_("The Email must be set"))
+        email = self.normalize_email(email)
+        extra_fields.setdefault("username", email.split("@")[0].lower())
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        """
+        Create and save a SuperUser with the given email and password.
+        """
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError(_("Superuser must have is_staff=True."))
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError(_("Superuser must have is_superuser=True."))
+        return self.create_user(email, password, **extra_fields)
+
+
 class User(AbstractUser):
+    email = models.EmailField(
+        _("email address"), db_collation="case_insensitive", unique=True
+    )
     is_pi = models.BooleanField("is principal investigator?", default=False)
     oidc_id = models.CharField(
         "OIDC identifier",
@@ -29,6 +69,11 @@ class User(AbstractUser):
         default=None,
         blank=True,
     )
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = OwnUserManager()
 
     class Meta:
         db_table = "auth_user"

@@ -18,7 +18,6 @@ User = get_user_model()
 
 class OwnUserAdmin(BaseUserAdmin):
     list_display = (
-        "username",
         "email",
         "first_name",
         "last_name",
@@ -26,10 +25,22 @@ class OwnUserAdmin(BaseUserAdmin):
         "get_user_groups",
     )
     critical_groups = None
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password1", "password2"),
+            },
+        ),
+    )
 
     def save_model(self, request, obj, form, change):
         # Set is_active and is_staff to True for newly created users
         if obj.pk is None:
+            obj.username = (
+                obj.username if obj.username else obj.email.split("@")[0].lower()
+            )
             obj.save()
             # Create User first, this triggers signal that sets is_active to false by default
             # therefore set is_active to True after creating the object
@@ -91,7 +102,6 @@ class OwnUserAdmin(BaseUserAdmin):
                         "last_name",
                         "email",
                         "is_superuser",
-                        "username",
                         "is_pi",
                         "oidc_id",
                     ]
@@ -107,10 +117,10 @@ class OwnUserAdmin(BaseUserAdmin):
 
         if request.user.is_superuser:
             self.fieldsets = (
-                (None, {"fields": ("username", "password")}),
+                (None, {"fields": ("email", "password")}),
                 (
                     _("Personal info"),
-                    {"fields": ("first_name", "last_name", "email", "oidc_id")},
+                    {"fields": ("first_name", "last_name", "oidc_id")},
                 ),
                 (
                     _("Permissions"),
@@ -127,14 +137,13 @@ class OwnUserAdmin(BaseUserAdmin):
             )
         elif request.user.is_pi:
             self.fieldsets = (
-                (None, {"fields": ("username", "password")}),
+                (None, {"fields": ("email", "password")}),
                 (
                     _("Personal info"),
                     {
                         "fields": (
                             "first_name",
                             "last_name",
-                            "email",
                         )
                     },
                 ),
@@ -152,7 +161,7 @@ class OwnUserAdmin(BaseUserAdmin):
         elif request.user.has_perm("common.change_user"):
             obj = self.model.objects.get(id=object_id)
             user_fields = (
-                ("username", "password") if obj.has_usable_password() else ("username",)
+                ("email", "password") if obj.has_usable_password() else ("email",)
             )
             self.fieldsets = (
                 (None, {"fields": user_fields}),
@@ -162,7 +171,6 @@ class OwnUserAdmin(BaseUserAdmin):
                         "fields": (
                             "first_name",
                             "last_name",
-                            "email",
                         )
                     },
                 ),
@@ -179,14 +187,13 @@ class OwnUserAdmin(BaseUserAdmin):
             )
         else:
             self.fieldsets = (
-                (None, {"fields": ("username",)}),
+                (None, {"fields": ("email",)}),
                 (
                     _("Personal info"),
                     {
                         "fields": (
                             "first_name",
                             "last_name",
-                            "email",
                         )
                     },
                 ),

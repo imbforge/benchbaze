@@ -47,7 +47,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
+    "common.backends.CaseInsensitiveAuthenticationBackend",
     "guardian.backends.ObjectPermissionBackend",
 ]
 
@@ -210,7 +210,9 @@ LOGGING = {
 LOGIN_REDIRECT_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/logout/"
 if ALLOW_OIDC:
-    AUTHENTICATION_BACKENDS = ["common.oidc.MyOIDCAB"] + AUTHENTICATION_BACKENDS
+    AUTHENTICATION_BACKENDS = [
+        "common.backends.OwnOIDCAuthenticationBackend"
+    ] + AUTHENTICATION_BACKENDS
     MIDDLEWARE += ["mozilla_django_oidc.middleware.SessionRefresh"]
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 86400  # 24 h
 
