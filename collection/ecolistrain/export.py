@@ -1,4 +1,5 @@
 from import_export import resources
+from django.contrib.auth import get_user_model
 
 from .models import EColiStrain
 
@@ -18,6 +19,6 @@ class EColiStrainExportResource(resources.ModelResource):
             "purpose",
             "note",
             "created_date_time",
-            "created_by__username",
+            f"created_by__{get_user_model().USERNAME_FIELD}",
         )
         export_order = fields

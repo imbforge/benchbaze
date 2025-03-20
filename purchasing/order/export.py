@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from import_export import resources
 from import_export.fields import Field
 
@@ -75,6 +76,6 @@ class OrderExportResource(BaseOrdeExportResource, resources.ModelResource):
             "created_date_time",
             "order_manager_created_date_time",
             "last_changed_date_time",
-            "created_by__username",
+            f"created_by__{get_user_model().USERNAME_FIELD}",
         )
         export_order = fields

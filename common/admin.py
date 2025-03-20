@@ -35,6 +35,10 @@ class OwnUserAdmin(BaseUserAdmin):
         ),
     )
 
+    @admin.display(description="Name", ordering="last_name")
+    def full_name(self, instance):
+        return instance.get_full_name()
+
     def save_model(self, request, obj, form, change):
         # Set is_active and is_staff to True for newly created users
         if obj.pk is None:
@@ -103,6 +107,7 @@ class OwnUserAdmin(BaseUserAdmin):
                         "email",
                         "is_superuser",
                         "is_pi",
+                        "is_system_user",
                         "oidc_id",
                     ]
                 else:
@@ -117,7 +122,7 @@ class OwnUserAdmin(BaseUserAdmin):
 
         if request.user.is_superuser:
             self.fieldsets = (
-                (None, {"fields": ("email", "password")}),
+                (None, {"fields": ("email", "username", "password")}),
                 (
                     _("Personal info"),
                     {"fields": ("first_name", "last_name", "oidc_id")},
@@ -129,6 +134,7 @@ class OwnUserAdmin(BaseUserAdmin):
                             "is_active",
                             "is_superuser",
                             "is_pi",
+                            "is_system_user",
                             "groups",
                             "user_permissions",
                         ),
@@ -211,23 +217,16 @@ class OwnUserAdmin(BaseUserAdmin):
 
         return super().change_view(request, object_id, extra_context=extra_context)
 
-    def get_formsets_with_inlines(self, request, obj=None):
-        """Show is_pi inline only for superusers"""
-
-        if request.user.is_superuser and obj:
-            for inline in self.get_inline_instances(request, obj):
-                yield inline.get_formset(request, obj), inline
-
     def get_queryset(self, request):
         # Show superusers only for superusers
-        # Also do not show AnonymousUser
+        # Also do not show system users
 
         qs = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            return qs.exclude(is_superuser=True).exclude(username="AnonymousUser")
-        else:
-            return qs.exclude(username="AnonymousUser")
+            return qs.exclude(is_superuser=True).exclude(is_system_user=True)
+
+        return qs
 
     @admin.display(description="Groups")
     def get_user_groups(self, instance):

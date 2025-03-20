@@ -52,7 +52,7 @@
         {% endif %}
         
         <h3 style='padding-left: 0;'>Grant a user the permission to change this record</h3>
-        <p style='padding-left: 0;'>By  default, permissions are granted for 24 h. Alternatively, you can choose to grant a permission indefinitely.</p>
+        <p style='padding-left: 0;'>By default, permissions are granted for 24 h. Alternatively, you can choose to grant a permission indefinitely.</p>
         {% for field in user_form %}
             {% include "admin/guardian/model/field.html" %}
         {% endfor %}

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from import_export import resources
 from import_export.fields import Field
 
@@ -43,6 +44,6 @@ class ScPombeStrainExportResource(resources.ModelResource):
             "received_from",
             "comment",
             "created_date_time",
-            "created_by__username",
+            f"created_by__{get_user_model().USERNAME_FIELD}",
         )
         export_order = fields

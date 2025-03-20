@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
@@ -68,10 +69,11 @@ class OrderAdminSite(admin.AdminSite):
         """
         View to redirect a user to its My Orders page
         """
-
-        return HttpResponseRedirect(
-            f'/purchasing/order/?q-l=on&q=created_by.username+%3D+"{request.user.username}"'
-        )
+        params = {
+            "q-l": "on",
+            "q": f'created_by.{User.USERNAME_FIELD}="{request.user.get_username()}"',
+        }
+        return HttpResponseRedirect(f"/purchasing/order/?{urlencode(params)}")
 
     def autocomplete_order_view(self, request, *args, **kwargs):
         """
@@ -724,7 +726,7 @@ class OrderAdmin(
                     ).exists()
                 ):
                     kwargs["queryset"] = User.objects.exclude(
-                        username__in=["admin", "guest", "AnonymousUser"]
+                        is_system_user=True
                     ).order_by("last_name")
                 kwargs["initial"] = request.user.id
 

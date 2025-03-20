@@ -2,6 +2,7 @@ from functools import reduce
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.db.models.functions import Collate
 from djangoql.schema import StrField
 
 User = get_user_model()
@@ -46,36 +47,40 @@ class SearchFieldUserUsernameWithOptions(StrField):
     """Create a list of unique users' usernames for search"""
 
     model = User
-    name = "username"
+    name = User.USERNAME_FIELD
     suggest_options = True
     id_list = []
 
     def get_options(self, search):
-        """Removes admin, guest and anonymous accounts from
-        the list of options, distinct() returns only unique values
-        sorted in alphabetical order"""
-
-        # from https://stackoverflow.com/questions/14907525/
-        excluded_users = ["AnonymousUser", "guest", "admin"]
-        q_list = map(lambda n: Q(username__iexact=n), excluded_users)
-        q_list = reduce(lambda a, b: a | b, q_list)
+        """Removes system users from the list of options,
+        distinct() returns only unique values
+        sorted in alphabetical order by last name"""
 
         if self.id_list:
             return (
-                self.model.objects.filter(
-                    id__in=self.id_list, username__icontains=search
+                self.model.objects.annotate(
+                    **{f"{self.name}_deterministic": Collate(self.name, "und-x-icu")},
                 )
-                .exclude(q_list)
+                .filter(
+                    **{
+                        "id__in": self.id_list,
+                        f"{self.name}_deterministic__icontains": search,
+                    }
+                )
+                .exclude(is_system_user=True)
                 .distinct()
-                .order_by(self.name)
+                .order_by("last_name")
                 .values_list(self.name, flat=True)
             )
         else:
             return (
-                self.model.objects.filter(username__icontains=search)
-                .exclude(q_list)
+                self.model.objects.annotate(
+                    **{f"{self.name}_deterministic": Collate(self.name, "und-x-icu")},
+                )
+                .filter(**{f"{self.name}_deterministic__icontains": search})
+                .exclude(is_system_user=True)
                 .distinct()
-                .order_by(self.name)
+                .order_by("last_name")
                 .values_list(self.name, flat=True)
             )
 

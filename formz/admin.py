@@ -195,9 +195,9 @@ class ProjectUserInline(admin.TabularInline):
         # Exclude certain users from the 'User' field
 
         if db_field.name == "user":
-            kwargs["queryset"] = User.objects.exclude(
-                username__in=["admin", "guest", "AnonymousUser"]
-            ).order_by("last_name")
+            kwargs["queryset"] = User.objects.exclude(is_system_user=True).order_by(
+                "last_name"
+            )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

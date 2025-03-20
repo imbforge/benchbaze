@@ -324,7 +324,7 @@ class WormStrainAdmin(
                     or request.user.groups.filter(name="Lab manager").exists()
                 ):
                     kwargs["queryset"] = User.objects.exclude(
-                        username__in=["admin", "guest", "AnonymousUser"]
+                        is_system_user=True
                     ).order_by("last_name")
                 # kwargs["initial"] = request.user.id # disable this for now
 
@@ -627,7 +627,7 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
                     or request.user.groups.filter(name="Lab manager").exists()
                 ):
                     kwargs["queryset"] = User.objects.exclude(
-                        username__in=["admin", "guest", "AnonymousUser"]
+                        is_system_user=True
                     ).order_by("last_name")
                 # kwargs["initial"] = request.user.id # disable this for now
 

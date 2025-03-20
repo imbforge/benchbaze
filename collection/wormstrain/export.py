@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from import_export import resources
 from import_export.fields import Field
 
@@ -41,7 +42,7 @@ class WormStrainExportResource(resources.ModelResource):
             "location_backup",
             "primers_for_genotyping",
             "created_date_time",
-            "created_by__username",
+            f"created_by__{get_user_model().USERNAME_FIELD}",
         )
         export_order = fields
 
@@ -76,6 +77,6 @@ class WormStrainAlleleExportResource(resources.ModelResource):
             "made_with_plasmids",
             "notes",
             "created_date_time",
-            "created_by__username",
+            f"created_by__{get_user_model().USERNAME_FIELD}",
         )
         export_order = fields

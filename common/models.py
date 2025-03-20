@@ -69,6 +69,7 @@ class User(AbstractUser):
         default=None,
         blank=True,
     )
+    is_system_user = models.BooleanField("is system user?", default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -77,6 +78,10 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "auth_user"
+
+
+def get_anonymous_user_instance(User):
+    return User(username="AnonymousUser", email="AnonymousUser", is_system_user=True)
 
 
 class SaveWithoutHistoricalRecord:

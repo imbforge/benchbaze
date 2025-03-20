@@ -25,7 +25,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 from djangoql.schema import DateTimeField, IntField, StrField
-from guardian.admin import GuardedModelAdmin, UserManage
+from guardian.admin import GuardedModelAdmin, UserManage as GuardianUserManage
 from guardian.shortcuts import (
     assign_perm,
     get_user_model,
@@ -262,8 +262,8 @@ class Approval:
             return instance.created_approval_by_pi
 
 
-class CustomUserManage(UserManage):
-    """Add drop-down menu to select user to who to
+class BBGuardianUserManage(GuardianUserManage):
+    """Add drop-down menu to select user to whom to
     give additonal permissions"""
 
     # Added this try block because if user_auth table not present in DB
@@ -273,11 +273,12 @@ class CustomUserManage(UserManage):
         user = forms.ChoiceField(
             choices=[("------", "------")]
             + [
-                (u.username, u)
-                for u in User.objects.all().order_by("last_name")
-                if u.groups.filter(name="Regular lab member").exists()
+                (getattr(u, u.USERNAME_FIELD), u)
+                for u in User.objects.filter(
+                    groups__name="Regular lab member", is_active=True
+                ).order_by("last_name")
             ],
-            label="Username",
+            label="User",
             error_messages={"does_not_exist": "This user is not valid"},
         )
         is_permanent = forms.BooleanField(required=False, label="Grant indefinitely?")
@@ -672,7 +673,7 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
                 perm = "{}.change_{}".format(
                     self.model._meta.app_label, self.model._meta.model_name
                 )
-                user = User.objects.get(username=request.POST["user"])
+                user = User.objects.get(**{User.USERNAME_FIELD: request.POST["user"]})
                 assign_perm(perm, user, obj)
                 self.message_user(request, "Permissions saved.", messages.SUCCESS)
 
@@ -705,10 +706,10 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
     def get_obj_perms_user_select_form(self, request):
         """
         Returns form class for selecting a user for permissions management.
-        By default :form:`UserManage` is returned.
+        By default :form:`GuardianUserManage` is returned.
         """
 
-        return CustomUserManage
+        return BBGuardianUserManage
 
     def obj_perms_delete(self, request, object_pk, user_id):
         """Delete object permission for a user"""
