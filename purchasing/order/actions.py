@@ -35,10 +35,7 @@ def change_order_status(request, queryset, origin_status, destination_status):
     """
 
     # Only Lab or Order Manager can use this action
-    if not (
-        request.user.groups.filter(name="Lab manager").exists()
-        or request.user.groups.filter(name="Order manager").exists()
-    ):
+    if not (request.user.is_elevated_user or request.user.is_order_manager):
         messages.error(request, "Nice try, you are not allowed to do that.")
         return
     else:
@@ -75,10 +72,7 @@ def change_order_status_to_delivered(modeladmin, request, queryset):
     """
 
     # Only Lab or Order Manager can use this action
-    if not (
-        request.user.groups.filter(name="Lab manager").exists()
-        or request.user.groups.filter(name="Order manager").exists()
-    ):
+    if not (request.user.is_elevated_user or request.user.is_order_manager):
         messages.error(request, "Nice try, you are not allowed to do that.")
         return
     else:
@@ -176,10 +170,7 @@ def mass_update(modeladmin, request, queryset):
         )
 
     # Only Lab or Order Managers
-    if not (
-        request.user.groups.filter(name="Lab manager").exists()
-        or request.user.groups.filter(name="Order manager").exists()
-    ):
+    if not (request.user.is_elevated_user or request.user.is_order_manager):
         messages.error(request, "Nice try, you are not allowed to do that.")
         return
 

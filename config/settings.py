@@ -216,6 +216,15 @@ if ALLOW_OIDC:
     MIDDLEWARE += ["mozilla_django_oidc.middleware.SessionRefresh"]
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 86400  # 24 h
 
+# Groups
+LAB_MANAGER_GROUP = "Lab manager"
+GUEST_GROUP = "Guest"
+ORDER_MANAGER_GROUP = "Order manager"
+FORMZ_MANAGER_GROUP = "FormZ manager"
+APPROVAL_MANAGER_GROUP = "Approval manager"
+REGULAR_LAB_MEMBER_GROUP = "Regular lab member"
+PAST_MEMBER_GROUP = "Past member"
+
 # Other settings
 FILE_UPLOAD_PERMISSIONS = 0o664
 LOGIN_URL = "/login/"

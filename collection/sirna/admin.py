@@ -104,10 +104,7 @@ class SiRnaAdmin(
         except Exception:
             # Exclude certain users from the 'Created by' field
             if db_field.name == "created_by":
-                if (
-                    request.user.is_superuser
-                    or request.user.groups.filter(name="Lab manager").exists()
-                ):
+                if request.user.is_elevated_user:
                     kwargs["queryset"] = User.objects.exclude(
                         is_system_user=True
                     ).order_by("last_name")

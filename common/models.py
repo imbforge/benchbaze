@@ -19,6 +19,13 @@ LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
 MAX_UPLOAD_FILE_SIZE_MB = getattr(settings, "MAX_UPLOAD_FILE_SIZE_MB", 2)
 ALLOWED_DOC_FILE_EXTS = getattr(settings, "ALLOWED_DOC_FILE_EXTS", ["pdf"])
+LAB_MANAGER_GROUP = getattr(settings, "LAB_MANAGER_GROUP")
+GUEST_GROUP = getattr(settings, "GUEST_GROUP")
+ORDER_MANAGER_GROUP = getattr(settings, "ORDER_MANAGER_GROUP")
+FORMZ_MANAGER_GROUP = getattr(settings, "FORMZ_MANAGER_GROUP")
+REGULAR_LAB_MEMBER_GROUP = getattr(settings, "REGULAR_LAB_MEMBER_GROUP")
+PAST_MEMBER_GROUP = getattr(settings, "PAST_MEMBER_GROUP")
+APPROVAL_MANAGER_GROUP = getattr(settings, "APPROVAL_MANAGER_GROUP")
 
 
 class OwnUserManager(BaseUserManager):
@@ -79,7 +86,42 @@ class User(AbstractUser):
     class Meta:
         db_table = "auth_user"
 
+    @property
+    def is_lab_manager(self):
+        return self.groups.filter(name=LAB_MANAGER_GROUP).exists()
 
+    @property
+    def is_guest(self):
+        return self.groups.filter(name=GUEST_GROUP).exists()
+
+    @property
+    def is_order_manager(self):
+        return self.groups.filter(name=ORDER_MANAGER_GROUP).exists()
+
+    @property
+    def is_formz_manager(self):
+        return self.groups.filter(name=FORMZ_MANAGER_GROUP).exists()
+
+    @property
+    def is_approval_manager(self):
+        return self.groups.filter(name=APPROVAL_MANAGER_GROUP).exists()
+
+    @property
+    def is_regular_lab_member(self):
+        return self.groups.filter(name=REGULAR_LAB_MEMBER_GROUP).exists()
+
+    @property
+    def is_past_member(self):
+        return self.groups.filter(name=PAST_MEMBER_GROUP).exists()
+
+    @property
+    def is_elevated_user(self):
+        """Defined as a user who is a Lab manager, PI or superuser"""
+        return self.is_lab_manager or self.is_pi or self.is_superuser
+
+
+# For django-guardian, custom AnonymousUser to be created upon
+# running migrations
 def get_anonymous_user_instance(User):
     return User(username="AnonymousUser", email="AnonymousUser", is_system_user=True)
 

@@ -195,20 +195,12 @@ class AddOrderExtraDocInline(admin.TabularInline):
         return False
 
     def get_readonly_fields(self, request, obj=None):
-        # If User is not a Lab or Order Manager set the name and description
-        # attributes as read-only
-        if obj:
-            if not (
-                request.user.is_superuser
-                or request.user.groups.filter(
-                    name__in=["Lab manager", "Order manager"]
-                ).exists()
-            ):
-                return ["name", "description"]
-            else:
-                return []
-        else:
-            return []
+        # If User is not an elevated user, set the name
+        # and description attributes as read-only
+        if obj and not (request.user.is_elevated_user or request.user.is_order_manager):
+            return ["name", "description"]
+
+        return []
 
     def get_queryset(self, request):
         return OrderExtraDoc.objects.none()
@@ -488,12 +480,8 @@ class OrderAdmin(
 
         # Save existing order
         def save_existing(request, obj):
-            # Allow only Lab and Order managers to change an order
-            if not (
-                request.user.groups.filter(
-                    name__in=["Lab manager", "Order manager"]
-                ).exists()
-            ):
+            # Allow only relevant users to change an order
+            if not (request.user.is_elevated_user or request.user.is_order_manager):
                 raise PermissionDenied
 
             else:
@@ -567,12 +555,7 @@ class OrderAdmin(
         qs = qs.annotate(
             models.Count("id"), models.Count("part_description"), models.Count("status")
         )
-        if not (
-            request.user.groups.filter(
-                name__in=["Lab manager", "Order manager"]
-            ).exists()
-            or request.user.is_superuser
-        ):
+        if not (request.user.is_elevated_user or request.user.is_order_manager):
             return qs.exclude(status="cancelled")
         else:
             return qs
@@ -595,12 +578,7 @@ class OrderAdmin(
         self.autocomplete_fields = []
         safety_info_fields = self.safety_info_fields.copy()
         safety_info_fields.remove("ghs_pict_img")
-        if (
-            request.user.groups.filter(
-                name__in=["Lab manager", "Order manager"]
-            ).exists()
-            or request.user.is_superuser
-        ):
+        if request.user.is_elevated_user or request.user.is_order_manager:
             self.fieldsets = (
                 (
                     None,
@@ -641,12 +619,7 @@ class OrderAdmin(
                 ),
             )
 
-            if (
-                request.user.groups.filter(
-                    name__in=["Lab manager", "Order manager"]
-                ).exists()
-                or request.user.is_superuser
-            ):
+            if request.user.is_elevated_user or request.user.is_order_manager:
                 self.can_change = True
                 extra_context = {
                     "show_close": True,
@@ -699,12 +672,7 @@ class OrderAdmin(
                 if inline.verbose_name_plural == "Existing extra docs":
                     yield inline.get_formset(request, obj), inline
                 else:
-                    if (
-                        request.user.is_superuser
-                        or request.user.groups.filter(
-                            name__in=["Lab manager", "Order manager"]
-                        ).exists()
-                    ):
+                    if request.user.is_elevated_user or request.user.is_order_manager:
                         yield inline.get_formset(request, obj), inline
         else:
             for inline in self.get_inline_instances(request, obj):
@@ -719,12 +687,7 @@ class OrderAdmin(
         except Exception:
             # Exclude certain users from the 'Created by' field in the order form
             if db_field.name == "created_by":
-                if (
-                    request.user.is_superuser
-                    or request.user.groups.filter(
-                        name__in=["Lab manager", "Order manager"]
-                    ).exists()
-                ):
+                if request.user.is_elevated_user or request.user.is_order_manager:
                     kwargs["queryset"] = User.objects.exclude(
                         is_system_user=True
                     ).order_by("last_name")

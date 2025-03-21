@@ -15,7 +15,7 @@ def check_guest(f):
     """If guest, do not allow access to view"""
 
     def decorator(request, **kwargs):
-        if request.user.groups.filter(name="Guest").exists():
+        if request.user.is_guest:
             messages.error(
                 request,
                 "Guests are not allowed to change their password, you have been automatically redirected to the home page.",

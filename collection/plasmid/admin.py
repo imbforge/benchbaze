@@ -418,14 +418,12 @@ class PlasmidAdmin(
         obj = self.model.objects.get(pk=object_id)
         if (
             request.user == obj.created_by
-            or request.user.groups.filter(name="Lab manager").exists()
-            or request.user.is_pi
-            or request.user.is_superuser
+            or request.user.is_elevated_user
+            or obj.created_by.is_past_member
             or request.user.has_perm(
                 f"{self.model._meta.app_label}.change_{self.model._meta.model_name}",
                 obj,
             )
-            or obj.created_by.groups.filter(name="Past member")
         ):
             extra_context.update({"show_redetect_save": True})
 

@@ -234,7 +234,7 @@ class WormStrainAdmin(
                 if inline.verbose_name_plural == "existing genotyping assays":
                     filtered_inline_instances.append(inline)
                 else:
-                    if not request.user.groups.filter(name="Guest").exists():
+                    if not request.user.is_guest:
                         filtered_inline_instances.append(inline)
 
         # Existing objects
@@ -245,7 +245,7 @@ class WormStrainAdmin(
                     filtered_inline_instances.append(inline)
                 else:
                     # Do not allow guests to add docs, ever
-                    if not request.user.groups.filter(name="Guest").exists():
+                    if not request.user.is_guest:
                         filtered_inline_instances.append(inline)
 
         return filtered_inline_instances
@@ -281,10 +281,7 @@ class WormStrainAdmin(
     def add_view(self, request, form_url="", extra_context=None):
         obj_unmodifiable_fields = self.obj_unmodifiable_fields.copy()
         add_view_main_fields = self.add_view_fieldsets[0][1]["fields"].copy()
-        if (
-            request.user.is_superuser
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user:
             obj_unmodifiable_fields = [
                 x for x in obj_unmodifiable_fields if x != "created_by"
             ]
@@ -319,10 +316,7 @@ class WormStrainAdmin(
         except Exception:
             # Exclude certain users from the 'Created by' field in the order form
             if db_field.name == "created_by":
-                if (
-                    request.user.is_superuser
-                    or request.user.groups.filter(name="Lab manager").exists()
-                ):
+                if request.user.is_elevated_user:
                     kwargs["queryset"] = User.objects.exclude(
                         is_system_user=True
                     ).order_by("last_name")
@@ -562,10 +556,7 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
         self.allele_type = request.GET.get("allele_type")
         obj_unmodifiable_fields = self.obj_unmodifiable_fields.copy()
 
-        if (
-            request.user.is_superuser
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user:
             obj_unmodifiable_fields = [
                 x for x in obj_unmodifiable_fields if x != "created_by"
             ]
@@ -622,10 +613,7 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
         except Exception:
             # Exclude certain users from the 'Created by' field in the order form
             if db_field.name == "created_by":
-                if (
-                    request.user.is_superuser
-                    or request.user.groups.filter(name="Lab manager").exists()
-                ):
+                if request.user.is_elevated_user:
                     kwargs["queryset"] = User.objects.exclude(
                         is_system_user=True
                     ).order_by("last_name")

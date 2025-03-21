@@ -25,10 +25,10 @@ from django.utils import timezone
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 from djangoql.schema import DateTimeField, IntField, StrField
-from guardian.admin import GuardedModelAdmin, UserManage as GuardianUserManage
+from guardian.admin import GuardedModelAdmin
+from guardian.admin import UserManage as GuardianUserManage
 from guardian.shortcuts import (
     assign_perm,
-    get_user_model,
     get_users_with_perms,
     remove_perm,
 )
@@ -541,9 +541,7 @@ class CollectionUserProtectionAdmin(Approval, CollectionBaseAdmin):
                 "show_save": True,
                 "show_obj_permission": False,
                 "show_disapprove": (
-                    True
-                    if request.user.groups.filter(name="Approval manager").exists()
-                    else False
+                    True if request.user.is_approval_manager else False
                 ),
                 "show_formz": self.show_formz,
             }
@@ -567,12 +565,7 @@ class CollectionUserProtectionAdmin(Approval, CollectionBaseAdmin):
                 f"({','.join(str(e) for e in plasmid_id_list)})"
             )
 
-        if (
-            request.user == obj.created_by
-            or request.user.groups.filter(name="Lab manager").exists()
-            or request.user.is_pi
-            or request.user.is_superuser
-        ):
+        if request.user == obj.created_by or request.user.is_elevated_user:
             self.can_change = True
 
             if self.is_guarded_model:
@@ -659,12 +652,7 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
             )
         )
 
-        if not (
-            request.user.is_superuser
-            or request.user.groups.filter(name="Lab manager").exists()
-            or request.user == obj.created_by
-            or request.user.is_pi
-        ):
+        if not (request.user == obj.created_by or request.user.is_elevated_user):
             raise PermissionDenied()
 
         if request.method == "POST" and "submit_manage_user" in request.POST:

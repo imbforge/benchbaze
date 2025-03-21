@@ -78,12 +78,8 @@ class FormZAdminSite(admin.AdminSite):
         """View for form to upload Excel files from ZKBS and update
         database"""
 
-        # Only allow superusers, FormZ or regular managers to access this view
-        if not (
-            request.user.is_superuser
-            or request.user.groups.filter(name="FormZ manager").exists()
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        # Only allow relevant user types to access this view
+        if not (request.user.is_elevated_user or request.user.is_formz_manager):
             raise PermissionDenied
 
         # Set link to ZKBS pages for cell lines, oncogenes and plasmids
@@ -476,11 +472,7 @@ class ZkbsPlasmidAdmin(admin.ModelAdmin):
 
         extra_context = extra_context or {}
 
-        if (
-            request.user.is_superuser
-            or request.user.groups.filter(name="FormZ manager").exists()
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user or request.user.is_formz_manager:
             extra_context["has_update_from_excel_permission"] = True
         else:
             extra_context["has_update_from_excel_permission"] = False
@@ -501,11 +493,7 @@ class ZkbsOncogeneAdmin(admin.ModelAdmin):
 
         extra_context = extra_context or {}
 
-        if (
-            request.user.is_superuser
-            or request.user.groups.filter(name="FormZ manager").exists()
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user or request.user.is_formz_manager:
             extra_context["has_update_from_excel_permission"] = True
         else:
             extra_context["has_update_from_excel_permission"] = False
@@ -534,11 +522,7 @@ class ZkbsCellLineAdmin(admin.ModelAdmin):
 
         extra_context = extra_context or {}
 
-        if (
-            request.user.is_superuser
-            or request.user.groups.filter(name="FormZ manager").exists()
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user or request.user.is_formz_manager:
             extra_context["has_update_from_excel_permission"] = True
         else:
             extra_context["has_update_from_excel_permission"] = False

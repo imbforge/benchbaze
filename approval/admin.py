@@ -74,16 +74,12 @@ class ApprovalAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
-        # If user is an approval manager but not a PI
+        # If user is an Approval manager but not an elevated user
         # show only collection items, not orders
 
-        if (
-            request.user.is_pi
-            or request.user.is_superuser
-            or request.user.groups.filter(name="Lab manager").exists()
-        ):
+        if request.user.is_elevated_user:
             return qs
-        elif request.user.groups.filter(name="Approval manager").exists():
+        elif request.user.is_approval_manager:
             qs = qs.filter(content_type__app_label="collection").exclude(
                 content_type__model="oligo"
             )

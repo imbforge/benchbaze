@@ -17,7 +17,8 @@ SITE_ADMIN_EMAIL_ADDRESSES = getattr(settings, "SITE_ADMIN_EMAIL_ADDRESSES", [])
 OIDC_UPN_FIELD_NAME = getattr(settings, "OIDC_UPN_FIELD_NAME", "upn")
 OIDC_PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", "")
 ALLOWED_HOSTS = getattr(settings, "ALLOWED_HOSTS", [])
-
+LAB_MANAGER_GROUP = getattr(settings, "LAB_MANAGER_GROUP")
+GUEST_GROUP = getattr(settings, "GUEST_GROUP")
 User = get_user_model()
 
 
@@ -120,7 +121,7 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             is_active=True,
             is_superuser=False,
             is_pi=False,
-            groups__name="Lab manager",
+            groups__name=LAB_MANAGER_GROUP,
         ).values_list("first_name", "email")
         recipients = list(recipients) + SITE_ADMIN_EMAIL_ADDRESSES
 
@@ -167,7 +168,7 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
         # A user must have at least one group. Therefore assign
         # the group with the fewest permissions, Guest, to the user
-        guest_group = Group.objects.filter(name="Guest")
+        guest_group = Group.objects.filter(name=GUEST_GROUP)
         user.groups.add(*guest_group)
 
         self.send_email_new_user(user)

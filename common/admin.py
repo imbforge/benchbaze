@@ -1,5 +1,6 @@
 import itertools
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
@@ -13,6 +14,13 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 
+GROUPS = [
+    getattr(settings, "GUEST_GROUP"),
+    getattr(settings, "REGULAR_LAB_MEMBER_GROUP"),
+    getattr(settings, "ORDER_MANAGER_GROUP"),
+    getattr(settings, "LAB_MANAGER_GROUP"),
+    getattr(settings, "PAST_MEMBER_GROUP"),
+]
 User = get_user_model()
 
 
@@ -57,15 +65,7 @@ class OwnUserAdmin(BaseUserAdmin):
                 self.critical_groups = []
             else:
                 old_user = User.objects.get(id=obj.pk)
-                critical_groups = old_user.groups.exclude(
-                    name__in=[
-                        "Guest",
-                        "Regular lab member",
-                        "Order manager",
-                        "Lab manager",
-                        "Past member",
-                    ]
-                )
+                critical_groups = old_user.groups.exclude(name__in=GROUPS)
                 self.critical_groups = list(critical_groups)
 
             obj.save()
@@ -254,15 +254,7 @@ class OwnUserAdmin(BaseUserAdmin):
             if request.user.is_superuser or request.user.is_pi:
                 kwargs["queryset"] = Group.objects.all()
             else:
-                kwargs["queryset"] = Group.objects.filter(
-                    name__in=[
-                        "Guest",
-                        "Regular lab member",
-                        "Order manager",
-                        "Lab manager",
-                        "Past member",
-                    ]
-                )
+                kwargs["queryset"] = Group.objects.filter(name__in=GROUPS)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
@@ -468,7 +460,7 @@ class ToggleDocInlineMixin(admin.ModelAdmin):
                     filtered_inline_instances.append(inline)
                 else:
                     # Do not allow guests to add docs, ever
-                    if not request.user.groups.filter(name="Guest").exists():
+                    if not request.user.is_guest:
                         filtered_inline_instances.append(inline)
 
         return filtered_inline_instances
