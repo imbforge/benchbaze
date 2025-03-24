@@ -272,6 +272,7 @@ class OrderAdmin(
         "delivered_date",
         "created_by",
     ]
+    can_change = False
 
     @admin.display(description="Part description", ordering="part_description")
     def item_description(self, instance):
@@ -565,13 +566,16 @@ class OrderAdmin(
             if self.can_change:
                 return self.obj_specific_fields[8:10] + self.obj_unmodifiable_fields
             else:
+                safety_info_fields = self.safety_info_fields.copy()
+                safety_info_fields.remove("ghs_pict_img")
                 return (
                     self.obj_specific_fields
-                    + self.safety_info_fields
+                    + safety_info_fields
                     + self.obj_unmodifiable_fields
                 )
         else:
             return self.obj_unmodifiable_fields[:3]
+        return self.obj_unmodifiable_fields[:3]
 
     def add_view(self, request, extra_context=None):
         self.raw_id_fields = self.safety_info_fields[1:-1]
