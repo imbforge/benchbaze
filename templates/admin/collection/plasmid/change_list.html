@@ -60,7 +60,7 @@
             {% if not user.is_guest %}
               <li>
                   <a style="background-color:palevioletred;" 
-                  href='?q-l=on&q=created_by.{{user.USERNAME_FIELD}}+%3D+"{{user.GET_username}}"'>
+                  href='?q-l=on&q=created_by.{{user.USERNAME_FIELD}}+%3D+"{{user.get_username}}"'>
                   {% blocktrans with cl.opts.verbose_name_plural as name_plural %}My {{ name_plural }}{% endblocktrans %}
                   </a>
               </li>
