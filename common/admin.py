@@ -33,6 +33,7 @@ class OwnUserAdmin(BaseUserAdmin):
         "get_user_groups",
     )
     critical_groups = None
+    search_fields = ["last_name", "first_name"]
     add_fieldsets = (
         (
             None,
