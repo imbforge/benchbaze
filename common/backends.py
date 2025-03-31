@@ -160,6 +160,7 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             first_name=first_name,
             last_name=last_name,
             is_active=True,
+            is_staff=True,
             oidc_id=oidc_id if oidc_id else None,
         )
         # Do not allow user to reset password
