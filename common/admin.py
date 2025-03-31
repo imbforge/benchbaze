@@ -101,6 +101,7 @@ class OwnUserAdmin(BaseUserAdmin):
                         "groups",
                         "user_permissions",
                         "is_active",
+                        "is_staff",
                         "username",
                         "password",
                         "first_name",
@@ -133,6 +134,7 @@ class OwnUserAdmin(BaseUserAdmin):
                     {
                         "fields": (
                             "is_active",
+                            "is_staff",
                             "is_superuser",
                             "is_pi",
                             "is_system_user",
