@@ -353,7 +353,7 @@ class WormStrain(
             elements = elements | ol.sequence_features.all()
         for al in all_alleles:
             elements = elements | al.sequence_features.all()
-        return self.elements.distinct().order_by("name")
+        return elements.distinct().order_by("name")
 
     @property
     def all_instock_plasmids(self):
