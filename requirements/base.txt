@@ -8,7 +8,7 @@
 asgiref==3.8.1
     # via django
 beautifulsoup4==4.12.3
-    # via -r requirements/base.in
+    # via -r base.in
 certifi==2024.12.14
     # via requests
 cffi==1.17.1
@@ -24,27 +24,27 @@ diff-match-patch==20241021
     # via django-import-export
 django==4.2.17
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   django-guardian
     #   django-import-export
     #   django-simple-history
     #   mozilla-django-oidc
 django-adminactions==1.9
-    # via -r requirements/base.in
+    # via -r base.in
 django-better-admin-arrayfield==1.4.2
-    # via -r requirements/base.in
+    # via -r base.in
 django-guardian==2.4.0
-    # via -r requirements/base.in
+    # via -r base.in
 django-import-export==4.3.3
-    # via -r requirements/base.in
+    # via -r base.in
 django-modelclone @ git+https://github.com/al-beton/django-modelclone/
-    # via -r requirements/base.in
+    # via -r base.in
 django-simple-history==3.7.0
-    # via -r requirements/base.in
+    # via -r base.in
 django4-background-tasks==1.2.10
-    # via -r requirements/base.in
+    # via -r base.in
 djangoql==0.17.1
-    # via -r requirements/base.in
+    # via -r base.in
 et-xmlfile==2.0.0
     # via openpyxl
 idna==3.10
@@ -52,17 +52,17 @@ idna==3.10
 josepy==1.14.0
     # via mozilla-django-oidc
 lxml==4.9.0
-    # via -r requirements/base.in
+    # via -r base.in
 mozilla-django-oidc==4.0.1
-    # via -r requirements/base.in
-openpyxl==3.1.2
-    # via -r requirements/base.in
+    # via -r base.in
+openpyxl==3.1.5
+    # via -r base.in
 pillow==11.1.0
-    # via -r requirements/base.in
+    # via -r base.in
 ply==3.11
     # via djangoql
 psycopg==3.2.3
-    # via -r requirements/base.in
+    # via -r base.in
 pycparser==2.22
     # via cffi
 pyopenssl==24.3.0
@@ -82,14 +82,16 @@ sqlparse==0.5.3
 tablib==3.7.0
     # via django-import-export
 typing-extensions==4.12.2
-    # via psycopg
+    # via
+    #   asgiref
+    #   psycopg
 urllib3==2.3.0
     # via requests
 xlrd==1.1.0
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   django-adminactions
 xlwt==1.3.0
     # via django-adminactions
 zmq==0.0.0
-    # via -r requirements/base.in
+    # via -r base.in
