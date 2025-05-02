@@ -226,7 +226,7 @@ REGULAR_LAB_MEMBER_GROUP = "Regular lab member"
 PAST_MEMBER_GROUP = "Past member"
 
 # Other settings
-FILE_UPLOAD_PERMISSIONS = 0o664
+FILE_UPLOAD_PERMISSIONS = 0o660
 LOGIN_URL = "/login/"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 X_FRAME_OPTIONS = "SAMEORIGIN"
