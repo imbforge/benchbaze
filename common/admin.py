@@ -241,8 +241,7 @@ class OwnUserAdmin(BaseUserAdmin):
         """Create a pretty name for a user to be shown as its unicode attribute"""
 
         if self.first_name:
-            pretty_name = self.first_name[0].upper() + ". " + self.last_name.title()
-            return pretty_name
+            return f"{self.first_name[0].upper()}. {self.last_name.title()}"
         else:
             return self.username
 
