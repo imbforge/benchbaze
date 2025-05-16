@@ -21,6 +21,8 @@ class CostUnit(models.Model):
     def __str__(self):
         return f"{self.name} - {self.description}"
 
-    def save(self, force_insert=False, force_update=False):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         self.name = self.name.strip().lower()
-        super().save(force_insert, force_update)
+        super().save(force_insert, force_update, using, update_fields)
