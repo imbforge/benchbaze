@@ -54,10 +54,8 @@ class OwnUserAdmin(BaseUserAdmin):
             obj.username = (
                 obj.username if obj.username else obj.email.split("@")[0].lower()
             )
-            obj.save()
-            # Create User first, this triggers signal that sets is_active to false by default
-            # therefore set is_active to True after creating the object
             obj.is_active = True
+            obj.is_staff = True
             obj.save()
         else:
             # If somebody tries to save a user for which it cannot see some of its groups,
