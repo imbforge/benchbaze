@@ -1,8 +1,11 @@
 import react from "@vitejs/plugin-react";
-import path from "path";
 
 export default {
+  base: "./",
   plugins: [react()],
+  build: {
+    outDir: "./build"
+  },
   optimizeDeps: {
     esbuildOptions: {
       loader: {

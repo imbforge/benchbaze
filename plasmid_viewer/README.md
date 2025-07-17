@@ -1,6 +1,9 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+# Plasmid viewer for the lab database of the Ulrich lab @ IMB Mainz
+
+This project is forked from <https://github.com/tnrich/ove-react-demo-repo> to implement changes that meet the needs of the lab database of the Ulrich lab @ IMB Mainz (<https://github.com/helle-ulrich-lab/organisation-intranet>).
+
+# Available Scripts
 
 In the project directory, you can run:
 
