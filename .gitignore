@@ -49,3 +49,6 @@ coverage.xml
 *.pot
 
 *.log
+
+**/node_modules
+**/.vite
