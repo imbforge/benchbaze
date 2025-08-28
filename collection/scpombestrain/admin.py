@@ -8,6 +8,7 @@ from common.admin import (
 )
 from formz.actions import formz_as_html
 
+from ..shared.actions import create_zebra_label
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     SortAutocompleteResultsId,
@@ -90,7 +91,7 @@ class ScPombeStrainAdmin(
     )
     list_display_links = ("id",)
     djangoql_schema = ScPombeStrainQLSchema
-    actions = [export_scpombestrain, formz_as_html]
+    actions = [export_scpombestrain, formz_as_html, create_zebra_label]
     form = ScPombeStrainAdminForm
     search_fields = ["id", "name"]
     show_plasmids_in_model = True

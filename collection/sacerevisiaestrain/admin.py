@@ -12,6 +12,7 @@ from ..sacerevisiaestrain.models import (
     SaCerevisiaeStrainDoc,
     SaCerevisiaeStrainEpisomalPlasmid,
 )
+from ..shared.actions import create_zebra_label
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
@@ -89,7 +90,7 @@ class SaCerevisiaeStrainAdmin(
     list_display = ("id", "name", "mating_type", "background", "created_by", "approval")
     list_display_links = ("id",)
     djangoql_schema = SaCerevisiaeStrainQLSchema
-    actions = [export_sacerevisiaestrain, formz_as_html]
+    actions = [export_sacerevisiaestrain, formz_as_html, create_zebra_label]
     form = SaCerevisiaeStrainAdminForm
     search_fields = ["id", "name"]
     show_plasmids_in_model = True

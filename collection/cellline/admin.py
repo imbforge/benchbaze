@@ -9,6 +9,7 @@ from common.admin import (
 from formz.actions import formz_as_html
 from formz.models import Species
 
+from ..shared.actions import create_zebra_label
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
@@ -128,7 +129,7 @@ class CellLineAdmin(
     list_display_links = ("id",)
     djangoql_schema = CellLineQLSchema
     inlines = [CellLineEpisomalPlasmidInline, CellLineDocInline, AddCellLineDocInline]
-    actions = [export_cellline, formz_as_html]
+    actions = [export_cellline, formz_as_html, create_zebra_label]
     search_fields = ["id", "name"]
     show_plasmids_in_model = True
     autocomplete_fields = [
