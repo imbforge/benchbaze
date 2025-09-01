@@ -1,6 +1,6 @@
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
-from ..shared.actions import create_zebra_label
+from ..shared.actions import create_label
 from ..shared.admin import CollectionSimpleAdmin
 from .actions import export_antibody
 from .models import AntibodyDoc
@@ -33,7 +33,7 @@ class AntibodyAdmin(CollectionSimpleAdmin):
     )
     list_display_links = ("id",)
     djangoql_schema = AntibodyQLSchema
-    actions = [export_antibody, create_zebra_label]
+    actions = [export_antibody, create_label]
     search_fields = ["id", "name"]
     inlines = [AntibodyDocInline, AntibodyAddDocInline]
     clone_ignore_fields = ["info_sheet"]

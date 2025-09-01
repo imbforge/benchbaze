@@ -13,7 +13,7 @@ from common.admin import (
 from formz.actions import formz_as_html
 
 from ..plasmid.admin import PlasmidAdmin
-from ..shared.actions import create_zebra_label
+from ..shared.actions import create_label
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
@@ -93,7 +93,7 @@ class WormStrainAdmin(
         "approval",
     )
     list_display_links = ("id",)
-    actions = [export_wormstrain, formz_as_html, create_zebra_label]
+    actions = [export_wormstrain, formz_as_html, create_label]
     form = WormStrainAdminForm
     djangoql_schema = WormStrainQLSchema
     search_fields = ["id", "name"]

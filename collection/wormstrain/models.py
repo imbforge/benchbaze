@@ -2,7 +2,12 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from common.models import (
+    DocFileMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
+)
 from formz.models import GenTechMethod, SequenceFeature, Species
 from formz.models import Project as FormZProject
 
@@ -35,6 +40,7 @@ class WormStrainAlleleDoc(DocFileMixin):
 
 
 class WormStrainAllele(
+    ZebraLabelFieldsMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
     MapFileChecPropertieskMixin,
@@ -207,6 +213,7 @@ class WormStrainDoc(DocFileMixin):
 
 
 class WormStrain(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,

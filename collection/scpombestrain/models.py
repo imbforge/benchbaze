@@ -5,7 +5,12 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.forms import ValidationError
 
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from common.models import (
+    DocFileMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
+)
 from formz.models import GenTechMethod, SequenceFeature
 from formz.models import Project as FormZProject
 
@@ -34,6 +39,7 @@ class ScPombeStrainDoc(DocFileMixin):
 
 
 class ScPombeStrain(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
@@ -177,6 +183,12 @@ class ScPombeStrain(
     @property
     def formz_genotype(self):
         return self.genotype
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = self.mating_type
+        return labels
 
 
 class ScPombeStrainEpisomalPlasmid(models.Model):

@@ -6,7 +6,7 @@ from common.admin import (
     DocFileInlineMixin,
 )
 
-from ..shared.actions import create_zebra_label
+from ..shared.actions import create_label
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     rename_info_sheet_save_obj_update_history,
@@ -43,7 +43,7 @@ class OligoAdmin(
     )
     list_display_links = ("id",)
     djangoql_schema = OligoQLSchema
-    actions = [export_oligo, create_zebra_label]
+    actions = [export_oligo, create_label]
     search_fields = ["id", "name"]
     autocomplete_fields = ["sequence_features"]
     form = OligoAdminForm

@@ -404,3 +404,15 @@ class HistoryFieldMixin(models.Model):
                     history_summary_data.append(history_change)
 
         return history_summary_data
+
+
+class ZebraLabelFieldsMixin:
+    @property
+    def zebra_n0jtt_label_content(self):
+        return [
+            f"<b>{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.id}</b>",
+            self.name,
+            "",
+            "",
+            str(self.created_by)[:15],
+        ]

@@ -10,6 +10,7 @@ from common.models import (
     DownloadFileNameMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
 from formz.models import GenTechMethod, SequenceFeature, ZkbsPlasmid
 from formz.models import Project as FormZProject
@@ -44,6 +45,7 @@ class PlasmidDoc(DocFileMixin):
 
 
 class Plasmid(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     CommonCollectionModelPropertiesMixin,

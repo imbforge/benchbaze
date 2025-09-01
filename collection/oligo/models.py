@@ -7,6 +7,7 @@ from common.models import (
     DownloadFileNameMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
 from formz.models import SequenceFeature
 
@@ -35,6 +36,7 @@ class OligoDoc(DocFileMixin):
 
 
 class Oligo(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
@@ -108,3 +110,9 @@ class Oligo(
         self.length = len(self.sequence)
 
         super().save(force_insert, force_update, using, update_fields)
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = "10 µM"
+        return labels

@@ -13,7 +13,7 @@ from common.admin import (
 from formz.actions import formz_as_html
 from formz.models import SequenceFeature
 
-from ..shared.actions import create_zebra_label
+from ..shared.actions import create_label
 from ..shared.admin import (
     AdminOligosInMap,
     CollectionUserProtectionAdmin,
@@ -61,7 +61,7 @@ class PlasmidAdmin(
     )
     list_display_links = ("id",)
     djangoql_schema = PlasmidQLSchema
-    actions = [export_plasmid, formz_as_html, create_zebra_label]
+    actions = [export_plasmid, formz_as_html, create_label]
     search_fields = ["id", "name"]
     autocomplete_fields = [
         "parent_vector",

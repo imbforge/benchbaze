@@ -3,7 +3,12 @@ from datetime import timedelta
 
 from django.db import models
 
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from common.models import (
+    DocFileMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
+)
 from formz.models import (
     GenTechMethod,
     SequenceFeature,
@@ -51,6 +56,7 @@ class CellLineDoc(DocFileMixin):
 
 
 class CellLine(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
@@ -201,6 +207,12 @@ class CellLine(
             virus_packaging_cell_line = ZkbsCellLine(name="293T (HEK 293T)")
 
         return virus_packaging_cell_line
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = "Passage:"
+        return labels
 
 
 class CellLineEpisomalPlasmid(models.Model):

@@ -6,6 +6,7 @@ from common.models import (
     DownloadFileNameMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
 
 from ..shared.models import (
@@ -32,6 +33,7 @@ class AntibodyDoc(DocFileMixin):
 
 
 class Antibody(
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
@@ -69,3 +71,10 @@ class Antibody(
 
     def __str__(self):
         return f"{self.id} - {self.name}"
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = "Glycerol:"
+        labels[-1] = ""
+        return labels
