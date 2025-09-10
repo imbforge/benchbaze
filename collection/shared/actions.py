@@ -59,13 +59,21 @@ def create_label(modeladmin, request, queryset):
         content: str = ""
 
     def string_width_index(label, font_name, font_size, horizontal_scale, frame_width):
-        return sum(
-            [
-                (stringWidth(ls, font_name, font_size) * horizontal_scale / 100)
-                < frame_width
-                for ls in [label[:i] for i in list(reversed(range(len(label))))]
-            ]
-        )
+        """Find the string index at which a string becomes smaller than the
+        frame in which it is placed"""
+
+        is_bigger = True
+        slice_idx = len(label)
+
+        while is_bigger:
+            slice_idx -= 1
+            is_bigger = (
+                stringWidth(label[:slice_idx], font_name, font_size)
+                * horizontal_scale
+                / 100
+            ) > frame_width
+
+        return slice_idx + 1
 
     def create_n0jtt_zebra_label(queryset, now):
         """
