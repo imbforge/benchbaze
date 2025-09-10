@@ -414,5 +414,5 @@ class ZebraLabelFieldsMixin:
             self.name,
             "",
             "",
-            str(self.created_by)[:15],
+            str(self.created_by)[:17],
         ]

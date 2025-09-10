@@ -187,7 +187,7 @@ class ScPombeStrain(
     @property
     def zebra_n0jtt_label_content(self):
         labels = super().zebra_n0jtt_label_content
-        labels[2] = self.mating_type
+        labels[2] = f"MT: {self.mating_type}"
         return labels
 
 

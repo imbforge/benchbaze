@@ -8,7 +8,7 @@ from django.utils import timezone
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.pdfmetrics import registerFontFamily
+from reportlab.pdfbase.pdfmetrics import registerFontFamily, stringWidth
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Frame, KeepInFrame, Paragraph
@@ -52,7 +52,20 @@ def create_label(modeladmin, request, queryset):
         topPadding: float = 0
         onOverflow: str = "truncate"
         alignment: int = 0
+        fontName: str = "SansR"
+        fontSize: int = 7
+        horizontalScale: int = 100
+        overflow_title: bool = False
         content: str = ""
+
+    def string_width_index(label, font_name, font_size, horizontal_scale, frame_width):
+        return sum(
+            [
+                (stringWidth(ls, font_name, font_size) * horizontal_scale / 100)
+                < frame_width
+                for ls in [label[:i] for i in list(reversed(range(len(label))))]
+            ]
+        )
 
     def create_n0jtt_zebra_label(queryset, now):
         """
@@ -101,7 +114,7 @@ def create_label(modeladmin, request, queryset):
                     y=y / 32 * inch,
                     width=width,
                     height=1 / 8 * inch,
-                    leftPadding=1 * mm,
+                    leftPadding=0.75 * mm,
                     rightPadding=0.5 * mm,
                     content=l,
                 )
@@ -112,16 +125,6 @@ def create_label(modeladmin, request, queryset):
                     zebra_n0jtt_label_content,
                 )
             ]
-
-            # Adjust style for label 3
-            label_3 = main_labels[3]
-            label_3.rightPadding = 0
-
-            # Adjust style for label 4
-            label_4 = main_labels[4]
-            label_4.leftPadding = 0
-            label_4.alignment = 2
-            label_4.onOverflow = "shrink"
 
             # Labels in circle, 5-6
             cap_labels = [
@@ -137,15 +140,37 @@ def create_label(modeladmin, request, queryset):
                 for y, l in zip(
                     [11, 7],
                     [
-                        f"<b>{queryset.model._model_abbreviation}{LAB_ABBREVIATION}</b>",
-                        f"<b>{obj.id}</b>",
+                        f"{queryset.model._model_abbreviation}{LAB_ABBREVIATION}",
+                        f"{obj.id}",
                     ],
                 )
             ]
 
+            all_labels = main_labels + cap_labels
+
+            # Make labels 0, 5, 6 bold
+            [setattr(all_labels[i], "fontName", "SansB") for i in [0, 5, 6]]
+
+            # Adjust style for label 3
+            label_1 = all_labels[1]
+            label_1.overflow_title = True
+
+            # Adjust style for label 3
+            label_3 = all_labels[3]
+            label_3.rightPadding = 0
+
+            # Adjust style for label 4
+            label_4 = all_labels[4]
+            label_4.leftPadding = 0
+            label_4.alignment = 2
+            label_4.fontSize = 6
+            label_4.onOverflow = "shrink"
+
             # Add labels to the canvas
-            for label in main_labels + cap_labels:
+            for label in all_labels:
                 default_style.alignment = label.alignment
+                default_style.fontName = label.fontName
+                default_style.fontSize = label.fontSize
                 frame = Frame(
                     label.x,
                     label.y,
@@ -157,12 +182,102 @@ def create_label(modeladmin, request, queryset):
                     topPadding=label.topPadding,
                     showBoundary=0,
                 )
+
+                # When using drawText a the style has to be set,
+                # because it applies to Paragraph as well
+                label_content = str(label.content)
+                text_box = canv.beginText()
+                text_box.setFont(label.fontName, label.fontSize)
+                text_box.setHorizScale(label.horizontalScale)
+                label_width = stringWidth(label_content, label.fontName, label.fontSize)
+                frame_width = label.width - (label.leftPadding + label.rightPadding)
+
+                # Resize label if needed by first reducing the font size and
+                if label.overflow_title and label_width > frame_width:
+                    reduced_font_size = label.fontSize - 1
+                    label_width = stringWidth(
+                        label_content, label.fontName, reduced_font_size
+                    )
+                    text_box.setFont(label.fontName, reduced_font_size)
+
+                    # then by squeezing it horizontally
+                    if label_width > frame_width:
+                        horizontal_scales = [90, 80, 70]
+                        for horizontal_scale in horizontal_scales:
+                            label_width_scaled = label_width * horizontal_scale / 100
+                            if label_width_scaled < frame_width:
+                                text_box.setHorizScale(horizontal_scale)
+                                break
+                            else:
+                                # If even after squeezing it to 70% it is too big
+                                # try breaking it
+                                if horizontal_scale == horizontal_scales[-1]:
+                                    text_box.setHorizScale(horizontal_scale)
+                                    break_index = string_width_index(
+                                        label_content,
+                                        label.fontName,
+                                        reduced_font_size,
+                                        horizontal_scale,
+                                        frame_width,
+                                    )
+
+                                    # Continue label on next line
+                                    label_content_cont = label_content[
+                                        break_index:
+                                    ].strip()
+                                    if label_content_cont:
+                                        text_box_cont = canv.beginText(
+                                            label.x + label.leftPadding,
+                                            label.y - 1 / 8 * inch + 1.75 * mm,
+                                        )
+                                        text_box_cont.setHorizScale(horizontal_scale)
+                                        text_box_cont.setFont(
+                                            label.fontName, reduced_font_size
+                                        )
+                                        break_index_cont = string_width_index(
+                                            label_content,
+                                            label.fontName,
+                                            reduced_font_size,
+                                            horizontal_scale,
+                                            frame_width / 2,
+                                        )
+                                        if break_index_cont < len(label_content_cont):
+                                            label_content_cont = (
+                                                label_content_cont[
+                                                    : break_index_cont - 2
+                                                ]
+                                                + "..."
+                                            )
+                                        text_box_cont.textLine(text=label_content_cont)
+                                        canv.drawText(text_box_cont)
+
+                                        # Shift label 2 to the right to accomodate extra text
+                                        label_2 = all_labels[2]
+                                        label_2.width = label_2.width / 2
+                                        label_2.x = label.x + label_2.width
+                                        label_2.leftPadding = 0
+                                        label_2.fontSize = 6
+                                        label_2.alignment = 2
+                                        if label_2.content.endswith(":"):
+                                            label_2.rightPadding = 5 * mm
+
+                                        # Update label_content
+                                        label_content = label_content[:break_index]
+
+                                continue
+
+                    text_box.setTextOrigin(
+                        label.x + label.leftPadding, label.y + 0.75 * mm
+                    )
+                    text_box.textLine(text=label_content)
+                    label_content = ""
+                canv.drawText(text_box)
                 frame.addFromList(
                     [
                         KeepInFrame(
                             0,
                             0,
-                            [Paragraph(str(label.content), default_style)],
+                            [Paragraph(label_content, default_style)],
                             mode=label.onOverflow,
                         ),
                     ],
