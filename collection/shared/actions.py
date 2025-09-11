@@ -111,7 +111,7 @@ def create_label(modeladmin, request, queryset):
             if break_index_second < len(second_line):
                 continue
 
-            return horizontal_scale, break_index_first, break_index_second
+        return horizontal_scale, break_index_first, break_index_second
 
     def create_n0jtt_zebra_label(queryset, now):
         """
