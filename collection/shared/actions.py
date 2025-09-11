@@ -40,6 +40,8 @@ def create_label(modeladmin, request, queryset):
     Admin action to create labels as PDF
     """
 
+    horizontal_scales = [100, 90, 80, 70]
+
     @dataclass
     class LabelFrame:
         x: float = 0
@@ -58,7 +60,9 @@ def create_label(modeladmin, request, queryset):
         overflow_title: bool = False
         content: str = ""
 
-    def string_width_index(label, font_name, font_size, horizontal_scale, frame_width):
+    def find_label_breakpoint(
+        label, font_name, font_size, horizontal_scale, frame_width
+    ):
         """Find the string index at which a string becomes smaller than the
         frame in which it is placed"""
 
@@ -74,6 +78,40 @@ def create_label(modeladmin, request, queryset):
             ) > frame_width
 
         return slice_idx + 1
+
+    def find_horizontal_scale(label_width, frame_width):
+        for horizontal_scale in horizontal_scales:
+            label_width_scaled = label_width * horizontal_scale / 100
+            if label_width_scaled < frame_width:
+                return horizontal_scale
+
+        return None
+
+    def find_horizontal_scale_label_breakpoint(
+        frame_width, label, font_name, font_size
+    ):
+        for horizontal_scale in horizontal_scales:
+            break_index_first = find_label_breakpoint(
+                label,
+                font_name,
+                font_size,
+                horizontal_scale,
+                frame_width,
+            )
+            second_line = label[break_index_first:].strip()
+
+            break_index_second = find_label_breakpoint(
+                second_line,
+                font_name,
+                font_size,
+                horizontal_scale,
+                frame_width,
+            )
+
+            if break_index_second < len(second_line):
+                continue
+
+            return horizontal_scale, break_index_first, break_index_second
 
     def create_n0jtt_zebra_label(queryset, now):
         """
@@ -191,92 +229,88 @@ def create_label(modeladmin, request, queryset):
                     showBoundary=0,
                 )
 
-                # When using drawText a the style has to be set,
-                # because it applies to Paragraph as well
+                # When using drawText the style has to be set,
+                # because it applies to Paragraph as well (?)
                 label_content = str(label.content)
                 text_box = canv.beginText()
                 text_box.setFont(label.fontName, label.fontSize)
                 text_box.setHorizScale(label.horizontalScale)
+                text_box.setTextOrigin(label.x + label.leftPadding, label.y + 0.75 * mm)
                 label_width = stringWidth(label_content, label.fontName, label.fontSize)
                 frame_width = label.width - (label.leftPadding + label.rightPadding)
 
-                # Resize label if needed by first reducing the font size and
+                # If label longer than frame width
                 if label.overflow_title and label_width > frame_width:
-                    reduced_font_size = label.fontSize - 1
-                    label_width = stringWidth(
-                        label_content, label.fontName, reduced_font_size
-                    )
-                    text_box.setFont(label.fontName, reduced_font_size)
+                    # One line
 
-                    # then by squeezing it horizontally
-                    if label_width > frame_width:
-                        horizontal_scales = [90, 80, 70]
-                        for horizontal_scale in horizontal_scales:
-                            label_width_scaled = label_width * horizontal_scale / 100
-                            if label_width_scaled < frame_width:
-                                text_box.setHorizScale(horizontal_scale)
-                                break
-                            else:
-                                # If even after squeezing it to 70% it is too big
-                                # try breaking it
-                                if horizontal_scale == horizontal_scales[-1]:
-                                    text_box.setHorizScale(horizontal_scale)
-                                    break_index = string_width_index(
-                                        label_content,
-                                        label.fontName,
-                                        reduced_font_size,
-                                        horizontal_scale,
-                                        frame_width,
-                                    )
+                    ## Resize label first by squeezing it horizontally
+                    if horizontal_scale := find_horizontal_scale(
+                        label_width, frame_width
+                    ):
+                        text_box.setHorizScale(horizontal_scale)
 
-                                    # Continue label on next line
-                                    label_content_cont = label_content[
-                                        break_index:
-                                    ].strip()
-                                    if label_content_cont:
-                                        text_box_cont = canv.beginText(
-                                            label.x + label.leftPadding,
-                                            label.y - 1 / 8 * inch + 1.75 * mm,
-                                        )
-                                        text_box_cont.setHorizScale(horizontal_scale)
-                                        text_box_cont.setFont(
-                                            label.fontName, reduced_font_size
-                                        )
-                                        break_index_cont = string_width_index(
-                                            label_content,
-                                            label.fontName,
-                                            reduced_font_size,
-                                            horizontal_scale,
-                                            frame_width / 2,
-                                        )
-                                        if break_index_cont < len(label_content_cont):
-                                            label_content_cont = (
-                                                label_content_cont[
-                                                    : break_index_cont - 2
-                                                ]
-                                                + "..."
-                                            )
-                                        text_box_cont.textLine(text=label_content_cont)
-                                        canv.drawText(text_box_cont)
+                    ## Try reducing font size
+                    elif (
+                        (label_width_reduced := stringWidth(
+                            label_content,
+                            label.fontName,
+                            reduced_font_size := label.fontSize - 1,
+                        ))
+                    ) < frame_width:
+                        text_box.setFont(label.fontName, reduced_font_size)
 
-                                        # Shift label 2 to the right to accomodate extra text
-                                        label_2 = all_labels[2]
-                                        label_2.width = label_2.width / 2
-                                        label_2.x = label.x + label_2.width
-                                        label_2.leftPadding = 0
-                                        label_2.fontSize = 6
-                                        label_2.alignment = 2
-                                        if label_2.content.endswith(":"):
-                                            label_2.rightPadding = 5 * mm
+                    ## Reduce size and squeeze
+                    elif horizontal_scale := find_horizontal_scale(
+                        label_width_reduced, frame_width
+                    ):
+                        text_box.setFont(label.fontName, reduced_font_size)
+                        text_box.setHorizScale(horizontal_scale)
 
-                                        # Update label_content
-                                        label_content = label_content[:break_index]
+                    # Two lines
+                    else:
+                        text_box.setTextOrigin(
+                            label.x + label.leftPadding, label.y + 1.75 * mm
+                        )
 
-                                continue
+                        horizontal_scale, breakpoint_first, breakpoint_second = (
+                            find_horizontal_scale_label_breakpoint(
+                                frame_width,
+                                label_content,
+                                label.fontName,
+                                reduced_font_size,
+                            )
+                        )
 
-                    text_box.setTextOrigin(
-                        label.x + label.leftPadding, label.y + 0.75 * mm
-                    )
+                        # Continue label on next line
+                        label_content_second = label_content[breakpoint_first:].strip()
+
+                        if label_content_second:
+                            # Set style of first line
+                            text_box.setFont(label.fontName, reduced_font_size)
+                            text_box.setHorizScale(horizontal_scale)
+
+                            # Set second line
+                            text_box_second = canv.beginText(
+                                label.x + label.leftPadding,
+                                label.y - 1 / 8 * inch + 2.75 * mm,
+                            )
+                            text_box_second.setHorizScale(horizontal_scale)
+                            text_box_second.setFont(label.fontName, reduced_font_size)
+
+                            if breakpoint_second < len(label_content_second):
+                                label_content_second = label_content_second[
+                                    :breakpoint_second
+                                ]
+                            text_box_second.textLine(text=label_content_second)
+                            canv.drawText(text_box_second)
+
+                            # Shift label 2 a little down
+                            label_2 = all_labels[2]
+                            label_2.y = label_2.y - 0.5 * mm
+
+                            # Update label_content
+                            label_content = label_content[:breakpoint_first]
+
                     text_box.textLine(text=label_content)
                     label_content = ""
                 canv.drawText(text_box)
