@@ -13,6 +13,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
@@ -124,6 +125,22 @@ class User(AbstractUser):
 # running migrations
 def get_anonymous_user_instance(User):
     return User(username="AnonymousUser", email="AnonymousUser", is_system_user=True)
+
+
+class LayoutFrontend(models.Model):
+    class Meta:
+        verbose_name = "Layout - Frontend"
+
+    theme = models.CharField("theme", max_length=24, blank=False, default="light")
+    primary_colour = models.CharField(
+        "primary_colour", max_length=24, blank=False, default="emerald"
+    )
+    surface_colour = models.CharField(
+        "surface_colour", max_length=24, blank=False, default="zinc"
+    )
+
+    def __str__(self):
+        return ", ".join([self.theme, self.primary_colour, self.surface_colour])
 
 
 class SaveWithoutHistoricalRecord:
@@ -292,7 +309,7 @@ class HistoryFieldMixin(models.Model):
                 if field_type == "FileField":
                     link_text = os.path.basename(value)
 
-                    # # Prettify DNA map field name
+                    # Prettify DNA map field name
                     if getattr(field, "prettify_map_path", False):
                         link_text = os.path.splitext(link_text)[0]
                     value_out = (
@@ -335,6 +352,9 @@ class HistoryFieldMixin(models.Model):
                         )
                     else:
                         value_out = ", ".join(value)
+
+                elif field_type == "DateField" or field_type == "DateTimeField":
+                    value_out = value.isoformat()
 
                 return value_out
 

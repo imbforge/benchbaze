@@ -25,5 +25,9 @@ export default defineConfig({
     outDir: "./dist",
     emptyOutDir: true
   },
-  base: "/frontend/"
+  base: "/frontend/",
+  server: {
+    allowedHosts: true,
+    hmr: false // disable hot reload
+  }
 });

@@ -134,7 +134,8 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
             + [
                 re_path(r"uploads/(?P<url_path>.*)$", self.admin_view(self.uploads)),
                 re_path(
-                    r"ove/(?P<url_path>.*)$", self.admin_view(self.ove_protected_view)
+                    r"(?P<root_path>ove)/(?P<url_path>.*)$",
+                    self.admin_view(self.protect_non_django_view),
                 ),
             ]
             + urls
@@ -201,7 +202,7 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
         else:
             raise Http404
 
-    def ove_protected_view(self, request, *args, **kwargs):
+    def protect_non_django_view(self, request, *args, **kwargs):
         """Put OVE behind Django's authentication system"""
 
         url_path = str(kwargs["url_path"])
@@ -211,9 +212,7 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
         # NGINX will not set it itself
         mimetype, encoding = mimetypes.guess_type(url_path)
         response["Content-Type"] = mimetype
-        response["X-Accel-Redirect"] = "/ove_secret/{url_path}".format(
-            url_path=url_path
-        )
+        response["X-Accel-Redirect"] = f"/{kwargs['root_path']}_secret/{url_path}"
         return response
 
 

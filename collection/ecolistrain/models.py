@@ -1,6 +1,8 @@
 from django.db import models
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from formz.actions import formz_as_html
 from formz.models import Project as FormZProject
 from formz.models import SequenceFeature
 
@@ -41,17 +43,7 @@ class EColiStrain(
         verbose_name = "strain - E. coli"
         verbose_name_plural = "strains - E. coli"
 
-    _model_abbreviation = "ec"
-    _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": EColiStrainDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-
+    # Fields
     name = models.CharField("name", max_length=255, blank=False)
     resistance = models.CharField("resistance", max_length=255, blank=True)
     genotype = models.TextField("genotype", blank=True)
@@ -77,5 +69,90 @@ class EColiStrain(
     formz_gentech_methods = None
     history_formz_gentech_methods = None
 
+    # Static properties
+    _model_abbreviation = "ec"
+    _show_formz = True
+    _show_in_frontend = "strains - <em>E. coli</em>"
+    _frontend_verbose_name = "strain - <em>E. coli</em>"
+    _frontend_verbose_plural = _show_in_frontend
+    _history_array_fields = {
+        "history_formz_projects": FormZProject,
+        "history_sequence_features": SequenceFeature,
+        "history_documents": EColiStrainDoc,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _list_display = ["resistance", "us_e", "purpose", "approval_formatted"]
+    _autocomplete_fields = ["formz_projects", "sequence_features"]
+    _export_field_names = [
+        "id",
+        "name",
+        "resistance",
+        "genotype",
+        "supplier",
+        "us_e",
+        "purpose",
+        "note",
+        "created_date_time",
+        "created_by",
+    ]
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+
+    _obj_specific_fields = [
+        "name",
+        "resistance",
+        "genotype",
+        "background",
+        "supplier",
+        "us_e",
+        "purpose",
+        "note",
+        "formz_projects",
+        "formz_risk_group",
+        "sequence_features",
+        "destroyed_date",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:8]},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": tuple(),
+                "fields": _obj_specific_fields[8:],
+            },
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:8] + _obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": (("collapse",)),
+                "fields": _obj_specific_fields[8:],
+            },
+        ],
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"

@@ -10,7 +10,6 @@ from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
 )
-from formz.actions import formz_as_html
 
 from ..plasmid.admin import PlasmidAdmin
 from ..shared.admin import (
@@ -20,7 +19,6 @@ from ..shared.admin import (
     convert_map_gbk_to_dna,
     create_map_preview,
 )
-from .actions import export_wormstrain, export_wormstrainallele
 from .forms import WormStrainAdminForm, WormStrainAlleleAdminForm
 from .models import (
     WormStrainAlleleDoc,
@@ -83,30 +81,8 @@ class WormStrainAdmin(
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
-    list_display = (
-        "id",
-        "name",
-        "chromosomal_genotype",
-        "stocked",
-        "created_by",
-        "approval",
-    )
-    list_display_links = ("id",)
-    actions = [export_wormstrain, formz_as_html]
     form = WormStrainAdminForm
     djangoql_schema = WormStrainQLSchema
-    search_fields = ["id", "name"]
-    show_plasmids_in_model = True
-    autocomplete_fields = [
-        "parent_1",
-        "parent_2",
-        "formz_projects",
-        "formz_gentech_methods",
-        "sequence_features",
-        "alleles",
-        "integrated_dna_plasmids",
-        "integrated_dna_oligos",
-    ]
     inlines = [
         WormStrainGenotypingAssayInline,
         AddWormStrainGenotypingAssayInline,
@@ -114,94 +90,10 @@ class WormStrainAdmin(
         WormStrainAddDocInline,
     ]
     change_form_template = "admin/collection/change_form.html"
-    obj_specific_fields = [
-        "name",
-        "chromosomal_genotype",
-        "parent_1",
-        "parent_2",
-        "construction",
-        "outcrossed",
-        "growth_conditions",
-        "organism",
-        "selection",
-        "phenotype",
-        "received_from",
-        "us_e",
-        "note",
-        "reference",
-        "at_cgc",
-        "alleles",
-        "integrated_dna_plasmids",
-        "integrated_dna_oligos",
-        "location_freezer1",
-        "location_freezer2",
-        "location_backup",
-        "formz_projects",
-        "formz_risk_group",
-        "formz_gentech_methods",
-        "sequence_features",
-        "destroyed_date",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:15]},
-        ],
-        [
-            "Integrated DNA",
-            {
-                "fields": obj_specific_fields[15:18],
-            },
-        ],
-        [
-            "Location",
-            {"fields": obj_specific_fields[18:21]},
-        ],
-        [
-            "FormZ",
-            {"fields": obj_specific_fields[21:]},
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:15] + obj_unmodifiable_fields},
-        ],
-        [
-            "Integrated DNA",
-            {
-                "fields": obj_specific_fields[15:18],
-            },
-        ],
-        [
-            "Location",
-            {"fields": obj_specific_fields[18:21]},
-        ],
-        [
-            "FormZ",
-            {"classes": (("collapse",)), "fields": obj_specific_fields[21:]},
-        ],
-    ]
 
     @admin.display(description="Stocked", boolean=True)
-    def stocked(self, instance):
-        if any(
-            len(s.strip()) > 0
-            for s in [
-                instance.location_freezer1,
-                instance.location_freezer1,
-                instance.location_backup,
-            ]
-        ):
-            return True
-        return False
+    def stocked_formatted(self, instance):
+        return instance.stocked_formatted()
 
     def save_related(self, request, form, formsets, change):
         obj, history_obj = super().save_related(request, form, formsets, change)
@@ -338,56 +230,10 @@ class WormStrainAlleleAddDocInline(AddDocFileInlineMixin):
 
 
 class WormStrainAlleleAdmin(PlasmidAdmin):
-    list_display = (
-        "id",
-        "typ_e",
-        "description",
-        "get_map_short_name",
-        "created_by",
-    )
-    list_display_links = ("id",)
     djangoql_schema = WormStrainAlleleQLSchema
-    actions = [export_wormstrainallele]
-    search_fields = ["id", "mutation", "transgene"]
-    autocomplete_fields = [
-        "sequence_features",
-        "made_by_method",
-        "reference_strain",
-        "transgene_plasmids",
-        "made_with_plasmids",
-    ]
     form = WormStrainAlleleAdminForm
     inlines = [WormStrainAlleleDocInline, WormStrainAlleleAddDocInline]
     allele_type = ""
-    show_formz = False
-    show_plasmids_in_model = True
-    obj_specific_fields = [
-        "lab_identifier",
-        "typ_e",
-        "transgene",
-        "transgene_position",
-        "transgene_plasmids",
-        "mutation",
-        "mutation_type",
-        "mutation_position",
-        "reference_strain",
-        "made_by_method",
-        "made_by_person",
-        "made_with_plasmids",
-        "notes",
-        "map",
-        "map_png",
-        "map_gbk",
-        "sequence_features",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "last_changed_date_time",
-        "created_by",
-    ]
-    set_readonly_fields = [
-        "map_png",
-    ]
 
     add_form_template = "admin/collection/wormstrainallele/add_form.html"
     change_form_template = "admin/collection/wormstrainallele/change_form.html"

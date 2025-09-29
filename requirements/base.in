@@ -11,7 +11,7 @@ Django==4.2.17
 django-adminactions==1.9
 django4-background-tasks==1.2.10
 django-guardian==2.4.0
-django-import-export==4.3.3
+django-import-export==4.3.9
 djangoql==0.17.1
 django-simple-history==3.7.0
 lxml==4.9.0
@@ -24,3 +24,4 @@ zmq==0.0.0
 django-better-admin-arrayfield==1.4.2
 backports-zoneinfo==0.2.1;python_version<"3.9"
 django-modelclone @git+https://github.com/al-beton/django-modelclone/
+djangorestframework

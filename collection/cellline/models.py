@@ -2,8 +2,11 @@ import random
 from datetime import timedelta
 
 from django.db import models
+from import_export.fields import Field
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from formz.actions import formz_as_html
 from formz.models import (
     GenTechMethod,
     SequenceFeature,
@@ -65,21 +68,7 @@ class CellLine(
         verbose_name = "cell line"
         verbose_name_plural = "cell lines"
 
-    _model_abbreviation = "cl"
-    _related_name_base = "cellline"
-    _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": CellLineDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-
+    # Fields
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     box_name = models.CharField("box", max_length=255, blank=False)
     alternative_name = models.CharField("alternative name", max_length=255, blank=True)
@@ -135,6 +124,110 @@ class CellLine(
     history_cassette_plasmids = None
     history_all_plasmids_in_stocked_strain = None
 
+    # Static properties
+    _model_abbreviation = "cl"
+    _show_formz = True
+    _show_in_frontend = True
+    _related_name_base = "cellline"
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _list_display = ["box_name", "created_by", "approval_formatted"]
+    _export_field_names = [
+        "id",
+        "name",
+        "box_name",
+        "alternative_name",
+        "parental_line",
+        "organism_name",
+        "cell_type_tissue",
+        "culture_type",
+        "growth_condition",
+        "freezing_medium",
+        "received_from",
+        "description_comment",
+        "integrated_plasmids",
+        "created_date_time",
+        "created_by",
+    ]
+    _export_custom_fields = {
+        "fields": {"organism_name": Field(column_name="Organism name")},
+        "dehydrate_methods": {"organism_name": lambda obj: str(obj.organism)},
+    }
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _show_plasmids_in_model = True
+    _autocomplete_fields = [
+        "parental_line",
+        "integrated_plasmids",
+        "formz_projects",
+        "zkbs_cell_line",
+        "formz_gentech_methods",
+        "sequence_features",
+    ]
+    _obj_specific_fields = [
+        "name",
+        "box_name",
+        "alternative_name",
+        "parental_line",
+        "organism",
+        "cell_type_tissue",
+        "culture_type",
+        "growth_condition",
+        "freezing_medium",
+        "received_from",
+        "integrated_plasmids",
+        "description_comment",
+        "s2_work",
+        "formz_projects",
+        "formz_risk_group",
+        "zkbs_cell_line",
+        "formz_gentech_methods",
+        "sequence_features",
+        "destroyed_date",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:13]},
+        ],
+        [
+            "FormZ",
+            {"classes": tuple(), "fields": _obj_specific_fields[13:]},
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:13] + _obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {"classes": (("collapse",)), "fields": _obj_specific_fields[13:]},
+        ],
+    ]
+    _history_array_fields = {
+        "history_integrated_plasmids": Plasmid,
+        "history_episomal_plasmids": Plasmid,
+        "history_formz_projects": FormZProject,
+        "history_formz_gentech_methods": GenTechMethod,
+        "history_sequence_features": SequenceFeature,
+        "history_documents": CellLineDoc,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"
 

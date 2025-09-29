@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "common",
     "mozilla_django_oidc",
     "django_better_admin_arrayfield",
+    "rest_framework",
 ]
 
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
@@ -247,3 +248,11 @@ ALLOWED_DOC_FILE_EXTS = [
 FILE_SIZE_LIMIT_MB = 2
 AUTH_USER_MODEL = "common.User"
 GUARDIAN_GET_INIT_ANONYMOUS_USER = "common.models.get_anonymous_user_instance"
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
+}

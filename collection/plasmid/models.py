@@ -4,13 +4,16 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from import_export.fields import Field
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
+from formz.actions import formz_as_html
 from formz.models import GenTechMethod, SequenceFeature, ZkbsPlasmid
 from formz.models import Project as FormZProject
 
@@ -18,8 +21,8 @@ from ..ecolistrain.models import EColiStrain
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
+    DnaMapMixin,
     FormZFieldsMixin,
-    MapFileChecPropertieskMixin,
     OwnershipFieldsMixin,
 )
 
@@ -49,7 +52,7 @@ class Plasmid(
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryFieldMixin,
-    MapFileChecPropertieskMixin,
+    DnaMapMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -58,23 +61,9 @@ class Plasmid(
         verbose_name = "plasmid"
         verbose_name_plural = "plasmids"
 
-    _model_abbreviation = "p"
     _model_upload_to = "collection/plasmid/"
-    _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_formz_ecoli_strains": EColiStrain,
-        "history_documents": PlasmidDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-        + ["map_png", "map_gbk"]
-    )
-    _unified_map_field = True
-    german_name = "Plasmid"
 
+    # Fields
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     other_name = models.CharField("other name", max_length=255, blank=True)
     parent_vector = models.ForeignKey(
@@ -143,6 +132,128 @@ class Plasmid(
         default=list,
     )
 
+    # Static properties
+    _model_abbreviation = "p"
+    _show_in_frontend = True
+    _history_array_fields = {
+        "history_formz_projects": FormZProject,
+        "history_formz_gentech_methods": GenTechMethod,
+        "history_sequence_features": SequenceFeature,
+        "history_formz_ecoli_strains": EColiStrain,
+        "history_documents": PlasmidDoc,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+        + ["map_png", "map_gbk"]
+    )
+    _unified_map_field = True
+    _show_formz = True
+    german_name = "Plasmid"
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _list_display = [
+        "selection",
+        "map_formatted",
+        "created_by",
+        "approval_formatted",
+    ]
+    _autocomplete_fields = [
+        "parent_vector",
+        "formz_projects",
+        "sequence_features",
+        "vector_zkbs",
+        "formz_ecoli_strains",
+        "formz_gentech_methods",
+    ]
+    _export_field_names = [
+        "id",
+        "name",
+        "other_name",
+        "parent_vector",
+        "additional_parent_vector_info",
+        "selection",
+        "us_e",
+        "construction_feature",
+        "received_from",
+        "note",
+        "reference",
+        "map",
+        "created_date_time",
+        "created_by",
+    ]
+    _export_custom_fields = {
+        "fields": {
+            "additional_parent_vector_info": Field(
+                column_name="Extra parent vector info", attribute="old_parent_vector"
+            )
+        },
+        "dehydrate_methods": dict(),
+    }
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _obj_specific_fields = [
+        "name",
+        "other_name",
+        "parent_vector",
+        "selection",
+        "us_e",
+        "construction_feature",
+        "received_from",
+        "note",
+        "reference",
+        "map",
+        "map_png",
+        "map_gbk",
+        "formz_projects",
+        "formz_risk_group",
+        "vector_zkbs",
+        "formz_gentech_methods",
+        "sequence_features",
+        "formz_ecoli_strains",
+        "destroyed_date",
+    ]
+    _set_readonly_fields = [
+        "map_png",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:10] + _obj_specific_fields[11:12]},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": tuple(),
+                "fields": _obj_specific_fields[12:],
+            },
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:12] + _obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": (("collapse",)),
+                "fields": _obj_specific_fields[12:],
+            },
+        ],
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"
 

@@ -9,6 +9,7 @@ from common.models import (
     SaveWithoutHistoricalRecord,
 )
 from formz.models import SequenceFeature
+from common.actions import export_tsv_action, export_xlsx_action
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -48,17 +49,9 @@ class Oligo(
         verbose_name = "oligo"
         verbose_name_plural = "oligos"
 
-    _model_abbreviation = "o"
     _model_upload_to = "collection/oligo/"
-    _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_documents": OligoDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
 
+    # Fields
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     sequence = models.CharField(
         "sequence",
@@ -97,6 +90,87 @@ class Oligo(
 
     approval_user = None
 
+    # Static properties
+    _model_abbreviation = "o"
+    _show_in_frontend = True
+    _is_guarded_model = False
+    _show_formz = False
+    _history_array_fields = {
+        "history_sequence_features": SequenceFeature,
+        "history_documents": OligoDoc,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _list_display = [
+        "sequence_formatted",
+        "restriction_site",
+        "created_by",
+        "approval_formatted",
+    ]
+    _export_field_names = [
+        "id",
+        "name",
+        "sequence",
+        "us_e",
+        "gene",
+        "restriction_site",
+        "description",
+        "comment",
+        "created_date_time",
+        "created_by",
+    ]
+    _actions = [
+        export_xlsx_action,
+        export_tsv_action,
+    ]
+
+    _autocomplete_fields = ["sequence_features"]
+    _clone_ignore_fields = [
+        "info_sheet",
+    ]
+    _obj_specific_fields = [
+        "name",
+        "sequence",
+        "us_e",
+        "gene",
+        "restriction_site",
+        "description",
+        "comment",
+        "info_sheet",
+        "sequence_features",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields},
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields},
+        ],
+        [
+            "Metadata",
+            {"fields": _obj_unmodifiable_fields},
+        ],
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"
 
@@ -108,3 +182,13 @@ class Oligo(
         self.length = len(self.sequence)
 
         super().save(force_insert, force_update, using, update_fields)
+
+    def sequence_formatted(self):
+        if self.sequence:
+            if len(self.sequence) <= 75:
+                return self.sequence
+            else:
+                return self.sequence[0:75] + "..."
+
+    sequence_formatted.short_description = sequence.name
+    sequence_formatted.field_type = sequence.get_internal_type()

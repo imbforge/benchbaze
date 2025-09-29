@@ -247,21 +247,6 @@ def convert_map_gbk_to_dna(gbk_map_path, dna_map_path, attempt_number=3, message
 ################################################
 
 
-class Approval:
-    @admin.display(
-        description="Approved",
-        boolean=True,
-    )
-    def approval(self, instance):
-        """Custom list_view field to show whether record
-        has been approved or not"""
-
-        if instance.last_changed_approval_by_pi is not None:
-            return instance.last_changed_approval_by_pi
-        else:
-            return instance.created_approval_by_pi
-
-
 class BBGuardianUserManage(GuardianUserManage):
     """Add drop-down menu to select user to whom to
     give additonal permissions"""
@@ -352,16 +337,27 @@ class CollectionBaseAdmin(
         CharField: {"widget": TextInput(attrs={"size": "93"})},
     }
     djangoql_completion_enabled_by_default = False
-    obj_specific_fields = ()
-    obj_unmodifiable_fields = ()
-    add_view_fieldsets = None
-    change_view_fieldsets = None
-    show_plasmids_in_model = False
-    is_guarded_model = False
-    set_readonly_fields = []
-    readonly_fields = []
-    show_formz = False
     can_change = False
+
+    def __init__(self, model, admin_site):
+        admin.ModelAdmin.__init__(self, model, admin_site)
+
+        self.list_display_links = getattr(model, "_list_display_links", ["id"])
+        self.search_fields = getattr(model, "_search_fields", ["id", "name"])
+        self.list_display = getattr(model, "_list_display_frozen", []) + getattr(
+            model, "_list_display", []
+        )
+        self.obj_specific_fields = getattr(model, "_obj_specific_fields", [])
+        self.obj_unmodifiable_fields = getattr(model, "_obj_unmodifiable_fields", [])
+        self.add_view_fieldsets = getattr(model, "_add_view_fieldsets", [])
+        self.change_view_fieldsets = getattr(model, "_change_view_fieldsets", [])
+        self.show_plasmids_in_model = getattr(model, "_show_plasmids_in_model", False)
+        self.is_guarded_model = getattr(model, "_is_guarded_model", False)
+        self.set_readonly_fields = getattr(model, "_set_readonly_fields", [])
+        self.show_formz = getattr(model, "_set_readonly_fields", False)
+        self.autocomplete_fields = getattr(model, "_autocomplete_fields", [])
+        self.clone_ignore_fields = getattr(model, "_clone_ignore_fields", [])
+        self.actions = getattr(model, "_actions", [])
 
     def save_history_fields(self, form, obj=None):
         obj = obj if obj else self.model.objects.get(pk=form.instance.id)
@@ -426,23 +422,8 @@ class CollectionSimpleAdmin(CollectionBaseAdmin):
 
         return super().change_view(request, object_id, form_url, extra_context)
 
-    @admin.action(description="Info Sheet")
-    def get_sheet_short_name(self, instance):
-        """Create custom column for information sheet.
-        It formats <a> html element to show always View"""
 
-        if instance.info_sheet:
-            return format_html(
-                '<a class="magnific-popup-iframe-pdflink" href="{}">View</a>',
-                instance.info_sheet.url,
-            )
-        else:
-            return ""
-
-
-class CollectionUserProtectionAdmin(Approval, CollectionBaseAdmin):
-    show_formz = True
-
+class CollectionUserProtectionAdmin(CollectionBaseAdmin):
     def save_model(self, request, obj, form, change):
         if obj.pk is None:
             # Don't rely on autoincrement value in DB table

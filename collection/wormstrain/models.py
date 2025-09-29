@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from import_export.fields import Field
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from formz.actions import formz_as_html
 from formz.models import GenTechMethod, SequenceFeature, Species
 from formz.models import Project as FormZProject
 
@@ -11,9 +14,9 @@ from ..plasmid.models import Plasmid
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
+    DnaMapMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
-    MapFileChecPropertieskMixin,
     OwnershipFieldsMixin,
 )
 
@@ -37,7 +40,7 @@ class WormStrainAlleleDoc(DocFileMixin):
 class WormStrainAllele(
     HistoryDocFieldMixin,
     HistoryFieldMixin,
-    MapFileChecPropertieskMixin,
+    DnaMapMixin,
     OwnershipFieldsMixin,
     models.Model,
 ):
@@ -45,20 +48,9 @@ class WormStrainAllele(
         verbose_name = "allele - Worm"
         verbose_name_plural = "alleles - Worm"
 
-    _model_abbreviation = "wa"
     _model_upload_to = "collection/wormstrainallele/"
-    german_name = "Allel"
-    _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_made_with_plasmids": Plasmid,
-        "history_transgene_plasmids": Plasmid,
-        "history_documents": WormStrainAlleleDoc,
-    }
-    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
-        "map_png",
-        "map_gbk",
-    ]
 
+    # Fields
     lab_identifier = models.CharField(
         "prefix/Lab identifier",
         max_length=15,
@@ -159,6 +151,96 @@ class WormStrainAllele(
         default=list,
     )
 
+    # Static properties
+    _model_abbreviation = "wa"
+    german_name = "Allel"
+    _history_array_fields = {
+        "history_sequence_features": SequenceFeature,
+        "history_made_with_plasmids": Plasmid,
+        "history_transgene_plasmids": Plasmid,
+        "history_documents": WormStrainAlleleDoc,
+    }
+    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
+        "map_png",
+        "map_gbk",
+    ]
+    _search_fields = ["id", "mutation", "transgene"]
+    _list_display_frozen = ["id"]
+    _list_display = [
+        "typ_e",
+        "description",
+        "map_formatted",
+        "created_by",
+    ]
+
+    _autocomplete_fields = [
+        "sequence_features",
+        "made_by_method",
+        "reference_strain",
+        "transgene_plasmids",
+        "made_with_plasmids",
+    ]
+    _export_field_names = [
+        "id",
+        "lab_identifier",
+        "type",
+        "transgene",
+        "transgene_position",
+        "transgene_plasmids",
+        "mutation",
+        "mutation_type",
+        "mutation_position",
+        "reference_strain",
+        "made_by_method",
+        "made_by_person",
+        "made_with_plasmids",
+        "notes",
+        "created_date_time",
+        "created_by",
+    ]
+    _export_custom_fields = {
+        "fields": {
+            "made_by_method": Field(column_name="Made by method"),
+            "type": Field(column_name="Type"),
+        },
+        "dehydrate_methods": {
+            "made_by_method": lambda obj: obj.made_by_method.english_name,
+            "type": lambda obj: obj.get_typ_e_display(),
+        },
+    }
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+
+    _show_formz = False
+    _show_plasmids_in_model = True
+    _obj_specific_fields = [
+        "lab_identifier",
+        "typ_e",
+        "transgene",
+        "transgene_position",
+        "transgene_plasmids",
+        "mutation",
+        "mutation_type",
+        "mutation_position",
+        "reference_strain",
+        "made_by_method",
+        "made_by_person",
+        "made_with_plasmids",
+        "notes",
+        "map",
+        "map_png",
+        "map_gbk",
+        "sequence_features",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "last_changed_date_time",
+        "created_by",
+    ]
+    _set_readonly_fields = [
+        "map_png",
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.lab_identifier}{self.id} - {self.name}"
 
@@ -220,23 +302,7 @@ class WormStrain(
         verbose_name = "strain - Worm"
         verbose_name_plural = "strains - Worm"
 
-    _model_abbreviation = "w"
-    _history_array_fields = {
-        "history_integrated_dna_plasmids": Plasmid,
-        "history_integrated_dna_oligos": Oligo,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_genotyping_oligos": Oligo,
-        "history_documents": WormStrainDoc,
-        "history_alleles": WormStrainAllele,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _m2m_save_ignore_fields = ["history_genotyping_oligos"]
-
+    # Fields
     name = models.CharField("name", max_length=255, blank=False)
     chromosomal_genotype = models.TextField("chromosomal genotype", blank=True)
     parent_1 = models.ForeignKey(
@@ -336,8 +402,178 @@ class WormStrain(
         default=list,
     )
 
+    # Static properties
+    _model_abbreviation = "w"
+    _show_in_frontend = True
+    _history_array_fields = {
+        "history_integrated_dna_plasmids": Plasmid,
+        "history_integrated_dna_oligos": Oligo,
+        "history_formz_projects": FormZProject,
+        "history_formz_gentech_methods": GenTechMethod,
+        "history_sequence_features": SequenceFeature,
+        "history_genotyping_oligos": Oligo,
+        "history_documents": WormStrainDoc,
+        "history_alleles": WormStrainAllele,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _m2m_save_ignore_fields = ["history_genotyping_oligos"]
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _export_field_names = [
+        "id",
+        "name",
+        "chromosomal_genotype",
+        "parent_1",
+        "parent_2",
+        "construction",
+        "outcrossed",
+        "growth_conditions",
+        "organism",
+        "integrated_dna_plasmids",
+        "integrated_dna_oligos",
+        "selection",
+        "phenotype",
+        "received_from",
+        "us_e",
+        "note",
+        "reference",
+        "at_cgc",
+        "location_freezer1",
+        "location_freezer2",
+        "location_backup",
+        "primers_for_genotyping",
+        "created_date_time",
+        "created_by",
+    ]
+    _export_custom_fields = {
+        "fields": {
+            "primers_for_genotyping": Field(column_name="Primers for genotyping"),
+        },
+        "dehydrate_methods": {
+            "primers_for_genotyping": lambda obj: ",".join(
+                [str(i) for i in obj.history_genotyping_oligos]
+            ),
+        },
+    }
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _list_display_frozen = _search_fields
+    _list_display = [
+        "chromosomal_genotype",
+        "stocked_formatted",
+        "created_by",
+        "approval_formatted",
+    ]
+    _show_formz = True
+    _show_plasmids_in_model = True
+    _autocomplete_fields = [
+        "parent_1",
+        "parent_2",
+        "formz_projects",
+        "formz_gentech_methods",
+        "sequence_features",
+        "alleles",
+        "integrated_dna_plasmids",
+        "integrated_dna_oligos",
+    ]
+    _obj_specific_fields = [
+        "name",
+        "chromosomal_genotype",
+        "parent_1",
+        "parent_2",
+        "construction",
+        "outcrossed",
+        "growth_conditions",
+        "organism",
+        "selection",
+        "phenotype",
+        "received_from",
+        "us_e",
+        "note",
+        "reference",
+        "at_cgc",
+        "alleles",
+        "integrated_dna_plasmids",
+        "integrated_dna_oligos",
+        "location_freezer1",
+        "location_freezer2",
+        "location_backup",
+        "formz_projects",
+        "formz_risk_group",
+        "formz_gentech_methods",
+        "sequence_features",
+        "destroyed_date",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:15]},
+        ],
+        [
+            "Integrated DNA",
+            {
+                "fields": _obj_specific_fields[15:18],
+            },
+        ],
+        [
+            "Location",
+            {"fields": _obj_specific_fields[18:21]},
+        ],
+        [
+            "FormZ",
+            {"fields": _obj_specific_fields[21:]},
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:15] + _obj_unmodifiable_fields},
+        ],
+        [
+            "Integrated DNA",
+            {
+                "fields": _obj_specific_fields[15:18],
+            },
+        ],
+        [
+            "Location",
+            {"fields": _obj_specific_fields[18:21]},
+        ],
+        [
+            "FormZ",
+            {"classes": (("collapse",)), "fields": _obj_specific_fields[21:]},
+        ],
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"
+
+    def stocked_formatted(self):
+        if any(
+            len(s.strip()) > 0
+            for s in [
+                self.location_freezer1,
+                self.location_freezer2,
+                self.location_backup,
+            ]
+        ):
+            return True
+        return False
+
+    stocked_formatted.use_api = True
+    stocked_formatted.field_type = models.BooleanField
 
     @property
     def all_sequence_features(self):

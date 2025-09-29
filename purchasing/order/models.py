@@ -52,6 +52,7 @@ class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
         "history_signal_words": SignalWord,
         "history_hazard_statements": HazardStatement,
     }
+    _show_in_frontend = True
 
     supplier = models.CharField(
         "supplier", max_length=255, blank=False, validators=[validate_absence_airquotes]

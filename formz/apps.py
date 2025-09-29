@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class FormzConfig(AppConfig):
-    name = 'formz'
+    name = "formz"
+    verbose_name = "GMO Compliance"

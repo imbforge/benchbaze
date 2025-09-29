@@ -6,7 +6,6 @@ from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
 )
-from formz.actions import formz_as_html
 
 from ..sacerevisiaestrain.models import (
     SaCerevisiaeStrainDoc,
@@ -17,7 +16,6 @@ from ..shared.admin import (
     CustomGuardedModelAdmin,
     SortAutocompleteResultsId,
 )
-from .actions import export_sacerevisiaestrain
 from .forms import SaCerevisiaeStrainAdminForm
 from .search import SaCerevisiaeStrainQLSchema
 
@@ -86,83 +84,13 @@ class SaCerevisiaeStrainAdmin(
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
-    list_display = ("id", "name", "mating_type", "background", "created_by", "approval")
-    list_display_links = ("id",)
     djangoql_schema = SaCerevisiaeStrainQLSchema
-    actions = [export_sacerevisiaestrain, formz_as_html]
-    form = SaCerevisiaeStrainAdminForm
-    search_fields = ["id", "name"]
-    show_plasmids_in_model = True
-    autocomplete_fields = [
-        "parent_1",
-        "parent_2",
-        "integrated_plasmids",
-        "cassette_plasmids",
-        "formz_projects",
-        "formz_gentech_methods",
-        "sequence_features",
-    ]
     inlines = [
         SaCerevisiaeStrainEpisomalPlasmidInline,
         SaCerevisiaeStrainDocInline,
         SaCerevisiaeStrainAddDocInline,
     ]
-    obj_specific_fields = [
-        "name",
-        "relevant_genotype",
-        "mating_type",
-        "chromosomal_genotype",
-        "parent_1",
-        "parent_2",
-        "parental_strain",
-        "construction",
-        "modification",
-        "integrated_plasmids",
-        "cassette_plasmids",
-        "plasmids",
-        "selection",
-        "phenotype",
-        "background",
-        "received_from",
-        "us_e",
-        "note",
-        "reference",
-        "formz_projects",
-        "formz_risk_group",
-        "formz_gentech_methods",
-        "sequence_features",
-        "destroyed_date",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:19]},
-        ],
-        [
-            "FormZ",
-            {
-                "classes": tuple(),
-                "fields": obj_specific_fields[19:],
-            },
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:19] + obj_unmodifiable_fields},
-        ],
-        [
-            "FormZ",
-            {"classes": (("collapse",)), "fields": obj_specific_fields[19:]},
-        ],
-    ]
+    form = SaCerevisiaeStrainAdminForm
 
     def save_related(self, request, form, formsets, change):
         obj, history_obj = super().save_related(

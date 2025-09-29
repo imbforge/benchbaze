@@ -6,13 +6,11 @@ from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
 )
-from formz.actions import formz_as_html
 
 from ..shared.admin import (
     CollectionUserProtectionAdmin,
     SortAutocompleteResultsId,
 )
-from .actions import export_scpombestrain
 from .forms import ScPombeStrainAdminForm
 from .models import (
     ScPombeStrainDoc,
@@ -81,78 +79,12 @@ class ScPombeStrainAdmin(
     SortAutocompleteResultsId,
     CollectionUserProtectionAdmin,
 ):
-    list_display = (
-        "id",
-        "name",
-        "auxotrophic_marker",
-        "mating_type",
-        "approval",
-    )
-    list_display_links = ("id",)
     djangoql_schema = ScPombeStrainQLSchema
-    actions = [export_scpombestrain, formz_as_html]
     form = ScPombeStrainAdminForm
-    search_fields = ["id", "name"]
-    show_plasmids_in_model = True
-    autocomplete_fields = [
-        "parent_1",
-        "parent_2",
-        "integrated_plasmids",
-        "cassette_plasmids",
-        "formz_projects",
-        "formz_gentech_methods",
-        "sequence_features",
-    ]
     inlines = [
         ScPombeStrainEpisomalPlasmidInline,
         ScPombeStrainDocInline,
         ScPombeStrainAddDocInline,
-    ]
-    obj_specific_fields = [
-        "box_number",
-        "parent_1",
-        "parent_2",
-        "parental_strain",
-        "mating_type",
-        "auxotrophic_marker",
-        "name",
-        "integrated_plasmids",
-        "cassette_plasmids",
-        "phenotype",
-        "received_from",
-        "comment",
-        "formz_projects",
-        "formz_risk_group",
-        "formz_gentech_methods",
-        "sequence_features",
-        "destroyed_date",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:12]},
-        ],
-        [
-            "FormZ",
-            {"fields": obj_specific_fields[12:]},
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:12] + obj_unmodifiable_fields},
-        ],
-        [
-            "FormZ",
-            {"classes": (("collapse",)), "fields": obj_specific_fields[12:]},
-        ],
     ]
 
     def save_related(self, request, form, formsets, change):

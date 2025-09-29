@@ -5,8 +5,9 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 
+# !!! Only temporary for back compatibility with orders
 def export_objects(request, queryset, export_data):
-    file_format = request.POST.get("format", default="none")
+    file_format = request.POST.get("format", default="xlsx")
     now = timezone.localtime(timezone.now())
     file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
 
@@ -32,5 +33,39 @@ def export_objects(request, queryset, export_data):
                 for i in sheet.row_values(rownum)
             ]
             wr.writerow(row_values)
+
+    return response
+
+
+def export_objects_xlsx(queryset, export_data):
+    now = timezone.localtime(timezone.now())
+    file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{file_name}.xlsx'
+    response.write(export_data.xlsx)
+
+    return response
+
+
+def export_objects_tsv(queryset, export_data):
+    now = timezone.localtime(timezone.now())
+    file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
+
+    response = HttpResponse(content_type="text/tab-separated-values")
+    response["Content-Disposition"] = f'attachment; filename="{file_name}.tsv'
+    response.write(export_data.tsv)
+    # xlsx_file = xlrd.open_workbook(file_contents=export_data.xlsx)
+    # sheet = xlsx_file.sheet_by_index(0)
+    # wr = csv.writer(response, delimiter="\t")
+    # # Get rid of return chars
+    # for rownum in range(sheet.nrows):
+    #     row_values = [
+    #         str(i).replace("\n", "").replace("\r", "").replace("\t", "")
+    #         for i in sheet.row_values(rownum)
+    #     ]
+    #     wr.writerow(row_values)
 
     return response

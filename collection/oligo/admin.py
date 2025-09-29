@@ -10,7 +10,6 @@ from ..shared.admin import (
     CollectionUserProtectionAdmin,
     rename_info_sheet_save_obj_update_history,
 )
-from .actions import export_oligo
 from .forms import OligoAdminForm
 from .models import Oligo, OligoDoc
 from .search import OligoDjangoQLSearchMixin, OligoQLSchema
@@ -32,55 +31,9 @@ class OligoAdmin(
     OligoDjangoQLSearchMixin,
     CollectionUserProtectionAdmin,
 ):
-    list_display = (
-        "id",
-        "name",
-        "get_oligo_short_sequence",
-        "restriction_site",
-        "created_by",
-        "approval",
-    )
-    list_display_links = ("id",)
     djangoql_schema = OligoQLSchema
-    actions = [export_oligo]
-    search_fields = ["id", "name"]
-    autocomplete_fields = ["sequence_features"]
     form = OligoAdminForm
     inlines = [OligoDocInline, OligoAddDocInline]
-    show_formz = False
-    clone_ignore_fields = [
-        "info_sheet",
-    ]
-    obj_specific_fields = [
-        "name",
-        "sequence",
-        "us_e",
-        "gene",
-        "restriction_site",
-        "description",
-        "comment",
-        "info_sheet",
-        "sequence_features",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields},
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields + obj_unmodifiable_fields},
-        ],
-    ]
 
     def save_model(self, request, obj, form, change):
         rename_doc = False
@@ -165,11 +118,3 @@ class OligoAdmin(
         # Rename info_sheet
         if rename_doc:
             rename_info_sheet_save_obj_update_history(obj, new_obj)
-
-    @admin.display(description="Sequence")
-    def get_oligo_short_sequence(self, instance):
-        if instance.sequence:
-            if len(instance.sequence) <= 75:
-                return instance.sequence
-            else:
-                return instance.sequence[0:75] + "..."

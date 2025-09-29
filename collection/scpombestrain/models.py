@@ -4,8 +4,11 @@ from datetime import timedelta
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.forms import ValidationError
+from import_export.fields import Field
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from formz.actions import formz_as_html
 from formz.models import GenTechMethod, SequenceFeature
 from formz.models import Project as FormZProject
 
@@ -47,23 +50,7 @@ class ScPombeStrain(
         verbose_name = "strain - Sc. pombe"
         verbose_name_plural = "strains - Sc. pombe"
 
-    _model_abbreviation = "sp"
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_cassette_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_all_plasmids_in_stocked_strain": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": ScPombeStrainDoc,
-    }
-    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
-
+    # Fields
     box_number = models.SmallIntegerField("box number", blank=False)
     parent_1 = models.ForeignKey(
         "self",
@@ -116,6 +103,138 @@ class ScPombeStrain(
         default=list,
     )
 
+    # Static properties
+    _model_abbreviation = "sp"
+    _show_in_frontend = "strains - <em>Sc. pombe</em>"
+    _frontend_verbose_name = "strain - <em>Sc. pombe</em>"
+    _frontend_verbose_plural = _show_in_frontend
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _history_array_fields = {
+        "history_integrated_plasmids": Plasmid,
+        "history_cassette_plasmids": Plasmid,
+        "history_episomal_plasmids": Plasmid,
+        "history_all_plasmids_in_stocked_strain": Plasmid,
+        "history_formz_projects": FormZProject,
+        "history_formz_gentech_methods": GenTechMethod,
+        "history_sequence_features": SequenceFeature,
+        "history_documents": ScPombeStrainDoc,
+    }
+    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _list_display = [
+        "auxotrophic_marker",
+        "mating_type",
+        "approval_formatted",
+    ]
+    _show_formz = True
+    _show_plasmids_in_model = True
+    _autocomplete_fields = [
+        "parent_1",
+        "parent_2",
+        "integrated_plasmids",
+        "cassette_plasmids",
+        "formz_projects",
+        "formz_gentech_methods",
+        "sequence_features",
+    ]
+    _export_field_names = [
+        "id",
+        "box_number",
+        "parent_1",
+        "parent_2",
+        "additional_parental_strain_info",
+        "mating_type",
+        "auxotrophic_marker",
+        "name",
+        "phenotype",
+        "integrated_plasmids",
+        "cassette_plasmids",
+        "episomal_plasmids_in_stock",
+        "received_from",
+        "comment",
+        "created_date_time",
+        "created_by",
+    ]
+    _export_custom_fields = {
+        "fields": {
+            "episomal_plasmids_in_stock": Field(
+                column_name="Episomal plasmids in stock"
+            ),
+            "additional_parental_strain_info": Field(
+                attribute="parental_strain",
+                column_name="Extra parental strain info",
+            ),
+        },
+        "dehydrate_methods": {
+            "episomal_plasmids_in_stock": lambda obj: (
+                ",".join(
+                    [
+                        str(i)
+                        for i in obj.episomal_plasmids.filter(
+                            scpombestrainepisomalplasmid__present_in_stocked_strain=True
+                        ).values_list("id", flat=True)
+                    ]
+                )
+            )
+        },
+    }
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+
+    _obj_specific_fields = [
+        "box_number",
+        "parent_1",
+        "parent_2",
+        "parental_strain",
+        "mating_type",
+        "auxotrophic_marker",
+        "name",
+        "integrated_plasmids",
+        "cassette_plasmids",
+        "phenotype",
+        "received_from",
+        "comment",
+        "formz_projects",
+        "formz_risk_group",
+        "formz_gentech_methods",
+        "sequence_features",
+        "destroyed_date",
+    ]
+    _obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:12]},
+        ],
+        [
+            "FormZ",
+            {"fields": _obj_specific_fields[12:]},
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:12] + _obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {"classes": (("collapse",)), "fields": _obj_specific_fields[12:]},
+        ],
+    ]
+
+    # Methods
     def __str__(self):
         return f"{self.id} - {self.genotype}"
 

@@ -310,6 +310,8 @@ class SequenceFeature(models.Model):
             "name",
         ]
 
+    _show_in_frontend = True
+
     name = models.CharField(
         "name",
         max_length=255,

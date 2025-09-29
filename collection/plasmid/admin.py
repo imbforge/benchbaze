@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 
 from common.admin import (
     AddDocFileInlineMixin,
@@ -22,7 +21,6 @@ from ..shared.admin import (
     create_map_preview,
     get_map_features,
 )
-from .actions import export_plasmid
 from .forms import PlasmidAdminForm
 from .models import PlasmidDoc
 from .search import PlasmidQLSchema
@@ -50,88 +48,11 @@ class PlasmidAdmin(
     CollectionUserProtectionAdmin,
     AdminOligosInMap,
 ):
-    list_display = (
-        "id",
-        "name",
-        "selection",
-        "get_map_short_name",
-        "created_by",
-        "approval",
-    )
-    list_display_links = ("id",)
     djangoql_schema = PlasmidQLSchema
-    actions = [export_plasmid, formz_as_html]
-    search_fields = ["id", "name"]
-    autocomplete_fields = [
-        "parent_vector",
-        "formz_projects",
-        "sequence_features",
-        "vector_zkbs",
-        "formz_ecoli_strains",
-        "formz_gentech_methods",
-    ]
     inlines = [PlasmidDocInline, PlasmidAddDocInline]
     form = PlasmidAdminForm
     change_form_template = "admin/collection/plasmid/change_form.html"
     add_form_template = "admin/collection/plasmid/change_form.html"
-    clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    obj_specific_fields = [
-        "name",
-        "other_name",
-        "parent_vector",
-        "selection",
-        "us_e",
-        "construction_feature",
-        "received_from",
-        "note",
-        "reference",
-        "map",
-        "map_png",
-        "map_gbk",
-        "formz_projects",
-        "formz_risk_group",
-        "vector_zkbs",
-        "formz_gentech_methods",
-        "sequence_features",
-        "formz_ecoli_strains",
-        "destroyed_date",
-    ]
-    set_readonly_fields = [
-        "map_png",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:10] + obj_specific_fields[11:12]},
-        ],
-        [
-            "FormZ",
-            {
-                "classes": tuple(),
-                "fields": obj_specific_fields[12:],
-            },
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:12] + obj_unmodifiable_fields},
-        ],
-        [
-            "FormZ",
-            {
-                "classes": (("collapse",)),
-                "fields": obj_specific_fields[12:],
-            },
-        ],
-    ]
 
     def save_model(self, request, obj, form, change):
         rename_and_preview = False
@@ -434,16 +355,3 @@ class PlasmidAdmin(
         if not obj and "formz_ecoli_strains" in form.base_fields:
             form.base_fields["formz_ecoli_strains"].initial = DEFAULT_ECOLI_STRAIN_IDS
         return form
-
-    @admin.display(description="Map")
-    def get_map_short_name(self, instance):
-        if instance.map:
-            ove_dna_preview = instance.map_ove_url
-            ove_gbk_preview = instance.map_ove_url_gbk
-            return mark_safe(
-                f'<a class="magnific-popup-img-map" href="{instance.map_png.url}">png</a> | '
-                f'<a href="{instance.map.url}">dna</a> <a class="magnific-popup-iframe-map-dna" href="{ove_dna_preview}">⊙</a> | '
-                f'<a href="{instance.map_gbk.url}">gbk</a> <a class="magnific-popup-iframe-map-gbk" href="{ove_gbk_preview}">⊙</a>'
-            )
-        else:
-            return ""

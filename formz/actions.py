@@ -12,7 +12,7 @@ from formz.models import Header
 User = get_user_model()
 
 
-@admin.action(description="Export Formblatt Z for selected items")
+@admin.action(description="Create Formblatt Z for selected")
 def formz_as_html(modeladmin, request, queryset):
     """Export ForblattZ as html"""
 

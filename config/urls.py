@@ -5,6 +5,7 @@ from django.contrib.auth import views as auth_views
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse_lazy
 from django.urls.conf import include
+from .api import router
 
 from common.admin_site import admin_site
 
@@ -37,6 +38,7 @@ urlpatterns = [
             )
         ),
     ),
+    path("api/", include(router.urls)),
     path("", admin_site.urls),
 ]
 

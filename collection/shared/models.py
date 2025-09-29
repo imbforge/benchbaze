@@ -8,6 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.forms import ValidationError
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from approval.models import Approval
 from formz.models import GenTechMethod, SequenceFeature, StorageLocation
@@ -26,14 +28,7 @@ class ApprovalFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
-    _history_view_ignore_fields = [
-        "created_approval_by_pi",
-        "last_changed_approval_by_pi",
-        "approval_by_pi_date_time",
-        "approval",
-        "approval_user",
-    ]
-
+    # Fields
     created_approval_by_pi = models.BooleanField(
         "record creation approval", default=False
     )
@@ -49,6 +44,27 @@ class ApprovalFieldsMixin(models.Model):
         null=True,
     )
 
+    # Static properties
+    _history_view_ignore_fields = [
+        "created_approval_by_pi",
+        "last_changed_approval_by_pi",
+        "approval_by_pi_date_time",
+        "approval_formatted",
+        "approval_user",
+    ]
+
+    def approval_formatted(self):
+        """Shows whether record has been approved or not"""
+
+        if self.last_changed_approval_by_pi is not None:
+            return self.last_changed_approval_by_pi
+        else:
+            return self.created_approval_by_pi
+
+    approval_formatted.short_description = "Approval"
+    approval_formatted.boolean = True
+    approval_formatted.field_type = "BooleanField"
+
 
 class OwnershipFieldsMixin(models.Model):
     """Common ownership fields"""
@@ -56,16 +72,35 @@ class OwnershipFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
-    _history_view_ignore_fields = [
-        "created_date_time",
-        "last_changed_date_time",
-    ]
-
+    # Fields
     created_date_time = models.DateTimeField("created", auto_now_add=True)
     last_changed_date_time = models.DateTimeField("last changed", auto_now=True)
     created_by = models.ForeignKey(
         User, related_name="%(class)s_createdby_user", on_delete=models.PROTECT
     )
+
+    # Static properties
+    _history_view_ignore_fields = [
+        "created_date_time",
+        "last_changed_date_time",
+    ]
+
+    def readonly_fields(self, request):
+        can_change = False
+
+        if request.user == self.created_by or request.user.is_elevated_user:
+            can_change = True
+
+        elif getattr(self, "_is_guarded_model", False) and request.user.has_perm(
+            f"{self._meta.app_label}.change_{self._meta.model_name}", self
+        ):
+            can_change = True
+
+        readonly_fields = self._obj_specific_fields + self._obj_unmodifiable_fields
+        if can_change:
+            readonly_fields = self._obj_unmodifiable_fields
+
+        return readonly_fields
 
 
 class HistoryDocFieldMixin(models.Model):
@@ -74,6 +109,7 @@ class HistoryDocFieldMixin(models.Model):
     class Meta:
         abstract = True
 
+    # Fields
     history_documents = ArrayField(
         models.PositiveIntegerField(),
         verbose_name="documents",
@@ -90,6 +126,7 @@ class HistoryPlasmidsFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
+    # Fields
     history_integrated_plasmids = ArrayField(
         models.PositiveIntegerField(),
         verbose_name="integrated plasmid",
@@ -126,6 +163,7 @@ class FormZFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
+    # Fields
     formz_projects = models.ManyToManyField(
         FormZProject,
         verbose_name="projects",
@@ -175,6 +213,9 @@ class FormZFieldsMixin(models.Model):
         default=list,
     )
 
+    # Static properties
+    _show_formz = True
+
     @property
     def formz_species(self):
         species = None
@@ -212,9 +253,28 @@ class FormZFieldsMixin(models.Model):
     def formz_genotype(self):
         return getattr(self, "genotype", None)
 
+    @property
+    def show_formz(self):
+        return self._show_formz
+
 
 class InfoSheetMaxSizeMixin:
     """Clean method for models that have an info sheet"""
+
+    def info_sheet_formatted(self):
+        """Format sheet as <a> html element"""
+
+        if self.info_sheet:
+            return format_html(
+                '<a class="magnific-popup-iframe-pdflink" href="{}">View</a>',
+                self.info_sheet.url,
+            )
+        else:
+            return ""
+
+    info_sheet_formatted.short_description = "Approval"
+    info_sheet_formatted.field_type = "FileField"
+    info_sheet_formatted.short_description = "Info Sheet"
 
     def clean(self):
         errors = {}
@@ -241,7 +301,7 @@ class InfoSheetMaxSizeMixin:
             raise ValidationError(errors)
 
 
-class MapFileChecPropertieskMixin:
+class DnaMapMixin:
     """Clean method and common properties for models that have a map sheet"""
 
     def clean(self):
@@ -351,6 +411,21 @@ class MapFileChecPropertieskMixin:
         }
 
         return f"{OVE_URL}?{urlencode(params)}"
+
+    def map_formatted(self):
+        if self.map:
+            ove_dna_preview = self.map_ove_url
+            ove_gbk_preview = self.map_ove_url_gbk
+            return mark_safe(
+                f'<a class="magnific-popup-img-map" href="{self.map_png.url}">png</a> | '
+                + f'<a href="{self.map.url}">dna</a> <a class="magnific-popup-iframe-map-dna" href="{ove_dna_preview}">⊙</a> | '
+                + f'<a href="{self.map_gbk.url}">gbk</a> <a class="magnific-popup-iframe-map-gbk" href="{ove_gbk_preview}">⊙</a>'
+            )
+        else:
+            return ""
+
+    map_formatted.short_description = "Map"
+    map_formatted.field_type = "FileField"
 
 
 class CommonCollectionModelPropertiesMixin:
