@@ -44,12 +44,15 @@
         border-radius: 50%;
         width: 2.5rem;
         height: 2.5rem;
-        color: var(--text-color);
-        transition: background-color var(--element-transition-duration);
+        border-width: 0 !important;
+        color: var(--text-color) !important;
+        background-color: transparent !important;
+        transition: background-color var(--element-transition-duration) !important;
         cursor: pointer;
 
         &:hover {
-            background-color: var(--surface-hover);
+            background-color: var(--surface-hover) !important;
+            color: var(--primary-color) !important;
         }
 
         &:focus-visible {
@@ -71,9 +74,7 @@
         }
     }
 
-    .layout-topbar-coloured-title {
-        color:var(--primary-color)
-    }
+
 
     .layout-menu-button {
         margin-right: 0.5rem;
@@ -171,7 +172,7 @@
     }
 
     .config-panel-colors {
-        > div {
+        >div {
             padding-top: 0.5rem;
             display: flex;
             gap: 0.5rem;

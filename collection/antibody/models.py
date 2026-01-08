@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
-from common.actions import export_xlsx_action, export_tsv_action
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -74,6 +74,8 @@ class Antibody(
     _history_array_fields = {
         "history_documents": AntibodyDoc,
     }
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

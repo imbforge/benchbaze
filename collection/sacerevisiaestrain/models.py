@@ -137,8 +137,8 @@ class SaCerevisiaeStrain(
 
     # Static properties
     _model_abbreviation = "sc"
-    _show_in_frontend = "strains - <em>Sa. cerevisiae</em>"
-    _frontend_verbose_name = "strain - <em>Sa. cerevisiae</em>"
+    _show_in_frontend = "Strains - <em>Sa. cerevisiae</em>"
+    _frontend_verbose_name = "Strain - <em>Sa. cerevisiae</em>"
     _frontend_verbose_plural = _show_in_frontend
     _history_array_fields = {
         "history_integrated_plasmids": Plasmid,
@@ -155,6 +155,8 @@ class SaCerevisiaeStrain(
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

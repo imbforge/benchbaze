@@ -1,9 +1,11 @@
 <script setup>
 import Breadcrumbs from "@/components/Breadcrumbs.vue";
 import HistoryDialog from "@/components/HistoryDialog.vue";
-import PdfDialog from "@/components/IFrameDialog.vue";
 import getCreateModelStore from "@/stores/modelStore.js";
+
+import { getStore } from "@/stores/index.js";
 import { Form } from "@primevue/forms";
+
 import { useToast } from "primevue/usetoast";
 import { onMounted, ref, useTemplateRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -19,46 +21,61 @@ let store = ref({ currentPage: 0, pageCount: 0 });
 const changeFormName = `change-form-${modelName.value}`;
 const changeForm = useTemplateRef(changeFormName);
 const initialData = ref({});
-const prefixBreadcrumb = ref({ modelName: null, id: null, name: null });
+const mainBreadcrumbsItems = ref([]);
 const isFormDisabled = ref(true);
 const editDisabled = ref(true);
 const showInfoSheetDialog = ref(false);
 const showHistoryDialog = ref(false);
 const history = ref();
 const historyLoading = ref(false);
+const historyBreadcrumbsItems = ref([]);
 const modelIconName = ref();
-const changeViewFields = ref([[null, { fields: [] }]]);
+const changeViewFieldSets = ref([
+  { name: null, fields: [{ name: null, type: null, verbose_name: null }] }
+]);
 const readonlyFields = ref([]);
 const hiddenFields = ref([]);
 
 const toast = useToast();
 
 const loadItem = async () => {
-  store = getCreateModelStore(appLabel.value, modelName.value);
+  store.value = getCreateModelStore(appLabel.value, modelName.value);
   try {
+    // Load fields and item
     let promises = [];
-    if (store.model.changeview_fields.length === 0) {
-      promises.push(store.getChangeViewFields());
+    if (store.value.model.changeview_fields.length === 0) {
+      promises.push(store.value.getChangeViewFields());
     }
-    if (store.lastFetchedItem.id != route.params.id) {
-      promises.push(store.getItem(route.params.id));
+    if (store.value.lastFetchedItem.id != route.params.id) {
+      promises.push(store.value.getItem(route.params.id));
     }
     await Promise.all(promises);
-    changeViewFields.value = store.model.changeview_fields;
-    readonlyFields.value = store.model.readonly_fields;
-    modelIconName.value = store.iconName;
-    prefixBreadcrumb.value = {
-      modelName: modelName,
-      id: store.lastFetchedItem.id,
-      name: store.lastFetchedItem.name
-    };
-    editDisabled.value = changeViewFields.value
-      .map((fieldset) => fieldset[1])
+    changeViewFieldSets.value = store.value.model.changeview_fields;
+    readonlyFields.value = store.value.model.readonly_fields;
+    modelIconName.value = store.value.iconName;
+
+    //Breadcrumbs
+    mainBreadcrumbsItems.value = [
+      { icon: "pi pi-home" },
+      { label: store.value.model.app_verbose_name },
+      {
+        icon: modelIconName.value,
+        label: store.value.model.model_verbose_plural
+      },
+      {
+        label: `${store.value.lastFetchedItem.id} - ${store.value.lastFetchedItem.name}`
+      }
+    ];
+
+    // Edit button
+    editDisabled.value = changeViewFieldSets.value
+      .map((fieldset) => fieldset.fields)
       .map((field) => field.name)
       .every((fieldName) => readonlyFields.value.includes(fieldName));
   } catch (error) {
+    console.error(error);
     toast.add({
-      severity: "contrast",
+      severity: "error",
       summary: "Error",
       detail: error,
       life: 3000
@@ -66,23 +83,16 @@ const loadItem = async () => {
   }
 };
 
-onMounted(async () => {
-  await loadItem();
-  // Initial values must be set using setValues and not via initialValues,
-  // https://github.com/primefaces/primevue/issues/6801
-  changeForm.value.setValues(store.lastFetchedItem);
-  hiddenFields.value = Object.keys(store.lastFetchedItem).filter(
-    (key) => !store.lastFetchedItem[key]
-  );
-  console.log(hiddenFields.value);
-});
-
 const setHistory = async () => {
   try {
-    history.value = await store.getItemHistoryGrouped();
+    history.value = await store.value.getItemHistoryGrouped();
+    historyBreadcrumbsItems.value = mainBreadcrumbsItems.value.map((b) => {
+      return { ...b };
+    });
+    historyBreadcrumbsItems.value.push({ label: "History" });
   } catch (error) {
     toast.add({
-      severity: "contrast",
+      severity: "error",
       summary: "Error",
       detail: error,
       life: 3000
@@ -108,37 +118,36 @@ const toggleHistoryDialog = () => {
 
 const onFormSubmit = (event) => {
   const payload = event.values;
+  console.log(payload);
   const saveItem = async () => {
     try {
-      await store.saveItem(payload);
+      await store.value.saveItem(payload);
       toast.add({
         severity: "success",
         summary: "Success",
-        detail: `The ${store.model.model_verbose_name} was saved`,
+        detail: `The ${store.value.model.model_verbose_name} was saved`,
         life: 3000
       });
     } catch (error) {
       toast.add({
-        severity: "contrast",
+        severity: "error",
         summary: "Error",
         detail: error,
         life: 3000
       });
     }
   };
-  saveItem();
+  // saveItem();
 };
 
 const onClickSave = () => {
   changeForm.value.submit();
 };
 
-async function onUpload() {
-  console.log(hello);
-}
+async function onUpload() {}
 
-const toLocaleDateTimeString = async (fieldName) => {
-  let value = await store.lastFetchedItem[fieldName];
+const toLocaleDateTimeString = (fieldName) => {
+  let value = store.value.lastFetchedItem[fieldName];
   let dateTime = value ? new Date(value) : value;
   changeForm.value.setFieldValue(
     fieldName,
@@ -149,9 +158,41 @@ const toLocaleDateTimeString = async (fieldName) => {
 };
 
 const hideField = async (fieldName) => {
-  let value = await store.lastFetchedItem[fieldName];
+  let value = await store.value.lastFetchedItem[fieldName];
   return value ? true : false;
 };
+
+const goUpNavigation = () => {
+  var upperPath = route.path.split("/");
+  if (upperPath.length > 2) {
+    upperPath.splice(upperPath.length - 1);
+    router.push(upperPath.join("/"));
+  } else {
+    router.push("/");
+  }
+};
+
+const getRelatedModelOptions = (field) => {
+  const relatedStore = ref(
+    getStore(field.related_model.app_label, field.related_model.model_name)
+  );
+  const fieldValue = store.value.lastFetchedItem[field.name];
+  relatedStore.value.getItems([fieldValue]);
+  const obj = relatedStore.value.findItemById(fieldValue);
+  if (obj) {
+    return [{ id: obj.id, name: obj.representation }];
+  }
+};
+
+onMounted(async () => {
+  await loadItem();
+  // Initial values must be set using setValues and not via initialValues,
+  // https://github.com/primefaces/primevue/issues/6801
+  changeForm.value.setValues(store.value.lastFetchedItem);
+  hiddenFields.value = Object.keys(store.value.lastFetchedItem).filter(
+    (key) => !store.value.lastFetchedItem[key]
+  );
+});
 </script>
 
 <template>
@@ -159,12 +200,7 @@ const hideField = async (fieldName) => {
     <div class="col-span-11" style="height: calc(100vh - 8rem)">
       <Card>
         <template #title>
-          <div class="flex flex-wrap items-center gap-2">
-            <IconBase>
-              <component :is="modelIconName" />
-            </IconBase>
-            <Breadcrumbs :prefix="prefixBreadcrumb" />
-          </div>
+          <Breadcrumbs :items="mainBreadcrumbsItems" />
         </template>
 
         <template #content>
@@ -174,90 +210,18 @@ const hideField = async (fieldName) => {
             @submit="onFormSubmit"
             class="flex flex-col gap-4 md:w-3/4 sm:w-full"
           >
-            <div
-              v-for="field in changeViewFields[0][1]['fields']"
-              v-show="!hiddenFields.includes(field.name) || !isFormDisabled"
-            >
-              <FloatLabel variant="on">
-                <InputText
-                  v-if="field.field_type === 'CharField'"
-                  :name="field.name"
-                  type="text"
-                  fluid
-                  :disabled="
-                    readonlyFields.includes(field.name) ? true : isFormDisabled
-                  "
-                />
-
-                <Textarea
-                  v-else-if="field.field_type === 'TextField'"
-                  :name="field.name"
-                  rows="5"
-                  fluid
-                  :disabled="
-                    readonlyFields.includes(field.name) ? true : isFormDisabled
-                  "
-                />
-
-                <div
-                  v-else-if="field.field_type === 'BooleanField'"
-                  class="flex items-center gap-2"
-                >
-                  <label :for="field.name">{{ field.verbose_name }}?</label>
-                  <Checkbox
-                    v-if="!readonlyFields.includes(field.name)"
-                    :name="field.name"
-                    binary
-                    :disabled="
-                      readonlyFields.includes(field.name)
-                        ? true
-                        : isFormDisabled
-                    "
-                  />
-                  <i v-else class="pi"></i>
-                </div>
-
-                <InputText
-                  v-else-if="
-                    field.field_type === 'DateTimeField' &&
-                    readonlyFields.includes(field.name)
-                  "
-                  :name="field.name"
-                  type="text"
-                  fluid
-                  :disabled="
-                    readonlyFields.includes(field.name) ? true : isFormDisabled
-                  "
-                  :modelValue="toLocaleDateTimeString(field.name)"
-                />
-
-                <InputText
-                  v-else="field.field_type === 'CharField'"
-                  :name="field.name"
-                  type="text"
-                  fluid
-                  :disabled="
-                    readonlyFields.includes(field.name) ? true : isFormDisabled
-                  "
-                />
-
-                <label
-                  v-if="field.field_type !== 'BooleanField'"
-                  :for="field.name"
-                  >{{ field.verbose_name }}</label
-                >
-              </FloatLabel>
-            </div>
-
-            <Fieldset
-              v-for="fieldset in changeViewFields.slice(1)"
-              :legend="fieldset[0]"
-              :toggleable="true"
-              :collapsed="true"
-            >
-              <div v-for="field in fieldset[1]['fields']" class="p-2">
+            <!-- Loop through fieldsets  -->
+            <div v-for="fieldSet in changeViewFieldSets">
+              <!-- Fieldsets without title  -->
+              <div
+                v-if="!fieldSet.name"
+                v-for="field in fieldSet.fields"
+                v-show="!hiddenFields.includes(field.name) || !isFormDisabled"
+                class="py-2"
+              >
                 <FloatLabel variant="on">
                   <InputText
+                    v-if="field.type === 'CharField'"
                     :name="field.name"
                     type="text"
                     fluid
@@ -267,14 +231,135 @@ const hideField = async (fieldName) => {
                         : isFormDisabled
                     "
                   />
+
+                  <Textarea
+                    v-else-if="field.type === 'TextField'"
+                    :name="field.name"
+                    rows="5"
+                    fluid
+                    :disabled="
+                      readonlyFields.includes(field.name)
+                        ? true
+                        : isFormDisabled
+                    "
+                  />
+
+                  <div
+                    v-else-if="field.type === 'BooleanField'"
+                    class="flex items-center gap-2"
+                  >
+                    <label :for="field.name">{{ field.verbose_name }}?</label>
+                    <Checkbox
+                      v-if="!readonlyFields.includes(field.name)"
+                      :name="field.name"
+                      binary
+                      :disabled="
+                        readonlyFields.includes(field.name)
+                          ? true
+                          : isFormDisabled
+                      "
+                    />
+                    <i v-else class="pi"></i>
+                  </div>
+
+                  <InputText
+                    v-else-if="
+                      field.type === 'DateTimeField' &&
+                      readonlyFields.includes(field.name)
+                    "
+                    :name="field.name"
+                    type="text"
+                    fluid
+                    :disabled="
+                      readonlyFields.includes(field.name)
+                        ? true
+                        : isFormDisabled
+                    "
+                    :modelValue="toLocaleDateTimeString(field.name)"
+                  />
+
+                  <InputText
+                    v-else="field.type === 'CharField'"
+                    :name="field.name"
+                    type="text"
+                    fluid
+                    :disabled="
+                      readonlyFields.includes(field.name)
+                        ? true
+                        : isFormDisabled
+                    "
+                  />
+
                   <label
-                    v-if="field.field_type !== 'BooleanField'"
+                    v-if="field.type !== 'BooleanField'"
                     :for="field.name"
                     >{{ field.verbose_name }}</label
                   >
                 </FloatLabel>
               </div>
-            </Fieldset>
+
+              <!-- Fieldsets with title  -->
+              <Fieldset
+                v-else
+                :legend="fieldSet.name"
+                :toggleable="true"
+                :collapsed="true"
+              >
+                <div v-for="field in fieldSet.fields" class="p-2">
+                  <FloatLabel variant="on">
+                    <DatePicker
+                      v-if="
+                        field.type === 'DateTimeField' &&
+                        readonlyFields.includes(field.name)
+                      "
+                      :name="field.name"
+                      fluid
+                      :disabled="
+                        readonlyFields.includes(field.name)
+                          ? true
+                          : isFormDisabled
+                      "
+                      dateFormat="dd/mm/yy hh"
+                      showTime
+                      hourFormat="24"
+                    />
+
+                    <Select
+                      v-else-if="'related_model' in field"
+                      :name="field.name"
+                      fluid
+                      optionLabel="name"
+                      optionValue="id"
+                      :disabled="
+                        readonlyFields.includes(field.name)
+                          ? true
+                          : isFormDisabled
+                      "
+                      :options="getRelatedModelOptions(field)"
+                    >
+                    </Select>
+
+                    <InputText
+                      v-else
+                      :name="field.name"
+                      type="text"
+                      fluid
+                      :disabled="
+                        readonlyFields.includes(field.name)
+                          ? true
+                          : isFormDisabled
+                      "
+                    />
+
+                    <label
+                      v-if="field.type !== 'BooleanField'"
+                      :for="field.name"
+                      >{{ field.verbose_name }}</label
+                    >
+                  </FloatLabel>
+                </div>
+              </Fieldset>
+            </div>
 
             <!-- <div class="flex items-center gap-2">
               <label for="info_sheet">Info sheet</label>
@@ -303,7 +388,7 @@ const hideField = async (fieldName) => {
           icon="pi pi-list"
           rounded
           raised
-          @click="router.back()"
+          @click="goUpNavigation"
         />
         <Button
           v-tooltip="'Edit'"
@@ -332,43 +417,34 @@ const hideField = async (fieldName) => {
     </div>
   </div>
 
-  <PdfDialog
-    v-model:visible="showInfoSheetDialog"
-    :iframeUrl="initialData.info_sheet"
-    :breadcrumbItems="['Info sheet']"
-    :prefixBreadcrumb="prefixBreadcrumb"
-  >
+  <!-- <PdfDialog v-model:visible="showInfoSheetDialog" :iframeUrl="initialData.info_sheet" :breadcrumbItems="['Info sheet']"
+    :breadcrumbItems="prefixBreadcrumb">
     <component :is="modelIconName" />
-  </PdfDialog>
+  </PdfDialog> -->
 
   <HistoryDialog
     v-model:visible="showHistoryDialog"
     :history
     :loading="historyLoading"
-    :prefixBreadcrumb="prefixBreadcrumb"
+    :breadcrumbItems="historyBreadcrumbsItems"
   >
-    <component :is="modelIconName" />
   </HistoryDialog>
 </template>
 
-<style>
-.p-dialog-content {
+<style scoped>
+::v-deep(.p-dialog-content) {
   height: 100%;
 }
 
-.p-card-title {
+::v-deep(.p-card-title) {
   padding-bottom: 5px;
 }
 
-.first-letter-capital::first-letter {
-  text-transform: uppercase;
-}
-
-.p-inputtext:disabled {
+::v-deep(.p-inputtext:disabled) {
   color: var(--p-inputtext-color) !important;
 }
 
-.p-floatlabel:has(input.p-filled) label {
+::v-deep(.p-floatlabel:has(input.p-filled) label) {
   color: var(--primary-color) !important;
 }
 </style>

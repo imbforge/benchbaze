@@ -1,40 +1,60 @@
 <script setup>
+import IconBase from "@/components/IconBase.vue";
+
 const props = defineProps({
   items: {
     type: Array,
-    default: () => []
-  },
-  prefix: {
-    type: Object,
     default: () => []
   }
 });
 </script>
 
 <template>
-  <div aria-label="breadcrumbs" class="breadcrumbs">
-    <span class="first-letter-capital">{{ prefix.modelName }}</span>
-    <i class="pi pi-chevron-right breadcrumb-separator" />
-    <span>{{ prefix.id }}, {{ prefix.name }}</span>
+  <div
+    aria-label="bb-breadcrumbs"
+    class="bb-breadcrumbs flex flex-row items-center gap-2"
+  >
     <span
       v-for="(item, index) in items"
       :key="index"
-      :class="{ active: index === items.length - 1 }"
-      class="breadcrumb-item"
-      ><i class="pi pi-chevron-right breadcrumb-separator" />{{ item }}</span
+      class="bb-breadcrumbs-item flex flex-row items-center gap-2"
     >
+      <i
+        v-if="item.icon && item.icon.startsWith('pi')"
+        :class="item.icon"
+        class="bb-breadcrumbs-icon"
+      />
+      <IconBase
+        v-else-if="item.icon && item.icon.startsWith('Icon')"
+        height="1.125rem"
+        width="1.125rem"
+      >
+        <component :is="item.icon" />
+      </IconBase>
+      <span
+        v-if="item.label"
+        class="bb-breadcrums-label"
+        v-html="item.label"
+      ></span>
+      <i
+        v-if="items.length !== 1 && index < items.length - 1"
+        class="pi pi-chevron-right bb-breadcrumbs-separator"
+      />
+    </span>
   </div>
 </template>
 
 <style scoped>
-/* This is needed for first-letter to work with the spans above */
-.first-letter-capital {
-  display: inline-block;
+.bb-breadcrums-label {
+  font-size: 1.25rem;
 }
 
-.breadcrumb-separator {
-  padding-left: 5px;
-  padding-right: 5px;
+.bb-breadcrumbs-icon {
+  font-size: 1.125rem;
+}
+
+.bb-breadcrumbs-separator {
   color: var(--primary-color);
+  font-size: 0.825rem;
 }
 </style>

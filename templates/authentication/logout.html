@@ -1,0 +1,12 @@
+{% extends 'authentication/base.html' %} {% load static %} {% block content %}
+{% if user.is_authenticated %}
+<form action="{% url 'logout' %}" method="post" class="bb-authentication-box bb-full-opacity">
+  {% csrf_token %}
+  <button class="btn btn-lg btn-primary btn-block" type="submit">Log Out</button>
+</form>
+{% else %}
+<div class="bb-authentication-box bb-full-opacity text-center">
+<h4>Logged out</h4>
+<a class="btn btn-lg btn-primary btn-block bb-authentication-box-logout-button" href="/">Log In</a>
+</div>
+{% endif %} {% endblock content %}

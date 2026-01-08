@@ -1,3 +1,4 @@
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
@@ -7,10 +8,79 @@ from .models import LayoutFrontend
 User = get_user_model()
 
 
+def build_model_serializer(model_obj, serializer, field_names, *args, **kwargs):
+    """
+    Based on https://stackoverflow.com/questions/297383
+    Create a serializer on the fly where the Meta class's model
+    and fields are set dynamically
+    """
+
+    class DynamicModelSerializer(serializer):
+        representation = serializers.SerializerMethodField()
+
+        class Meta:
+            model = model_obj
+            fields = field_names + ["representation"]
+
+        def __init__(self, *args_init, **kwargs_init):
+            kwargs_copy = kwargs_init.copy()
+            # if "model" in kwargs_copy:
+            #     del kwargs_copy["model"]
+            super().__init__(*args_init, **kwargs_copy)
+
+        def get_representation(self, obj):
+            return str(obj)
+
+    return DynamicModelSerializer
+
+
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+    representation = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "representation",
+        )
+
+    def get_representation(self, obj):
+        return str(obj)
+
+
+class LogEntrySerializer(serializers.ModelSerializer):
+    representation = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LogEntry
+        fields = [
+            "id",
+            "representation",
+            "action_flag",
+            "user",
+            "content_type",
+            "action_time",
+        ]
+
+    def get_representation(self, obj):
+        try:
+            edited_object = obj.get_edited_object()
+            return getattr(
+                edited_object,
+                getattr(edited_object, "_representation_field", ""),
+                obj.object_repr,
+            )
+        except:
+            return obj.object_repr
+
+    def get_id(self, obj):
+        return obj.object_id
 
 
 class LayoutFrontendSerializer(serializers.ModelSerializer):
@@ -25,33 +95,6 @@ class NavigationSerializer(serializers.ModelSerializer):
     model_verbose_name = serializers.SerializerMethodField()
     model_verbose_plural = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
-    listview_fields_frozen = serializers.SerializerMethodField()
-    listview_fields = serializers.SerializerMethodField()
-    addview_fields = serializers.SerializerMethodField()
-    changeview_fields = serializers.SerializerMethodField()
-    readonly_fields = serializers.SerializerMethodField()
-    actions = serializers.SerializerMethodField()
-
-    def __init__(self, *args, **kwargs):
-        field_names_empty_list = [
-            "listview_fields_frozen",
-            "listview_fields",
-            "addview_fields",
-            "changeview_fields",
-            "readonly_fields",
-            "actions",
-        ]
-
-        # Create get_ methods for the dummy, empty list, fields
-        for field_name in field_names_empty_list:
-            # Setting an attribute dynamically for the field does not work
-            # setattr(self, field_name, serializers.SerializerMethodField())
-            setattr(self, f"get_{field_name}", lambda cls: list())
-
-        # Update the Meta class fields attribute
-        self.Meta.fields = self.Meta.fields + field_names_empty_list
-
-        super().__init__(*args, **kwargs)
 
     class Meta:
         model = ContentType
@@ -84,7 +127,12 @@ class NavigationSerializer(serializers.ModelSerializer):
 class UserMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "first_name", "last_name", "email")
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+        )
         read_only = (
             "id",
             "first_name",
@@ -96,8 +144,6 @@ class UserMinimalSerializer(serializers.ModelSerializer):
 class ListSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        if "created_by" in representation:
-            representation["created_by"] = str(instance.created_by)
         if "approval" in representation:
             representation["approval"] = instance.approval_formatted()
         return representation

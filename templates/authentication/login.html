@@ -1,0 +1,87 @@
+{% extends 'authentication/base.html' %} {% load static %} {% block content %}
+{% if oidc_enable %}
+<h4>Sign in with</h4>
+<form
+  method="get"
+  action="{% url 'oidc_authentication_init' %}"
+  class="bb-full-opacity"
+>
+  <input type="hidden" name="next" value="{{ next }}" />
+  <button
+    type="submit"
+    class="btn btn-default btn-block bb-authentication-box-submit-button"
+  >
+    <img
+      src="{% static 'authentication/oidc_provider_logo.png' %}"
+      class="bb-authentication-box-oidc-logo"
+      alt="oidc-provider-logo"
+    />{{oidc_provider_name}}
+  </button>
+</form>
+
+<button
+  class="btn btn-default btn-block collapsible"
+  style="text-align: left; font-size: large"
+>
+  <img
+    src="{% static 'authentication/logo-small.svg' %}"
+    class="bb-authentication-box-local-login"
+    alt="BenchBaze"
+  />BenchBaze
+</button>
+{% endif %}
+
+<form
+  class="bb-authentication-box bb-full-opacity"
+  style="display: {% if oidc_enable %} none {% else %} block {% endif %};"
+  method="post"
+  action="{% url 'login' %}"
+>
+  {% csrf_token %}
+  <input
+    type="text"
+    class="form-control"
+    id="id_username"
+    name="username"
+    placeholder="Email"
+    required=""
+    autofocus=""
+  />
+  <input
+    type="password"
+    class="form-control"
+    id="id_password"
+    name="password"
+    placeholder="Password"
+    required=""
+  />
+  <input class="btn btn-lg btn-primary btn-block" type="submit" value="Login" />
+  <input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+{% if form.errors or messages %}
+<div class="alert alert-danger" role="alert">
+  {% if form.errors %}
+  <p class="lead text-center">
+    Your username and/or password are not valid. Please try again.
+  </p>
+  {% endif %} {% if messages %} {% for message in messages %}
+  <p class="lead text-center">{{ message|capfirst }}</p>
+  {% endfor %} {% endif %}
+</div>
+{% endif %} {% endblock content %} {% block js %}
+<script type="text/javascript">
+  var button = document.getElementsByClassName("collapsible")[0];
+  if (button) {
+    button.addEventListener("click", function () {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+{% endblock js %}

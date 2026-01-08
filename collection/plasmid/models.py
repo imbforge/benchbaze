@@ -150,6 +150,8 @@ class Plasmid(
     _unified_map_field = True
     _show_formz = True
     german_name = "Plasmid"
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

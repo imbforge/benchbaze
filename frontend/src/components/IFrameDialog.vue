@@ -7,10 +7,6 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  prefixBreadcrumb: {
-    type: Object,
-    default: () => ({})
-  },
   iframeUrl: {
     type: String,
     default: ""
@@ -38,14 +34,7 @@ const internalVisible = computed({
     :modal="true"
   >
     <template #header>
-      <div class="flex flex-wrap items-center gap-2">
-        <IconBase>
-          <slot />
-        </IconBase>
-        <div class="text-xl font-bold first-letter-capital">
-          <Breadcrumbs :items="breadcrumbItems" :prefix="prefixBreadcrumb" />
-        </div>
-      </div>
+      <Breadcrumbs :items="breadcrumbItems" />
     </template>
     <iframe
       :src="iframeUrl"

@@ -1,7 +1,7 @@
-import Lexer from "lex";
-import debounce from "lodash/debounce";
-import isObject from "lodash/isObject";
-import throttle from "lodash/throttle";
+import Lexer from "../../lexer/lexer";
+import debounce from "lodash-es/debounce";
+import isObject from "lodash-es/isObject";
+import throttle from "lodash-es/throttle";
 
 import LRUCache from "./lru-cache";
 import { DOMReady, escapeRegExp, setUrlParams } from "./utils";
@@ -163,6 +163,10 @@ const DjangoQL = function (options) {
       cacheSize = options.cacheSize;
     }
   }
+  if (this.textarea && options.initValue) {
+    this.textarea.value = options.initValue;
+  }
+
   this.suggestionsCache = new LRUCache(cacheSize);
   this.debouncedLoadFieldOptions = debounce(
     this.loadFieldOptions.bind(this),
@@ -494,6 +498,13 @@ DjangoQL.prototype = {
     this.selected = null;
     if (this.completion) {
       this.completion.style.display = "none";
+    }
+  },
+
+  deleteCompletion() {
+    if (this.completion) {
+      this.textarea.value = "";
+      this.completion.remove();
     }
   },
 

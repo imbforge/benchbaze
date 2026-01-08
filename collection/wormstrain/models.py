@@ -164,6 +164,8 @@ class WormStrainAllele(
         "map_png",
         "map_gbk",
     ]
+    _list_display_links = ["id"]
+    _representation_field = "name"
     _search_fields = ["id", "mutation", "transgene"]
     _list_display_frozen = ["id"]
     _list_display = [
@@ -420,6 +422,8 @@ class WormStrain(
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
     _m2m_save_ignore_fields = ["history_genotyping_oligos"]
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

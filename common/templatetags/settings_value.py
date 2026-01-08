@@ -5,12 +5,13 @@ from django.conf import settings
 
 register = template.Library()
 
+
 # settings value
 @register.simple_tag
 def settings_value(name):
     # return getattr(settings, name, "")
-    if name == 'OIDC_PROVIDER_NAME':
+    if name == "OIDC_PROVIDER_NAME":
         return getattr(settings, name, "")
-    elif name == 'HOMEPAGE_DOCS_URL':
+    elif name == "DOCS_URL":
         return getattr(settings, name, "")
-    return ''
+    return ""

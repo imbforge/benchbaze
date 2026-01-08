@@ -26,9 +26,9 @@ WORM_ALLELE_LAB_ID_DEFAULT = "worm_allele_lab_id_default"
 DEFAULT_ECOLI_STRAIN_IDS = []
 PLASMID_AS_ECOLI_STOCK = False
 
-# OIDC settings, if available, otherwise set ALLOW_OIDC to False
-ALLOW_OIDC = True
-if ALLOW_OIDC:
+# OIDC settings, if available, otherwise set OIDC_ENABLE to False
+OIDC_ENABLE = True
+if OIDC_ENABLE:
     from config.oidc import discover_oidc
 
     try:
@@ -62,4 +62,4 @@ FAIL2BAN_NUM_ATTEMPTS = 3
 # Others
 MS_TEAMS_WEBHOOK = "ms_teams_webhook"
 ORDER_EMAIL_ADDRESSES = ["order_email_address"]
-HOMEPAGE_DOCS_URL = "homepage_docs_url"
+DOCS_URL = "DOCS_URL"

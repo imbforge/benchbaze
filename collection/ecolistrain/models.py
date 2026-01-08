@@ -72,8 +72,8 @@ class EColiStrain(
     # Static properties
     _model_abbreviation = "ec"
     _show_formz = True
-    _show_in_frontend = "strains - <em>E. coli</em>"
-    _frontend_verbose_name = "strain - <em>E. coli</em>"
+    _show_in_frontend = "Strains - <em>E. coli</em>"
+    _frontend_verbose_name = "Strain - <em>E. coli</em>"
     _frontend_verbose_plural = _show_in_frontend
     _history_array_fields = {
         "history_formz_projects": FormZProject,
@@ -84,6 +84,8 @@ class EColiStrain(
         ApprovalFieldsMixin._history_view_ignore_fields
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

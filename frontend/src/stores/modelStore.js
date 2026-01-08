@@ -4,6 +4,21 @@ import { ref } from "vue";
 import { storeMap } from "@/stores/index.js";
 import { navigationTree } from "@/main";
 import { getNavigationModel } from "@/router/navigation";
+import getCreateUserStore from "@/stores/userStore.js";
+
+const userStore = getCreateUserStore();
+
+// List of model properties that will be set later
+// but should be initialized as empty arrays
+const modelInitEmptyProps = [
+  "listview_fields_frozen",
+  "listview_fields",
+  "addview_fields",
+  "changeview_fields",
+  "readonly_fields",
+  "actions",
+  "search_introspection"
+];
 
 export const getCreateModelStore = (appLabel, modelName) => {
   const model = getNavigationModel(navigationTree, appLabel, modelName);
@@ -12,50 +27,120 @@ export const getCreateModelStore = (appLabel, modelName) => {
   if (storeMap.has(storeName)) {
     return storeMap.get(storeName);
   } else {
+    // Initialize empty array properties
+    modelInitEmptyProps.forEach((prop) => (model[prop] = []));
     let store = defineStore(storeName, {
       state: () => ({
         storeName: storeName,
         model: model,
-        apiEndpoint: `/api/${model.app_label}/${model.model_class_name.toLowerCase()}`,
-        iconName: `Icon${model.app_label.charAt(0).toUpperCase() + model.app_label.slice(1)}${model.model_class_name}`,
-        currentPage: ref(1),
-        pageCount: ref(0),
-        itemsPerPage: ref(25),
-        itemCount: ref(0),
+        virgin: ref(true),
+        api: {
+          endpointMain: `/api/${model.app_label}/${model.model_class_name.toLowerCase()}`,
+          endpointNavigation: `/api/navigation/${model.app_label}/${model.model_class_name.toLowerCase()}`,
+          iconName: `Icon${model.app_label.charAt(0).toUpperCase() + model.app_label.slice(1)}${model.model_class_name}`
+        },
+        paginationOpts: ref({
+          currentPage: 1,
+          pageCount: 0,
+          itemsPerPage: 25,
+          itemCount: 0
+        }),
         items: ref([]),
         lastFetchedItem: ref({ id: 0 }),
-        itemHistory: ref({})
+        itemHistory: ref({}),
+        searchOpts: ref({
+          advancedEnabled: false,
+          query: "",
+          ordering: [],
+          ownRecords: false
+        }),
+        lastSynced: ref()
       }),
       actions: {
         async getItems(
-          currentPage = this.currentPage,
-          itemsPerPage = this.itemsPerPage
+          currentPage = this.paginationOpts.currentPage,
+          searchQuery = this.searchOpts.query,
+          itemsPerPage = this.paginationOpts.itemsPerPage,
+          requestParams = {}
         ) {
-          this.currentPage = currentPage;
-          this.itemsPerPage = itemsPerPage;
+          this.paginationOpts.currentPage =
+            currentPage || this.paginationOpts.currentPage || 1;
+          this.paginationOpts.itemsPerPage =
+            itemsPerPage || this.paginationOpts.itemsPerPage;
+          this.searchOpts.query =
+            searchQuery === ""
+              ? searchQuery
+              : searchQuery || this.searchOpts.query;
           try {
-            const response = await axios.get(`${this.apiEndpoint}/`, {
-              params: { page: this.currentPage, limit: this.itemsPerPage }
+            // Get data
+            const response = await axios.get(`${this.api.endpointMain}/`, {
+              params: {
+                ...{
+                  page: this.paginationOpts.currentPage,
+                  limit: this.paginationOpts.itemsPerPage,
+                  search: searchQuery
+                },
+                ...(this.searchOpts.advancedEnabled ? { q: "" } : {}),
+                ...(this.searchOpts.ordering.length > 0
+                  ? { ordering: this.searchOpts.ordering }
+                  : {}),
+                ...requestParams
+              },
+              paramsSerializer: {
+                indexes: null
+              }
             });
-            const data = response.data;
-            this.items = data.results;
-            this.itemCount = data.count;
-            this.pageCount = Math.floor(this.itemCount / this.itemsPerPage);
+            const data = response.data.results;
+
+            // If created_by is passed, get relevant users
+            if (
+              this.model.listview_fields
+                .map((field) => field.name)
+                .includes("created_by")
+            ) {
+              await userStore.getItems(data.map((item) => item.created_by));
+              // Add user and path to each item
+              data.forEach((item) => {
+                item.user = userStore.items.find(
+                  (user) => user.id == item.created_by
+                );
+              });
+            }
+
+            // Add path
+            data.forEach((item) => {
+              item.path = `/${this.model.app_label}/${this.model.model_class_name.toLowerCase()}/${item.id}`;
+            });
+
+            // Set relevant variables for the store
+            this.items = data;
+            this.paginationOpts.itemCount = response.data.count;
+            this.paginationOpts.pageCount = Math.ceil(
+              this.paginationOpts.itemCount / this.paginationOpts.itemsPerPage
+            );
+            if (this.paginationOpts.pageCount === 0) {
+              this.paginationOpts.currentPage = 0;
+            }
+            this.lastSynced = new Date();
+            this.virgin = false;
           } catch (error) {
             console.error(error);
             throw error;
           }
         },
 
+        async search(textareaValue) {
+          await this.getItems(1, textareaValue);
+        },
+
         async getListViewFields() {
           try {
             const response = await axios.get(
-              `/api/navigation/${this.model.id}/listview_fields/`
+              `${this.api.endpointNavigation}/listview_fields/`
             );
-            this.model.listview_fields_frozen = response.data[0];
-            this.model.listview_fields = response.data[1];
+            this.model.listview_fields = response.data;
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
@@ -63,34 +148,51 @@ export const getCreateModelStore = (appLabel, modelName) => {
         async getChangeViewFields() {
           try {
             const response = await axios.get(
-              `/api/navigation/${this.model.id}/changeview_fields/`
+              `${this.api.endpointNavigation}/changeview_fields/`
             );
             this.model.changeview_fields = response.data;
           } catch (error) {
-            console.log(error);
-            throw error;
-          }
-        },
-        async getActions() {
-          try {
-            const response = await axios.get(
-              `/api/navigation/${this.model.id}/action_list/`
-            );
-            this.model.actions = response.data;
-          } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
 
-        async submitAction(actionName, selectedItemsIds) {
+        async getSearchIntrospection() {
+          try {
+            const response = await axios.get(
+              `${this.api.endpointNavigation}/advanced_search_introspection/`
+            );
+            this.model.search_introspection = response.data;
+          } catch (error) {
+            console.error(error);
+            throw error;
+          }
+        },
+
+        async getActions() {
+          try {
+            const response = await axios.get(
+              `${this.api.endpointNavigation}/action_list/`
+            );
+            this.model.actions = response.data;
+          } catch (error) {
+            console.error(error);
+            throw error;
+          }
+        },
+
+        async submitAction(actionName, selectedItemsIds, searchQuery) {
           try {
             // https://stackoverflow.com/questions/41938718
             // Download the file with Axios as a responseType: 'blob'
             const response = await axios.get(
-              `/api/navigation/${this.model.id}/action/`,
+              `${this.api.endpointNavigation}/action/`,
               {
-                params: { action_name: actionName, id: selectedItemsIds },
+                params: {
+                  name: actionName,
+                  id: selectedItemsIds,
+                  search: searchQuery
+                },
                 paramsSerializer: {
                   indexes: null
                 },
@@ -114,19 +216,19 @@ export const getCreateModelStore = (appLabel, modelName) => {
             document.body.removeChild(link);
             URL.revokeObjectURL(href);
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
 
         async getItem(id) {
           try {
-            const response = await axios.get(`${this.apiEndpoint}/${id}/`);
+            const response = await axios.get(`${this.api.endpointMain}/${id}/`);
             this.lastFetchedItem = response.data;
             await this.getItemReadOnlyFields();
             return response.data;
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
@@ -134,11 +236,11 @@ export const getCreateModelStore = (appLabel, modelName) => {
         async getItemReadOnlyFields() {
           try {
             const response = await axios.get(
-              `${this.apiEndpoint}/${this.lastFetchedItem.id}/readonly_fields/`
+              `${this.api.endpointMain}/${this.lastFetchedItem.id}/readonly_fields/`
             );
             this.model.readonly_fields = response.data;
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
@@ -146,12 +248,12 @@ export const getCreateModelStore = (appLabel, modelName) => {
         async getItemHistory() {
           try {
             const response = await axios.get(
-              `${this.apiEndpoint}/${this.lastFetchedItem.id}/history/`
+              `${this.api.endpointMain}/${this.lastFetchedItem.id}/history/`
             );
             this.itemHistory = response.data;
             return response.data;
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
@@ -184,18 +286,19 @@ export const getCreateModelStore = (appLabel, modelName) => {
 
             return [...[createdRecord], ...changedRecords];
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         },
+
         async saveItem(payload) {
           try {
             await axios.put(
-              `${this.apiEndpoint}/${this.lastFetchedItem.id}/`,
+              `${this.api.endpointMain}/${this.lastFetchedItem.id}/`,
               payload
             );
           } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
           }
         }

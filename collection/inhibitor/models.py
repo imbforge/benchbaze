@@ -1,13 +1,13 @@
 from django.conf import settings
 from django.db import models
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
-from common.actions import export_tsv_action, export_xlsx_action
 
 from ..shared.models import (
     HistoryDocFieldMixin,
@@ -70,7 +70,8 @@ class Inhibitor(
     _model_abbreviation = "ib"
     _show_in_frontend = True
     _history_array_fields = {"history_documents": InhibitorDoc}
-
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

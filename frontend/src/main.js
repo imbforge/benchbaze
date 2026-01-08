@@ -10,10 +10,10 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import { pinia } from "./stores/index.js";
-import { getNavigationTree, whoami } from "./router/navigation";
+import { getNavigationTree, getLoggedUser } from "./router/navigation";
 
 // Get logged user info
-const user = await whoami();
+const user = await getLoggedUser();
 
 // Create a navigation tree from API and mount app
 const navigationTree = await getNavigationTree();

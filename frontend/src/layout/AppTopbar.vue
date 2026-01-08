@@ -1,8 +1,35 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
+import { user } from "@/main";
+import { djangoSettings } from "@/router/navigation";
+import axios from "axios";
+import { useToast } from "primevue/usetoast";
 import AppConfigurator from "./AppConfigurator.vue";
 
+const toast = useToast();
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+
+const logout = async () => {
+  try {
+    await axios.post(
+      djangoSettings.logout_url ? djangoSettings.logout_url : "/logout/",
+      {},
+      {
+        headers: {
+          "BenchBaze-Api": true
+        }
+      }
+    );
+    window.location.replace(import.meta.env.BASE_URL);
+  } catch (error) {
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail: error,
+      life: 3000
+    });
+  }
+};
 </script>
 
 <template>
@@ -30,12 +57,17 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
             "
           />
         </svg>
-        <span
-          ><span class="layout-topbar-coloured-title">B</span>ENCH<span
-            class="layout-topbar-coloured-title"
-            >B</span
-          >AZE</span
-        >
+        <div class="flex flex-col justify-self-center">
+          <span
+            ><span class="bb-authentication-box-coloured-title">B</span
+            >ENCH<span class="bb-authentication-box-coloured-title">B</span
+            >AZE</span
+          >
+          <span v-if="djangoSettings.lab_name" class="text-xs"
+            ><span class="bb-authentication-box-coloured-title">@</span>
+            {{ djangoSettings.lab_name }}</span
+          >
+        </div>
       </router-link>
     </div>
 
@@ -56,6 +88,10 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
+          <Button variant="text" disabled class="bb-layout-topbar-user">
+            <i class="pi pi-user"></i>
+            <span>{{ user.representation }}</span>
+          </Button>
           <button
             type="button"
             class="layout-topbar-action"
@@ -80,17 +116,27 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
                 hideOnOutsideClick: true
               }"
               type="button"
-              class="layout-topbar-action layout-topbar-action-highlight"
+              class="layout-topbar-action"
             >
               <i class="pi pi-palette"></i>
               <span>Highlight color</span>
             </button>
             <AppConfigurator />
           </div>
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-user"></i>
-            <span>Profile</span>
-          </button>
+          <Button
+            as="a"
+            :href="djangoSettings.docs_url"
+            target="_blank"
+            rel="noopener"
+            class="layout-topbar-action"
+          >
+            <i class="pi pi-book"></i>
+            <span>Docs</span>
+          </Button>
+          <Button class="layout-topbar-action" @click="logout()">
+            <i class="pi pi-sign-out"></i>
+            <span>Log out</span>
+          </Button>
         </div>
       </div>
     </div>

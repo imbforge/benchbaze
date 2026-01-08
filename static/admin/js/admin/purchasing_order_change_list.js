@@ -44,7 +44,7 @@ function refreshOrderList() {
       $("#result_list").replaceWith($("#result_list", data));
     },
     error: (error) => {
-      console.log(error);
+      console.error(error);
     }
   });
 }

@@ -3,8 +3,8 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_better_admin_arrayfield.models.fields import ArrayField as BetterArrayField
 from import_export.fields import Field
-from common.actions import export_tsv_action, export_xlsx_action
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -113,9 +113,13 @@ class SiRna(
 
     # Static properties
     _model_abbreviation = "siRNA"
-    _show_in_frontend = True
+    _show_in_frontend = "siRNAs"
+    _frontend_verbose_name = "siRNA"
+    _frontend_verbose_plural = _show_in_frontend
     _history_array_fields = {"history_orders": Order, "history_documents": SiRnaDoc}
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

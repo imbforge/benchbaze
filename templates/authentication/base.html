@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+
+    <title>BenchBaze @ {{lab_name}}</title>
+
+    <link
+      rel="icon"
+      type="image/png"
+      href="{% static 'authentication/favicon.ico' %}"
+    />
+    <link rel="stylesheet" href="{% static 'authentication/style.css' %}" />
+
+    {% block css %}{% endblock %} {% block extrahead %}{% endblock %}
+  </head>
+
+  <body>
+    <div id="authentication-box" class="bb-authentication-box">
+      <div class="bb-authentication-box-heading container text-center">
+        <div class="row bb-authentication-box-row">
+          <img
+            src="{% static 'authentication/logo.svg' %}"
+            class="col-xs-2 img-fluid bb-authentication-box-logo"
+          />
+          <h2 class="col-xs-10 text-center bb-authentication-box-title">
+            <span class="bb-authentication-box-coloured-title">B</span>ENCH<span
+              class="bb-authentication-box-coloured-title"
+              >B</span
+            >AZE
+          </h2>
+        </div>
+        <h3 class="bb-authentication-box-lab-name">
+          <span class="bb-authentication-box-coloured-title">@</span>
+          {{lab_name}}
+        </h3>
+      </div>
+      {% block content %}{% endblock %}
+    </div>
+
+    <div class="footer">
+      {% if impressum_url %}<a href="{{impressum_url}}" target="_blank"
+        >Impressum</a
+      >{% endif %} {% if data_protection_url %}<a
+        href="{{data_protection_url}}"
+        target="_blank"
+        >Datenschutz</a
+      >{% endif %}
+    </div>
+
+    {% block js %}{% endblock %}
+  </body>
+</html>

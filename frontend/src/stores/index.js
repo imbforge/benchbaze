@@ -8,4 +8,14 @@ pinia.use(({ store }) => {
   storeMap.set(store.$id, store);
 });
 
-export { pinia, storeMap };
+const getStore = (appLabel, modelName) => {
+  const storeName = `${appLabel}-${modelName.toLowerCase()}`;
+
+  if (storeMap.has(storeName)) {
+    return storeMap.get(storeName);
+  } else {
+    return null;
+  }
+};
+
+export { getStore, pinia, storeMap };

@@ -29,7 +29,7 @@ SITE_TITLE = 'site_title'
 LAB_ABBREVIATION_FOR_FILES = 'lab_abbreviation_for_files'
 
 # OIDC settings
-ALLOW_OIDC = True
+OIDC_ENABLE = True
 OIDC_PROVIDER_NAME = 'oidc_provider_name'
 OIDC_RP_CLIENT_ID = 'oidc_rp_client_id'
 OIDC_RP_CLIENT_SECRET = 'oidc_rp_client_secret'

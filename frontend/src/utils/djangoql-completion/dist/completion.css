@@ -1,12 +1,11 @@
 .djangoql-completion {
+  z-index: 1000;
   position: absolute;
   display: none;
-  border: solid 1px #ccc;
+  background: var(--surface-card);
   border-radius: 4px;
-  background: white;
-  background: var(--body-bg, white);
+  border: 1px solid var(--p-primary-color);
   min-width: 183px;
-  font-size: 13px;
 }
 
 .djangoql-completion .active {
@@ -28,22 +27,19 @@
 }
 
 .djangoql-completion li:hover {
-  background-color: #c4e9fa;
+  background-color: var(--p-primary-300);
   color: black;
 }
 
 .djangoql-completion li i {
-  font-size: 0.9em;
-  color: #ccc;
   float: right;
-  font-style: normal;
+  font-style: italic;
 }
 
 .djangoql-completion .syntax-help {
   padding: 4px 10px 6px 10px;
   margin: 0;
-  border-top: solid 1px #ccc;
-  font-size: inherit;
+  border-top: solid 1px var(--p-primary-color);
 }
 
 /*
@@ -76,6 +72,7 @@ Pure CSS loading icon. Credit: https://loading.io/css/
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }

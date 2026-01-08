@@ -105,8 +105,8 @@ class ScPombeStrain(
 
     # Static properties
     _model_abbreviation = "sp"
-    _show_in_frontend = "strains - <em>Sc. pombe</em>"
-    _frontend_verbose_name = "strain - <em>Sc. pombe</em>"
+    _show_in_frontend = "Strains - <em>Sc. pombe</em>"
+    _frontend_verbose_name = "Strain - <em>Sc. pombe</em>"
     _frontend_verbose_plural = _show_in_frontend
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -123,6 +123,8 @@ class ScPombeStrain(
         "history_documents": ScPombeStrainDoc,
     }
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

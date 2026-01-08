@@ -142,6 +142,13 @@ class LayoutFrontend(models.Model):
     def __str__(self):
         return ", ".join([self.theme, self.primary_colour, self.surface_colour])
 
+    def clean(self):
+        super().clean()
+
+        # Prevent addition of more than one record
+        if not self.id and self.objects.exists():
+            raise ValidationError("You cannot add more than one record.")
+
 
 class SaveWithoutHistoricalRecord:
     def save_without_historical_record(self, *args, **kwargs):

@@ -153,7 +153,7 @@ export function useLayout() {
     try {
       await axios.put("/api/layout/1/", payload);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -194,7 +194,7 @@ export function useLayout() {
 
       return data;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

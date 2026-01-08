@@ -129,6 +129,8 @@ class CellLine(
     _show_formz = True
     _show_in_frontend = True
     _related_name_base = "cellline"
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

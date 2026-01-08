@@ -29,7 +29,7 @@ export const useNavigationStore = defineStore(name, {
         this.item = response.data;
         return response.data;
       } catch (error) {
-        console.log(error);
+        console.error(error);
         throw error;
       }
     },
@@ -41,7 +41,7 @@ export const useNavigationStore = defineStore(name, {
         );
         return response.data;
       } catch (error) {
-        console.log(error);
+        console.error(error);
         throw error;
       }
     },

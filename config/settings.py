@@ -210,7 +210,7 @@ LOGGING = {
 # OIDC settings
 LOGIN_REDIRECT_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/logout/"
-if ALLOW_OIDC:
+if OIDC_ENABLE:
     AUTHENTICATION_BACKENDS = [
         "common.backends.OwnOIDCAuthenticationBackend"
     ] + AUTHENTICATION_BACKENDS

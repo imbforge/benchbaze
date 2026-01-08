@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -9,7 +10,6 @@ from common.models import (
     SaveWithoutHistoricalRecord,
 )
 from formz.models import SequenceFeature
-from common.actions import export_tsv_action, export_xlsx_action
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -103,6 +103,8 @@ class Oligo(
         ApprovalFieldsMixin._history_view_ignore_fields
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
+    _representation_field = "name"
+    _list_display_links = ["id"]
     _search_fields = [
         "id",
         "name",

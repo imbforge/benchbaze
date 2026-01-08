@@ -160,3 +160,5 @@ function Lexer(defunct) {
     return matches;
   }
 }
+
+export default Lexer;

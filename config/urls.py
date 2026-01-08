@@ -5,11 +5,13 @@ from django.contrib.auth import views as auth_views
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse_lazy
 from django.urls.conf import include
-from .api import router
 
 from common.admin_site import admin_site
+from common.views import OwnLoginView, OwnLogoutView, SettingsApiView
 
-ALLOW_OIDC = getattr(settings, "ALLOW_OIDC", False)
+from .api import router
+
+OIDC_ENABLE = getattr(settings, "OIDC_ENABLE", False)
 
 
 def check_guest(f):
@@ -31,6 +33,16 @@ def check_guest(f):
 
 urlpatterns = [
     path(
+        "login/",
+        OwnLoginView.as_view(template_name="authentication/login.html"),
+        name="login",
+    ),
+    path(
+        "logout/",
+        OwnLogoutView.as_view(template_name="authentication/logout.html"),
+        name="logout",
+    ),
+    path(
         "password_change/",
         check_guest(
             auth_views.PasswordChangeView.as_view(
@@ -38,11 +50,12 @@ urlpatterns = [
             )
         ),
     ),
-    path("api/", include(router.urls)),
+    path("api/", include(router.urls), name="api"),
+    path("api/settings/", SettingsApiView.as_view(), name="api_settings"),
     path("", admin_site.urls),
 ]
 
-if ALLOW_OIDC:
+if OIDC_ENABLE:
     urlpatterns = [path("oidc/", include("mozilla_django_oidc.urls"))] + urlpatterns
 
 if settings.DEBUG is True:

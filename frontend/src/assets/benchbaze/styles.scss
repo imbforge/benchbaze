@@ -1,0 +1,90 @@
+:root {
+  --bb-table-cell-padding: 0.5rem 0.75rem;
+}
+
+.bb-select-all-checkbox {
+  padding: var(--p-datatable-body-cell-padding);
+}
+
+.bb-table-header-titles {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  padding: var(--bb-table-cell-padding) !important;
+}
+
+.bb-djangoql-textarea {
+  resize: none;
+  height: 30px !important;
+  padding-left: calc(var(--p-icon-size)*2.2 + var(--p-toggleswitch-width)) !important;
+  padding-right: calc(var(--p-icon-size) * 2.8) !important;
+}
+
+.bb-search-icon {
+  color: var(--p-iconfield-icon-color) !important;
+}
+
+.p-datatable-header {
+  border-top-left-radius: var(--content-border-radius);
+  border-top-right-radius: var(--content-border-radius);
+}
+
+.p-paginator,
+.p-datatable-paginator-bottom {
+  border-radius: 0 0 var(--content-border-radius) var(--content-border-radius) !important;
+}
+
+/*
+  Bounce transition
+*/
+.bb-bounce-enter-active {
+  animation: bounce-in 0.5s;
+}
+
+.bb-bounce-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.p-dialog-content {
+  height: 100%;
+}
+
+.p-row-even>td {
+  padding: var(--bb-table-cell-padding) !important;
+}
+
+.p-row-odd>td {
+  padding: var(--bb-table-cell-padding) !important;
+}
+
+.bb-layout-topbar-user {
+  color: var(--text-color) !important;
+  opacity: 1 !important;
+}
+
+.bb-authentication-box-coloured-title {
+  color: var(--primary-color)
+}
+
+.bb-user-column {
+  color: var(--p-datatable-row-color) !important;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+}

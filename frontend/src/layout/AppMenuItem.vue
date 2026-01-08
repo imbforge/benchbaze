@@ -77,7 +77,8 @@ function itemClick(event, item) {
 }
 
 function checkActiveRoute(item) {
-  return route.path === item.to;
+  // Remove trailing /123 from route to account for item ID in Change view
+  return route.path.replace(/\/[\d]+$/, "") === item.to;
 }
 </script>
 
@@ -113,7 +114,7 @@ function checkActiveRoute(item) {
       tabindex="0"
       :to="item.to"
     >
-      <IconBase :icon-name="item.icon" class="layout-menuitem-icon">
+      <IconBase :icon-name="item.label" class="layout-menuitem-icon">
         <component :is="item.icon"></component>
       </IconBase>
       <span class="layout-menuitem-text" v-html="item.label"></span>
