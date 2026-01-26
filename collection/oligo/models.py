@@ -9,7 +9,6 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
-from formz.models import SequenceFeature
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -53,8 +52,8 @@ class Oligo(
     _model_abbreviation = "o"
     _model_upload_to = "collection/oligo/"
     _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_documents": OligoDoc,
+        "history_sequence_features": "forms.SequenceFeature",
+        "history_documents": "collection.OligoDoc",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -84,7 +83,7 @@ class Oligo(
     )
 
     sequence_features = models.ManyToManyField(
-        SequenceFeature,
+        "formz.SequenceFeature",
         verbose_name="elements",
         related_name="%(class)s_sequence_features",
         blank=True,

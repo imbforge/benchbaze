@@ -1,20 +1,21 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-User = get_user_model()
+AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 class Approval(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    content_type = models.ForeignKey(
+        "contenttypes.ContentType", on_delete=models.PROTECT
+    )
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 
     activity_type = models.CharField(
         max_length=20, choices=(("created", "created"), ("changed", "changed"))
     )
-    activity_user = models.ForeignKey(User, on_delete=models.PROTECT)
+    activity_user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
     message = models.TextField(
         "message", max_length=255, help_text="Max. 255 characters", blank=True
     )

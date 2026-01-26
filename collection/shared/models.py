@@ -2,7 +2,6 @@ import base64
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
@@ -10,14 +9,13 @@ from django.db import models
 from django.forms import ValidationError
 
 from approval.models import Approval
-from formz.models import GenTechMethod, SequenceFeature, StorageLocation
-from formz.models import Project as FormZProject
+from formz.models import StorageLocation
 
-User = get_user_model()
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
+AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 class ApprovalFieldsMixin(models.Model):
@@ -43,7 +41,7 @@ class ApprovalFieldsMixin(models.Model):
     approval_by_pi_date_time = models.DateTimeField(null=True, default=None)
     approval = GenericRelation(Approval)
     approval_user = models.ForeignKey(
-        User,
+        AUTH_USER_MODEL,
         related_name="%(class)s_approval_user",
         on_delete=models.PROTECT,
         null=True,
@@ -64,7 +62,9 @@ class OwnershipFieldsMixin(models.Model):
     created_date_time = models.DateTimeField("created", auto_now_add=True)
     last_changed_date_time = models.DateTimeField("last changed", auto_now=True)
     created_by = models.ForeignKey(
-        User, related_name="%(class)s_createdby_user", on_delete=models.PROTECT
+        AUTH_USER_MODEL,
+        related_name="%(class)s_createdby_user",
+        on_delete=models.PROTECT,
     )
 
 
@@ -126,8 +126,10 @@ class FormZFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
+    _formz_enable = True
+
     formz_projects = models.ManyToManyField(
-        FormZProject,
+        "formz.Project",
         verbose_name="projects",
         related_name="%(class)s_formz_projects",
         blank=False,
@@ -136,14 +138,14 @@ class FormZFieldsMixin(models.Model):
         "risk group", choices=((1, 1), (2, 2)), blank=False, null=True
     )
     formz_gentech_methods = models.ManyToManyField(
-        GenTechMethod,
+        "formz.GenTechMethod",
         verbose_name="genTech methods",
         help_text="The genetic method(s) used to create this record",
         related_name="%(class)s_gentech_methods",
         blank=True,
     )
     sequence_features = models.ManyToManyField(
-        SequenceFeature,
+        "formz.SequenceFeature",
         verbose_name="sequence features",
         help_text="Use only when a feature is not present in the chosen plasmid(s), if any. "
         "Searching against the aliases of a feature is case-sensitive. "

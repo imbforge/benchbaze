@@ -11,10 +11,7 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
-from formz.models import GenTechMethod, SequenceFeature
-from formz.models import Project as FormZProject
 
-from ..plasmid.models import Plasmid
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -59,14 +56,14 @@ class ScPombeStrain(
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
     _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_cassette_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_all_plasmids_in_stocked_strain": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": ScPombeStrainDoc,
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_cassette_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_all_plasmids_in_stocked_strain": "collection.Plasmid",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.ScPombeStrainDoc",
     }
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
 
@@ -202,7 +199,7 @@ class ScPombeStrainEpisomalPlasmid(models.Model):
         "present in -80° C stock?", default=False
     )
     formz_projects = models.ManyToManyField(
-        FormZProject, related_name="%(class)s_episomal_plasmid_projects", blank=True
+        "formz.Project", related_name="%(class)s_episomal_plasmid_projects", blank=True
     )
     created_date = models.DateField("created", blank=True, null=True)
     destroyed_date = models.DateField("destroyed", blank=True, null=True)

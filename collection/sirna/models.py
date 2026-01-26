@@ -9,8 +9,6 @@ from common.models import (
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
-from formz.models import Species
-from purchasing.models import Order
 
 from ..shared.models import (
     InfoSheetMaxSizeMixin,
@@ -48,7 +46,10 @@ class SiRna(
 
     _model_abbreviation = "siRNA"
     _model_upload_to = "collection/sirna/"
-    _history_array_fields = {"history_orders": Order, "history_documents": SiRnaDoc}
+    _history_array_fields = {
+        "history_orders": "purchasing.Order",
+        "history_documents": "collection.SiRnaDoc",
+    }
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
 
     name = models.CharField("name", max_length=255, blank=False)
@@ -63,7 +64,7 @@ class SiRna(
         "supplier siRNA ID", max_length=255, blank=False
     )
     species = models.ForeignKey(
-        Species,
+        "formz.Species",
         verbose_name="organism",
         on_delete=models.PROTECT,
         null=True,
@@ -92,7 +93,10 @@ class SiRna(
         null=True,
     )
     orders = models.ManyToManyField(
-        Order, verbose_name="orders", related_name="%(class)s_order", blank=True
+        "purchasing.Order",
+        verbose_name="orders",
+        related_name="%(class)s_order",
+        blank=True,
     )
 
     history_orders = ArrayField(

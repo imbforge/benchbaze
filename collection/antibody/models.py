@@ -49,7 +49,7 @@ class Antibody(
     _model_abbreviation = "ab"
     _model_upload_to = "collection/antibody/"
     _history_array_fields = {
-        "history_documents": AntibodyDoc,
+        "history_documents": "collection.AntibodyDoc",
     }
 
     name = models.CharField("name", max_length=255, blank=False)

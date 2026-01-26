@@ -1,6 +1,7 @@
 import random
 from datetime import timedelta
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from common.models import (
@@ -9,17 +10,8 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
-from formz.models import (
-    GenTechMethod,
-    SequenceFeature,
-    Species,
-    ZkbsCellLine,
-)
-from formz.models import (
-    Project as FormZProject,
-)
+from formz.models import ZkbsCellLine
 
-from ..plasmid.models import Plasmid
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -74,12 +66,14 @@ class CellLine(
     _model_abbreviation = "cl"
     _related_name_base = "cellline"
     _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": CellLineDoc,
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_formz_projects": "forms.FormZProject",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.CellLineDoc",
+        "history_viruses_mammalian": "collection.VirusMammalian",
+        "history_viruses_insect": "collection.VirusInsect",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -100,7 +94,7 @@ class CellLine(
         null=True,
     )
     organism = models.ForeignKey(
-        Species,
+        "formz.Species",
         verbose_name="organism",
         on_delete=models.PROTECT,
         null=True,
@@ -127,9 +121,20 @@ class CellLine(
         blank=True,
         through="CellLineEpisomalPlasmid",
     )
-
+    viruses_mammalian = models.ManyToManyField(
+        "VirusMammalian",
+        related_name="%(class)s_virus_mammalian",
+        blank=True,
+        through="CellLineVirusMammalian",
+    )
+    viruses_insect = models.ManyToManyField(
+        "VirusInsect",
+        related_name="%(class)s_virus_insect",
+        blank=True,
+        through="CellLineVirusInsect",
+    )
     zkbs_cell_line = models.ForeignKey(
-        ZkbsCellLine,
+        "formz.ZkbsCellLine",
         verbose_name="ZKBS database cell line",
         on_delete=models.PROTECT,
         null=True,
@@ -218,12 +223,12 @@ class CellLine(
 class CellLineEpisomalPlasmid(models.Model):
     _inline_foreignkey_fieldname = "cell_line"
 
-    cell_line = models.ForeignKey(CellLine, on_delete=models.PROTECT)
+    cell_line = models.ForeignKey("CellLine", on_delete=models.PROTECT)
     plasmid = models.ForeignKey(
         "Plasmid", verbose_name="Plasmid", on_delete=models.PROTECT
     )
     formz_projects = models.ManyToManyField(
-        FormZProject, related_name="%(class)s_projects", blank=True
+        "formz.Project", related_name="%(class)s_projects", blank=True
     )
     s2_work_episomal_plasmid = models.BooleanField(
         "Used for S2 work?",

@@ -46,7 +46,7 @@ class Inhibitor(
 
     _model_abbreviation = "ib"
     _model_upload_to = "collection/inhibitor/"
-    _history_array_fields = {"history_documents": InhibitorDoc}
+    _history_array_fields = {"history_documents": "collection.InhibitorDoc"}
 
     name = models.CharField("name", max_length=255, blank=False)
     other_names = models.CharField("other names", max_length=255, blank=False)

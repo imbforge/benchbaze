@@ -1,8 +1,6 @@
 from django.db import models
 
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
-from formz.models import Project as FormZProject
-from formz.models import SequenceFeature
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -43,9 +41,9 @@ class EColiStrain(
 
     _model_abbreviation = "ec"
     _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": EColiStrainDoc,
+        "history_formz_projects": "formz.Project",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.EColiStrainDoc",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields

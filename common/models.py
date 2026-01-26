@@ -1,6 +1,7 @@
 import itertools
 import os
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -321,7 +322,10 @@ class HistoryFieldMixin(models.Model):
                     )
 
                 elif field_type == "ArrayField":
-                    array_field_model = self._history_array_fields.get(field.name, None)
+                    array_field_model_name = self._history_array_fields.get(
+                        field.name, None
+                    )
+                    array_field_model = apps.get_model(array_field_model_name.lower())
                     if array_field_model:
                         value_out = (
                             ", ".join(

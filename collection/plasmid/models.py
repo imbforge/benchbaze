@@ -12,10 +12,7 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
-from formz.models import GenTechMethod, SequenceFeature, ZkbsPlasmid
-from formz.models import Project as FormZProject
 
-from ..ecolistrain.models import EColiStrain
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -63,11 +60,11 @@ class Plasmid(
     _model_abbreviation = "p"
     _model_upload_to = "collection/plasmid/"
     _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_formz_ecoli_strains": EColiStrain,
-        "history_documents": PlasmidDoc,
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_formz_ecoli_strains": "collection.EColiStrain",
+        "history_documents": "collection.PlasmidDoc",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -115,7 +112,7 @@ class Plasmid(
         blank=True,
     )
     vector_zkbs = models.ForeignKey(
-        ZkbsPlasmid,
+        "formz.ZkbsPlasmid",
         verbose_name="ZKBS database vector",
         on_delete=models.PROTECT,
         blank=False,

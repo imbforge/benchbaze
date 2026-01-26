@@ -8,8 +8,7 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
-from formz.models import GenTechMethod, SequenceFeature, Species
-from formz.models import Project as FormZProject
+from formz.models import Species
 
 from ..oligo.models import Oligo
 from ..plasmid.models import Plasmid
@@ -55,10 +54,10 @@ class WormStrainAllele(
     _model_upload_to = "collection/wormstrainallele/"
     german_name = "Allel"
     _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_made_with_plasmids": Plasmid,
-        "history_transgene_plasmids": Plasmid,
-        "history_documents": WormStrainAlleleDoc,
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_made_with_plasmids": "collection.Plasmid",
+        "history_transgene_plasmids": "collection.Plasmid",
+        "history_documents": "collection.WormStrainAlleleDoc",
     }
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
         "map_png",
@@ -105,7 +104,7 @@ class WormStrainAllele(
         null=True,
     )
     made_by_method = models.ForeignKey(
-        GenTechMethod,
+        "formz.GenTechMethod",
         verbose_name="made by method",
         related_name="%(class)s_made_by_method",
         help_text="The method used to create the allele",
@@ -136,7 +135,7 @@ class WormStrainAllele(
         blank=True,
     )
     sequence_features = models.ManyToManyField(
-        SequenceFeature,
+        "formz.SequenceFeature",
         verbose_name="elements",
         help_text="Searching against the aliases of a sequence feature is case-sensitive. "
         '<a href="/formz/sequencefeature/" target="_blank">View all/Change</a>',
@@ -229,14 +228,14 @@ class WormStrain(
 
     _model_abbreviation = "w"
     _history_array_fields = {
-        "history_integrated_dna_plasmids": Plasmid,
-        "history_integrated_dna_oligos": Oligo,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_genotyping_oligos": Oligo,
-        "history_documents": WormStrainDoc,
-        "history_alleles": WormStrainAllele,
+        "history_integrated_dna_plasmids": "collection.Plasmid",
+        "history_integrated_dna_oligos": "collection.Oligo",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_genotyping_oligos": "collection.Oligo",
+        "history_documents": "collection.WormStrainDoc",
+        "history_alleles": "collection.WormStrainAllele",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -419,7 +418,7 @@ class WormStrainGenotypingAssay(models.Model):
 
     _inline_foreignkey_fieldname = "worm_strain"
 
-    worm_strain = models.ForeignKey(WormStrain, on_delete=models.PROTECT)
+    worm_strain = models.ForeignKey("WormStrain", on_delete=models.PROTECT)
     locus_allele = models.CharField("locus/allele", max_length=255, blank=False)
     oligos = models.ManyToManyField(Oligo, related_name="%(class)s_oligos", blank=False)
 
