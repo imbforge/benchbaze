@@ -579,7 +579,7 @@ class OrderAdmin(
 
     def add_view(self, request, extra_context=None):
         self.raw_id_fields = self.safety_info_fields[1:-1]
-        self.autocomplete_fields = ['created_by']
+        self.autocomplete_fields = ["created_by"]
         safety_info_fields = self.safety_info_fields.copy()
         safety_info_fields.remove("ghs_pict_img")
         if request.user.is_elevated_user or request.user.is_order_manager:
