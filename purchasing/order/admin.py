@@ -573,8 +573,7 @@ class OrderAdmin(
                     + safety_info_fields
                     + self.obj_unmodifiable_fields
                 )
-        else:
-            return self.obj_unmodifiable_fields[:3]
+
         return self.obj_unmodifiable_fields[:3]
 
     def add_view(self, request, extra_context=None):
