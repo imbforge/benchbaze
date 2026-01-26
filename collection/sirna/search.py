@@ -16,11 +16,11 @@ User = get_user_model()
 
 
 class SiRnaSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = SiRna.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = SiRna
 
 
 class SiRnaSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = SiRna.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = SiRna
 
 
 class SiRnaQLSchema(DjangoQLSchema):

@@ -48,22 +48,24 @@ class SearchFieldUserUsernameWithOptions(StrField):
 
     model = User
     name = User.USERNAME_FIELD
+    model_user_options = None
     suggest_options = True
-    id_list = []
 
     def get_options(self, search):
         """Removes system users from the list of options,
         distinct() returns only unique values
         sorted in alphabetical order by last name"""
 
-        if self.id_list:
+        if self.model_user_options:
             return (
                 self.model.objects.annotate(
                     **{f"{self.name}_deterministic": Collate(self.name, "und-x-icu")},
                 )
                 .filter(
                     **{
-                        "id__in": self.id_list,
+                        "id__in": self.model_user_options.objects.all()
+                        .values_list("created_by_id", flat=True)
+                        .distinct(),
                         f"{self.name}_deterministic__icontains": search,
                     }
                 )
@@ -90,25 +92,24 @@ class SearchFieldUserLastnameWithOptions(StrField):
 
     model = User
     name = "last_name"
+    model_user_options = None
     suggest_options = True
     id_list = []
 
     def get_options(self, search):
-        """Removes admin, guest and anonymous accounts from
-        the list of options, distinct() returns only unique values
-        sorted in alphabetical order"""
+        """Removes system users from the list of options,
+        distinct() returns only unique values sorted in
+        alphabetical order"""
 
-        # from https://stackoverflow.com/questions/14907525/
-        excluded_users = ["", "admin", "guest"]
-        q_list = map(lambda n: Q(last_name__iexact=n), excluded_users)
-        q_list = reduce(lambda a, b: a | b, q_list)
-
-        if self.id_list:
+        if self.model_user_options:
             return (
                 self.model.objects.filter(
-                    id__in=self.id_list, last_name__icontains=search
+                    id__in=self.model_user_options.objects.all()
+                    .values_list("created_by_id", flat=True)
+                    .distinct(),
+                    last_name__icontains=search,
                 )
-                .exclude(q_list)
+                .exclude(is_system_user=True)
                 .distinct()
                 .order_by(self.name)
                 .values_list(self.name, flat=True)
@@ -116,7 +117,7 @@ class SearchFieldUserLastnameWithOptions(StrField):
         else:
             return (
                 self.model.objects.filter(last_name__icontains=search)
-                .exclude(q_list)
+                .exclude(is_system_user=True)
                 .distinct()
                 .order_by(self.name)
                 .values_list(self.name, flat=True)

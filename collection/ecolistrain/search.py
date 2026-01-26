@@ -18,11 +18,11 @@ User = get_user_model()
 
 
 class EColiStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = EColiStrain.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = EColiStrain
 
 
 class EColiStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = EColiStrain.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = EColiStrain
 
 
 class EColiStrainQLSchema(DjangoQLSchema):

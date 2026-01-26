@@ -27,11 +27,11 @@ class CellLineSearchFieldParentalCellLineId(IntField):
 
 
 class CellLineSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = CellLine.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = CellLine
 
 
 class CellLineSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = CellLine.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = CellLine
 
 
 class CellLineSearchFieldEpisomalPlasmidFormZProject(StrField):

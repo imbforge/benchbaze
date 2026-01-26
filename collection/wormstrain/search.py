@@ -14,6 +14,7 @@ from ..shared.admin import (
     FieldParent1,
     FieldParent2,
     FieldSequenceFeature,
+    FieldType,
     FieldUse,
 )
 from .models import WormStrain, WormStrainAllele
@@ -22,11 +23,11 @@ User = get_user_model()
 
 
 class WormStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = WormStrain.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = WormStrain
 
 
 class WormStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = WormStrain.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = WormStrain
 
 
 class WormStrainSearchFieldAlleleName(StrField):
@@ -108,15 +109,11 @@ class WormStrainQLSchema(DjangoQLSchema):
 
 
 class WormStrainAlleleSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = (
-        WormStrainAllele.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = WormStrainAllele
 
 
 class WormStrainAlleleSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = (
-        WormStrainAllele.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = WormStrainAllele
 
 
 class WormStrainAlleleSearchFieldSequenceFeature(FieldSequenceFeature):
@@ -137,6 +134,10 @@ class WormStrainAlleleFieldMadeWithPlasmids(IntField):
         return "made_with_plasmids__id"
 
 
+class WormStrainAlleleFieldType(FieldType):
+    model = WormStrainAllele
+
+
 class WormStrainAlleleQLSchema(DjangoQLSchema):
     """Customize search functionality"""
 
@@ -152,7 +153,7 @@ class WormStrainAlleleQLSchema(DjangoQLSchema):
             return [
                 "id",
                 "lab_identifier",
-                "typ_e",
+                WormStrainAlleleFieldType(),
                 "transgene",
                 "transgene_position",
                 WormStrainAlleleFieldTransgenePlasmids(),

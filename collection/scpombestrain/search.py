@@ -23,15 +23,11 @@ User = get_user_model()
 
 
 class ScPombeStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = (
-        ScPombeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = ScPombeStrain
 
 
 class ScPombeStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = (
-        ScPombeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = ScPombeStrain
 
 
 class ScPombeStrainFieldEpisomalPlasmidFormZProject(StrField):

@@ -971,6 +971,17 @@ class OptionalChoiceField(forms.MultiValueField):
 ################################################
 
 
+class FieldType(StrField):
+    name = "type"
+    suggest_options = True
+
+    def get_lookup_name(self):
+        return "typ_e"
+
+    def _field_choices(self):
+        return self.model._meta.get_field("typ_e").choices
+
+
 class FieldUse(StrField):
     name = "use"
 

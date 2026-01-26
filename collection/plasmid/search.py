@@ -19,11 +19,11 @@ User = get_user_model()
 
 
 class PlasmidSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = Plasmid.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Plasmid
 
 
 class PlasmidSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = Plasmid.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Plasmid
 
 
 class PlasmidSearchFieldSequenceFeature(FieldSequenceFeature):

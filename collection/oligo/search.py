@@ -25,11 +25,11 @@ User = get_user_model()
 
 
 class OligoSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = Oligo.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Oligo
 
 
 class OligoSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = Oligo.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Oligo
 
 
 class OligoSearchFieldSequence(StrField):

@@ -24,15 +24,11 @@ User = get_user_model()
 
 
 class SaCerevisiaeStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = (
-        SaCerevisiaeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = SaCerevisiaeStrain
 
 
 class SaCerevisiaeStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = (
-        SaCerevisiaeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+    model_user_options = SaCerevisiaeStrain
 
 
 class SaCerevisiaeStrainSearchFieldEpisomalPlasmidFormZProject(StrField):
