@@ -24,7 +24,7 @@ LAB_ABBREVIATION_FOR_FILES = ""
 WORM_ALLELE_LAB_IDS = []
 WORM_ALLELE_LAB_ID_DEFAULT = "worm_allele_lab_id_default"
 DEFAULT_ECOLI_STRAIN_IDS = []
-PLASMID_AS_ECOLI_STOCK = False
+PLASMID_STORAGE_TYPE = "plasmid"  # choose from ("plasmid", "bacteria", "both")
 
 # OIDC settings, if available, otherwise set ALLOW_OIDC to False
 ALLOW_OIDC = True

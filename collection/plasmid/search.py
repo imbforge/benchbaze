@@ -50,6 +50,7 @@ class PlasmidQLSchema(DjangoQLSchema):
                 "received_from",
                 "note",
                 "reference",
+                "storage_type",
                 "created_by",
                 FieldCreated(),
                 FieldLastChanged(),

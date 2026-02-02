@@ -22,9 +22,7 @@ from ..shared.models import (
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
-
-
-PLASMID_AS_ECOLI_STOCK = getattr(settings, "PLASMID_AS_ECOLI_STOCK", False)
+PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
 
 
 class PlasmidDoc(DocFileMixin):
@@ -96,6 +94,16 @@ class Plasmid(
     received_from = models.CharField("received from", max_length=255, blank=True)
     note = models.CharField("note", max_length=300, blank=True)
     reference = models.CharField("reference", max_length=255, blank=True)
+    storage_type = models.CharField(
+        "storage type",
+        choices=(
+            ("plasmid", "Purified plasmid"),
+            ("bacteria", "Bacterial stock"),
+            ("both", "Both"),
+        ),
+        max_length=20,
+        blank=False,
+    )
     map = models.FileField(
         "Map (.dna)",
         help_text=f"only SnapGene .dna files, max. {FILE_SIZE_LIMIT_MB} MB",
@@ -148,9 +156,9 @@ class Plasmid(
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        # If destroyed date not present, automatically set it if a plasmid is
-        # not kept as E. coli stock
-        if not PLASMID_AS_ECOLI_STOCK and not self.destroyed_date:
+        # If a plasmid is kept exclusively as a purified stock and a destroyed
+        # date is not set, automatically set it
+        if PLASMID_STORAGE_TYPE == "plasmid" and not self.destroyed_date:
             self.destroyed_date = datetime.now().date() + timedelta(
                 days=random.randint(7, 21)
             )

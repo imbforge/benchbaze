@@ -31,6 +31,7 @@ from .search import PlasmidQLSchema
 MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 DEFAULT_ECOLI_STRAIN_IDS = getattr(settings, "DEFAULT_ECOLI_STRAIN_IDS", [])
+PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
 
 
 class PlasmidDocInline(DocFileInlineMixin):
@@ -93,6 +94,7 @@ class PlasmidAdmin(
         "received_from",
         "note",
         "reference",
+        "storage_type",
         "map",
         "map_png",
         "map_gbk",
@@ -432,8 +434,16 @@ class PlasmidAdmin(
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
-        if not obj and "formz_ecoli_strains" in form.base_fields:
-            form.base_fields["formz_ecoli_strains"].initial = DEFAULT_ECOLI_STRAIN_IDS
+        # For new objects
+        if not obj:
+            # Set default E. coli strains
+            if "formz_ecoli_strains" in form.base_fields:
+                form.base_fields[
+                    "formz_ecoli_strains"
+                ].initial = DEFAULT_ECOLI_STRAIN_IDS
+            # Set storage type
+            if "storage_type" in form.base_fields and PLASMID_STORAGE_TYPE:
+                form.base_fields["storage_type"].initial = PLASMID_STORAGE_TYPE
         return form
 
     @admin.display(description="Map")

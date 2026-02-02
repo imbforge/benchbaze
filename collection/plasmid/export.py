@@ -26,6 +26,7 @@ class PlasmidExportResource(resources.ModelResource):
             "received_from",
             "note",
             "reference",
+            "storage_type",
             "map",
             "created_date_time",
             f"created_by__{get_user_model().USERNAME_FIELD}",
