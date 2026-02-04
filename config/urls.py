@@ -8,7 +8,7 @@ from django.urls.conf import include
 
 from common.admin_site import admin_site
 
-ALLOW_OIDC = getattr(settings, "ALLOW_OIDC", False)
+OIDC_ENABLE = getattr(settings, "OIDC_ENABLE", False)
 
 
 def check_guest(f):
@@ -40,7 +40,7 @@ urlpatterns = [
     path("", admin_site.urls),
 ]
 
-if ALLOW_OIDC:
+if OIDC_ENABLE:
     urlpatterns = [path("oidc/", include("mozilla_django_oidc.urls"))] + urlpatterns
 
 if settings.DEBUG is True:
