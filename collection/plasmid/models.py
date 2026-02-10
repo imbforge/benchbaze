@@ -8,6 +8,7 @@ from django.db import models
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -17,7 +18,8 @@ from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
-    MapFileChecPropertieskMixin,
+    LocationMixin,
+    MapFileCheckPropertiesMixin,
     OwnershipFieldsMixin,
 )
 
@@ -40,13 +42,15 @@ class PlasmidDoc(DocFileMixin):
 
 
 class Plasmid(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
+    LocationMixin,
     HistoryFieldMixin,
-    MapFileChecPropertieskMixin,
+    MapFileCheckPropertiesMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -63,6 +67,7 @@ class Plasmid(
         "history_sequence_features": "formz.SequenceFeature",
         "history_formz_ecoli_strains": "collection.EColiStrain",
         "history_documents": "collection.PlasmidDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -71,6 +76,7 @@ class Plasmid(
     )
     _unified_map_field = True
     german_name = "Plasmid"
+    _storage_requires_species = "Escherichia coli"
 
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     other_name = models.CharField("other name", max_length=255, blank=True)

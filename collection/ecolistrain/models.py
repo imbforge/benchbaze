@@ -1,12 +1,18 @@
 from django.db import models
 
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from common.models import (
+    DocFileMixin,
+    EnhancedModelCleanMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+)
 
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -26,10 +32,12 @@ class EColiStrainDoc(DocFileMixin):
 
 
 class EColiStrain(
+    EnhancedModelCleanMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     HistoryDocFieldMixin,
     FormZFieldsMixin,
+    LocationMixin,
     HistoryFieldMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
@@ -44,11 +52,13 @@ class EColiStrain(
         "history_formz_projects": "formz.Project",
         "history_sequence_features": "formz.SequenceFeature",
         "history_documents": "collection.EColiStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
+    _storage_requires_species = "Escherichia coli"
 
     name = models.CharField("name", max_length=255, blank=False)
     resistance = models.CharField("resistance", max_length=255, blank=True)

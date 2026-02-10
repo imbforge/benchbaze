@@ -15,9 +15,11 @@ from formz.models import SequenceFeature
 
 from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     AdminOligosInMap,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
     convert_map_gbk_to_dna,
     create_map_preview,
@@ -72,7 +74,12 @@ class PlasmidAdmin(
         "formz_ecoli_strains",
         "formz_gentech_methods",
     ]
-    inlines = [PlasmidDocInline, PlasmidAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        PlasmidDocInline,
+        PlasmidAddDocInline,
+    ]
     form = PlasmidAdminForm
     change_form_template = "admin/collection/plasmid/change_form.html"
     add_form_template = "admin/collection/plasmid/change_form.html"
@@ -112,26 +119,26 @@ class PlasmidAdmin(
     add_view_fieldsets = [
         [
             None,
-            {"fields": obj_specific_fields[:10] + obj_specific_fields[11:12]},
+            {"fields": obj_specific_fields[:11] + obj_specific_fields[12:13]},
         ],
         [
             "FormZ",
             {
                 "classes": tuple(),
-                "fields": obj_specific_fields[12:],
+                "fields": obj_specific_fields[13:],
             },
         ],
     ]
     change_view_fieldsets = [
         [
             None,
-            {"fields": obj_specific_fields[:12] + obj_unmodifiable_fields},
+            {"fields": obj_specific_fields[:13] + obj_unmodifiable_fields},
         ],
         [
             "FormZ",
             {
                 "classes": (("collapse",)),
-                "fields": obj_specific_fields[12:],
+                "fields": obj_specific_fields[13:],
             },
         ],
     ]

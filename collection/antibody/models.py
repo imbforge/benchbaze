@@ -1,9 +1,11 @@
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -12,6 +14,7 @@ from common.models import (
 from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -33,10 +36,12 @@ class AntibodyDoc(DocFileMixin):
 
 
 class Antibody(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
     OwnershipFieldsMixin,
@@ -50,6 +55,7 @@ class Antibody(
     _model_upload_to = "collection/antibody/"
     _history_array_fields = {
         "history_documents": "collection.AntibodyDoc",
+        "history_locations": "collection.LocationItem",
     }
 
     name = models.CharField("name", max_length=255, blank=False)

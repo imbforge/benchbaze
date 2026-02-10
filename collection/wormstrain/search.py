@@ -1,11 +1,5 @@
-from django.contrib.auth import get_user_model
 from django.db.models import Q
-from djangoql.schema import DjangoQLSchema, IntField, StrField
-
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
+from djangoql.schema import IntField, RelationField, StrField
 
 from ..shared.admin import (
     FieldCreated,
@@ -17,25 +11,39 @@ from ..shared.admin import (
     FieldType,
     FieldUse,
 )
-from .models import WormStrain, WormStrainAllele
-
-User = get_user_model()
-
-
-class WormStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = WormStrain
+from ..shared.search import CollectionQLSchema
+from .models import WormStrainAllele
 
 
-class WormStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = WormStrain
+class WormStrainAlleleField(RelationField):
+    name = "allele"
+    related_model = WormStrainAllele
+
+    def __init__(self, model):
+        super().__init__(model, self.name, self.related_model)
+
+    def get_lookup_name(self):
+        return "alleles"
+
+
+class WormStrainSearchFieldAlleleId(IntField):
+    name = "id"
+
+    def get_lookup(self, path, operator, value):
+        """Override parent's method to replace 'allele' with 'alleles' in path"""
+
+        path = [p if p != "allele" else "alleles" for p in path]
+        return super().get_lookup(path, operator, value)
 
 
 class WormStrainSearchFieldAlleleName(StrField):
-    model = WormStrainAllele
-    name = "allele_name"
+    name = "name"
     suggest_options = True
 
     def get_options(self, search):
+        """Suggest allele names based on the search input, looking in both
+        transgene and mutation fields of WormStrainAllele"""
+
         if len(search) < 3:
             return ["Type 3 or more characters to see suggestions"]
 
@@ -45,6 +53,9 @@ class WormStrainSearchFieldAlleleName(StrField):
         return [a.name for a in qs]
 
     def get_lookup(self, path, operator, value):
+        """Override parent's method to search for the input value in both
+        transgene and mutation fields of WormStrainAllele"""
+
         op, invert = self.get_operator(operator)
         value = self.get_lookup_value(value)
 
@@ -55,65 +66,47 @@ class WormStrainSearchFieldAlleleName(StrField):
         return ~q if invert else q
 
 
-class WormStrainSearchFieldAlleleId(IntField):
-    model = WormStrainAllele
-    name = "allele_id"
-    suggest_options = False
+class WormStrainQLSchema(CollectionQLSchema):
+    """DjangoQL schema for WormStrain collection model"""
 
-    def get_lookup_name(self):
-        return "alleles__id"
-
-
-class WormStrainQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
-
-    include = (WormStrain, User)  # Include only the relevant models to be searched
+    def __init__(self, model):
+        self.fields = [
+            "id",
+            "name",
+            "chromosomal_genotype",
+            FieldParent1(),
+            FieldParent2(),
+            "construction",
+            "outcrossed",
+            "growth_conditions",
+            "organism",
+            "selection",
+            "phenotype",
+            "received_from",
+            FieldUse(),
+            "note",
+            "reference",
+            "at_cgc",
+            "location_freezer1",
+            "location_freezer2",
+            "location_backup",
+            WormStrainAlleleField(model=model),
+            "created_by",
+            FieldCreated(),
+            FieldLastChanged(),
+            FieldFormZProject(),
+            "locations",
+        ]
+        super().__init__(model)
 
     def get_fields(self, model):
-        """Define fields that can be searched"""
+        if model.__name__ == "WormStrainAllele":
+            return [
+                WormStrainSearchFieldAlleleId(model=model),
+                WormStrainSearchFieldAlleleName(model=model),
+            ]
 
-        if model == WormStrain:
-            return [
-                "id",
-                "name",
-                "chromosomal_genotype",
-                FieldParent1(),
-                FieldParent2(),
-                "construction",
-                "outcrossed",
-                "growth_conditions",
-                "organism",
-                "selection",
-                "phenotype",
-                "received_from",
-                FieldUse(),
-                "note",
-                "reference",
-                "at_cgc",
-                "location_freezer1",
-                "location_freezer2",
-                "location_backup",
-                WormStrainSearchFieldAlleleId(),
-                WormStrainSearchFieldAlleleName(),
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldFormZProject(),
-            ]
-        elif model == User:
-            return [
-                WormStrainSearchFieldUserUsername(),
-                WormStrainSearchFieldUserLastname(),
-            ]
         return super().get_fields(model)
-
-
-class WormStrainAlleleSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = WormStrainAllele
-
-
-class WormStrainAlleleSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = WormStrainAllele
 
 
 class WormStrainAlleleSearchFieldSequenceFeature(FieldSequenceFeature):
@@ -134,45 +127,28 @@ class WormStrainAlleleFieldMadeWithPlasmids(IntField):
         return "made_with_plasmids__id"
 
 
-class WormStrainAlleleFieldType(FieldType):
-    model = WormStrainAllele
+class WormStrainAlleleQLSchema(CollectionQLSchema):
+    """DjangoQL schema for WormStrainAllele model"""
 
-
-class WormStrainAlleleQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
-
-    include = (
-        WormStrainAllele,
-        User,
-    )  # Include only the relevant models to be searched
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == self.include[0]:
-            return [
-                "id",
-                "lab_identifier",
-                WormStrainAlleleFieldType(),
-                "transgene",
-                "transgene_position",
-                WormStrainAlleleFieldTransgenePlasmids(),
-                "mutation",
-                "mutation_type",
-                "mutation_position",
-                "reference_strain",
-                "made_by_method",
-                "made_by_person",
-                WormStrainAlleleFieldMadeWithPlasmids(),
-                "notes",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldSequenceFeature(),
-            ]
-        elif model == self.include[1]:
-            return [
-                WormStrainAlleleSearchFieldUserUsername(),
-                WormStrainAlleleSearchFieldUserLastname(),
-            ]
-        return super().get_fields(model)
+    def __init__(self, model):
+        self.fields = [
+            "id",
+            "lab_identifier",
+            FieldType(model=model),
+            "transgene",
+            "transgene_position",
+            WormStrainAlleleFieldTransgenePlasmids(),
+            "mutation",
+            "mutation_type",
+            "mutation_position",
+            "reference_strain",
+            "made_by_method",
+            "made_by_person",
+            WormStrainAlleleFieldMadeWithPlasmids(),
+            "notes",
+            "created_by",
+            FieldCreated(),
+            FieldLastChanged(),
+            FieldSequenceFeature(model=model),
+        ]
+        super().__init__(model)

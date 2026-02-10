@@ -1,9 +1,8 @@
-from import_export import resources
-
+from ..shared.export import CollectionExportMixin
 from .models import Inhibitor
 
 
-class InhibitorExportResource(resources.ModelResource):
+class InhibitorExportResource(CollectionExportMixin):
     """Custom export resource class for Inhibitor"""
 
     class Meta:
@@ -21,5 +20,6 @@ class InhibitorExportResource(resources.ModelResource):
             "stock_solution",
             "description_comment",
             "info_sheet",
+            "locations",
         )
         export_order = fields

@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
-from import_export import resources
 from import_export.fields import Field
 
+from ..shared.export import CollectionExportMixin
 from .models import SaCerevisiaeStrain
 
 
-class SaCerevisiaeStrainExportResource(resources.ModelResource):
+class SaCerevisiaeStrainExportResource(CollectionExportMixin):
     """Defines a custom export resource class for SaCerevisiaeStrain"""
 
     episomal_plasmids_in_stock = Field()
@@ -53,5 +53,6 @@ class SaCerevisiaeStrainExportResource(resources.ModelResource):
             "reference",
             "created_date_time",
             f"created_by__{get_user_model().USERNAME_FIELD}",
+            "locations",
         )
         export_order = fields

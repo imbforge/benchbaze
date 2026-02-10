@@ -8,3 +8,5 @@ from .sacerevisiaestrain.admin import SaCerevisiaeStrainAdmin
 from .scpombestrain.admin import ScPombeStrainAdmin
 from .sirna.admin import SiRnaAdmin
 from .wormstrain.admin import WormStrainAdmin, WormStrainAlleleAdmin
+from .virus.admin import VirusMammalianAdmin, VirusInsectAdmin
+from .storage.admin import StorageAdmin, LocationNameAdmin

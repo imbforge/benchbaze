@@ -28,8 +28,16 @@ from collection.admin import (
     SaCerevisiaeStrainAdmin,
     ScPombeStrainAdmin,
     SiRnaAdmin,
+    VirusInsectAdmin,
+    VirusMammalianAdmin,
     WormStrainAdmin,
     WormStrainAlleleAdmin,
+)
+from collection.admin import (
+    StorageAdmin as CollectionStorageAdmin,
+)
+from collection.admin import (
+    LocationNameAdmin as CollectionLocationNameAdmin,
 )
 from collection.models import (
     Antibody,
@@ -41,9 +49,14 @@ from collection.models import (
     SaCerevisiaeStrain,
     ScPombeStrain,
     SiRna,
+    VirusInsect,
+    VirusMammalian,
     WormStrain,
     WormStrainAllele,
 )
+from collection.models import Storage as CollectionStorage
+from collection.models import LocationName as CollectionLocationName
+
 from formz.admin import (
     FormZAdminSite,
     GenTechMethodAdmin,
@@ -61,9 +74,6 @@ from formz.admin import (
 from formz.admin import (
     ProjectAdmin as FormZProjectAdmin,
 )
-from formz.admin import (
-    StorageLocationAdmin as FormZStorageLocationAdmin,
-)
 from formz.models import (
     GenTechMethod,
     NucleicAcidPurity,
@@ -74,15 +84,8 @@ from formz.models import (
     ZkbsOncogene,
     ZkbsPlasmid,
 )
-from formz.models import (
-    Header as FormZHeader,
-)
-from formz.models import (
-    Project as FormZProject,
-)
-from formz.models import (
-    StorageLocation as FormZStorageLocation,
-)
+from formz.models import Header as FormZHeader
+from formz.models import Project as FormZProject
 from purchasing.admin import (
     CostUnitAdmin,
     GhsSymbolAdmin,
@@ -234,7 +237,6 @@ admin_site.register(FormZHeader, FormZHeaderAdmin)
 admin_site.register(ZkbsPlasmid, ZkbsPlasmidAdmin)
 admin_site.register(ZkbsOncogene, ZkbsOncogeneAdmin)
 admin_site.register(ZkbsCellLine, ZkbsCellLineAdmin)
-admin_site.register(FormZStorageLocation, FormZStorageLocationAdmin)
 admin_site.register(Species, SpeciesAdmin)
 
 admin_site.register(Task, TaskAdmin)
@@ -259,5 +261,10 @@ admin_site.register(WormStrain, WormStrainAdmin)
 admin_site.register(WormStrainAllele, WormStrainAlleleAdmin)
 admin_site.register(Inhibitor, InhibitorAdmin)
 admin_site.register(SiRna, SiRnaAdmin)
+admin_site.register(VirusMammalian, VirusMammalianAdmin)
+admin_site.register(VirusInsect, VirusInsectAdmin)
+admin_site.register(CollectionStorage, CollectionStorageAdmin)
+admin_site.register(CollectionLocationName, CollectionLocationNameAdmin)
+
 
 admin_site.register(Approval, ApprovalAdmin)

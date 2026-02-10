@@ -4,6 +4,7 @@ from django.db import models
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
@@ -11,6 +12,7 @@ from common.models import (
 from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -32,11 +34,13 @@ class InhibitorDoc(DocFileMixin):
 
 
 class Inhibitor(
+    EnhancedModelCleanMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
     models.Model,
 ):
@@ -46,7 +50,10 @@ class Inhibitor(
 
     _model_abbreviation = "ib"
     _model_upload_to = "collection/inhibitor/"
-    _history_array_fields = {"history_documents": "collection.InhibitorDoc"}
+    _history_array_fields = {
+        "history_documents": "collection.InhibitorDoc",
+        "history_locations": "collection.LocationItem",
+    }
 
     name = models.CharField("name", max_length=255, blank=False)
     other_names = models.CharField("other names", max_length=255, blank=False)

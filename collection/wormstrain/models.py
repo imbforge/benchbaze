@@ -4,6 +4,7 @@ from django.db import models
 
 from common.models import (
     DocFileMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -17,7 +18,8 @@ from ..shared.models import (
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
-    MapFileChecPropertieskMixin,
+    LocationMixin,
+    MapFileCheckPropertiesMixin,
     OwnershipFieldsMixin,
 )
 
@@ -42,7 +44,7 @@ class WormStrainAllele(
     ZebraLabelFieldsMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
-    MapFileChecPropertieskMixin,
+    MapFileCheckPropertiesMixin,
     OwnershipFieldsMixin,
     models.Model,
 ):
@@ -212,12 +214,14 @@ class WormStrainDoc(DocFileMixin):
 
 
 class WormStrain(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryFieldMixin,
     HistoryDocFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -236,6 +240,7 @@ class WormStrain(
         "history_genotyping_oligos": "collection.Oligo",
         "history_documents": "collection.WormStrainDoc",
         "history_alleles": "collection.WormStrainAllele",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields

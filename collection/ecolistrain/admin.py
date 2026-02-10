@@ -8,7 +8,9 @@ from common.admin import (
 from formz.actions import formz_as_html
 
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
+    LocationInline,
 )
 from .actions import export_ecolistrain
 from .models import EColiStrainDoc
@@ -39,7 +41,12 @@ class EColiStrainAdmin(CollectionUserProtectionAdmin):
     actions = [export_ecolistrain, formz_as_html]
     search_fields = ["id", "name"]
     autocomplete_fields = ["formz_projects", "sequence_features"]
-    inlines = [EcoliStrainDocInline, EColiStrainAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        EcoliStrainDocInline,
+        EColiStrainAddDocInline,
+    ]
     obj_specific_fields = [
         "name",
         "resistance",

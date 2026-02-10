@@ -2,13 +2,14 @@ from django.contrib.auth import get_user_model
 from import_export import resources
 from import_export.fields import Field
 
+from ..shared.export import CollectionExportMixin
 from .models import (
     WormStrain,
     WormStrainAllele,
 )
 
 
-class WormStrainExportResource(resources.ModelResource):
+class WormStrainExportResource(CollectionExportMixin):
     """Defines a custom export resource class for WormStrain"""
 
     primers_for_genotyping = Field()
@@ -43,6 +44,7 @@ class WormStrainExportResource(resources.ModelResource):
             "primers_for_genotyping",
             "created_date_time",
             f"created_by__{get_user_model().USERNAME_FIELD}",
+            "locations",
         )
         export_order = fields
 

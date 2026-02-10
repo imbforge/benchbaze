@@ -1,7 +1,4 @@
-from functools import reduce
-
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.db.models.functions import Collate
 from djangoql.schema import StrField
 
@@ -51,6 +48,10 @@ class SearchFieldUserUsernameWithOptions(StrField):
     model_user_options = None
     suggest_options = True
 
+    def __init__(self, model_user_options=None, **kwargs):
+        self.model_user_options = model_user_options
+        super().__init__(**kwargs)
+
     def get_options(self, search):
         """Removes system users from the list of options,
         distinct() returns only unique values
@@ -95,6 +96,10 @@ class SearchFieldUserLastnameWithOptions(StrField):
     model_user_options = None
     suggest_options = True
     id_list = []
+
+    def __init__(self, model_user_options=None, **kwargs):
+        self.model_user_options = model_user_options
+        super().__init__(**kwargs)
 
     def get_options(self, search):
         """Removes system users from the list of options,

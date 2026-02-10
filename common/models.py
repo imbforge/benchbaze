@@ -420,3 +420,31 @@ class ZebraLabelFieldsMixin:
             "",
             str(self.created_by)[:17],
         ]
+
+
+class EnhancedModelCleanMixin:
+    def clean(self):
+        """Enhanced clean method to call all methods starting with 'clean_field_'"""
+
+        super().clean()
+
+        errors = [
+            func()
+            for func_name in dir(self)
+            if func_name.startswith("clean_field_")
+            and callable(func := getattr(self, func_name))
+        ]
+
+        if errors:
+            # Combine ValidationError instances
+            combined_errors = {}
+            for err in errors:
+                # If err is a dict, it contains field-specific errors
+                if isinstance(err, dict):
+                    for field, field_errors in err.items():
+                        combined_errors.setdefault(field, []).extend(field_errors)
+                # If err is a list, it contains non-field errors
+                elif isinstance(err, list):
+                    combined_errors.setdefault("__all__", []).extend(err)
+
+            raise ValidationError(combined_errors)

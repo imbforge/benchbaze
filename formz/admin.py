@@ -15,6 +15,8 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 from import_export import resources
 from import_export.fields import Field
+from django.urls import reverse
+
 
 from .models import (
     Header,
@@ -23,7 +25,6 @@ from .models import (
     SequenceFeature,
     SequenceFeatureAlias,
     Species,
-    StorageLocation,
 )
 from .update_zkbs_records import (
     update_zkbs_celllines,
@@ -268,40 +269,39 @@ class ProjectAdmin(admin.ModelAdmin):
 
     @admin.display(description="")
     def model_search_link(self, instance):
-        projects = (
-            str(
-                tuple(
-                    [instance.short_title]
-                    + list(
-                        Project.objects.filter(
-                            parent_project_id=instance.id
-                        ).values_list("short_title", flat=True)
-                    )
+        # Create Django QL query string to search project by short title
+        ql_search_query = '", "'.join(
+            [instance.short_title]
+            + list(
+                Project.objects.filter(parent_project_id=instance.id).values_list(
+                    "short_title", flat=True
                 )
             )
-            .replace("'", '"')
-            .replace(",)", ")")
         )
+        ql_search_query = f'?q-l=on&q=formz_projects_title+in+("{ql_search_query}")'
 
-        html_str = ""
+        # Get models that have a FormZ
+        models = [
+            ct.model_class()
+            for ct in ContentType.objects.filter(app_label="collection")
+            if (model := ct.model_class()) and getattr(model, "_formz_enable", False)
+        ]
 
-        for loc in StorageLocation.objects.all().order_by("collection_model__model"):
-            model = loc.collection_model.model_class()
+        # Generate field value
+        html_str = []
+        for model in models:
             if model.objects.filter(
                 Q(formz_projects__id=instance.id)
                 | Q(formz_projects__parent_project__id=instance.id)
             ).exists():
-                html_str = (
-                    html_str
-                    + "<a href='/{}/{}/?q-l=on&q=formz_projects_title+in+{}'>{}</a>".format(
-                        loc.collection_model.app_label,
-                        loc.collection_model.model,
-                        projects,
-                        capfirst(model._meta.verbose_name_plural),
-                    )
+                url = reverse(
+                    f"admin:{model._meta.app_label}_{model._meta.model_name}_changelist"
+                )
+                html_str.append(
+                    f"<a href='{url}{ql_search_query}'>{capfirst(model._meta.verbose_name_plural)}</a>"
                 )
 
-        html_str = html_str.replace("><", "> | <")
+        html_str = " | ".join(html_str)
 
         return mark_safe(html_str)
 
@@ -542,48 +542,6 @@ class HeaderAdmin(admin.ModelAdmin):
             return HttpResponseRedirect("..")
         else:
             return super().add_view(request)
-
-
-class StorageLocationAdmin(admin.ModelAdmin):
-    list_display = ("collection_model_prettified", "storage_location", "species")
-    list_display_links = ("collection_model_prettified",)
-    list_per_page = 25
-    autocomplete_fields = ["species"]
-
-    @admin.display(description="Collection")
-    def collection_model_prettified(self, instance):
-        return str(
-            instance.collection_model.model_class()._meta.verbose_name.capitalize()
-        )
-
-    def has_module_permission(self, request):
-        # Show this model on the admin home page only for superusers and
-        # lab managers
-        if (
-            request.user.groups.filter(name="Lab manager").exists()
-            or request.user.is_superuser
-        ):
-            return True
-        else:
-            return False
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        try:
-            request.resolver_match.args[0]
-        except Exception:
-            # Include only relevant models from collection app
-
-            if db_field.name == "collection_model":
-                kwargs["queryset"] = (
-                    ContentType.objects.filter(model__contains="strain")
-                    .exclude(model__contains="historical")
-                    .exclude(model__contains="plasmid")
-                    .exclude(model__contains="summary")
-                    | ContentType.objects.filter(model="plasmid")
-                    | ContentType.objects.filter(model="cellline")
-                )
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class SpeciesForm(forms.ModelForm):

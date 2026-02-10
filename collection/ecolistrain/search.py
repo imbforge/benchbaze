@@ -1,56 +1,27 @@
-from django.contrib.auth import get_user_model
-from djangoql.schema import DjangoQLSchema
-
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
-
 from ..shared.admin import (
     FieldCreated,
     FieldFormZProject,
     FieldLastChanged,
     FieldUse,
 )
-from .models import EColiStrain
-
-User = get_user_model()
+from ..shared.search import CollectionQLSchema
 
 
-class EColiStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = EColiStrain
+class EColiStrainQLSchema(CollectionQLSchema):
+    """DjangoQL schema for EColiStrain collection model"""
 
-
-class EColiStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = EColiStrain
-
-
-class EColiStrainQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
-
-    include = (EColiStrain, User)  # Include only the relevant models to be searched
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == EColiStrain:
-            return [
-                "id",
-                "name",
-                "resistance",
-                "genotype",
-                "supplier",
-                FieldUse(),
-                "purpose",
-                "note",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldFormZProject(),
-            ]
-        elif model == User:
-            return [
-                EColiStrainSearchFieldUserUsername(),
-                EColiStrainSearchFieldUserLastname(),
-            ]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "name",
+        "resistance",
+        "genotype",
+        "supplier",
+        FieldUse(),
+        "purpose",
+        "note",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        FieldFormZProject(),
+        "locations",
+    ]

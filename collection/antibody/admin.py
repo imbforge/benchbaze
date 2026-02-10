@@ -1,7 +1,11 @@
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
 from ..shared.actions import create_label
-from ..shared.admin import CollectionSimpleAdmin
+from ..shared.admin import (
+    AddLocationInline,
+    CollectionSimpleAdmin,
+    LocationInline,
+)
 from .actions import export_antibody
 from .models import AntibodyDoc
 from .search import AntibodyQLSchema
@@ -35,7 +39,12 @@ class AntibodyAdmin(CollectionSimpleAdmin):
     djangoql_schema = AntibodyQLSchema
     actions = [export_antibody, create_label]
     search_fields = ["id", "name"]
-    inlines = [AntibodyDocInline, AntibodyAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        AntibodyDocInline,
+        AntibodyAddDocInline,
+    ]
     clone_ignore_fields = ["info_sheet"]
     obj_specific_fields = [
         "name",

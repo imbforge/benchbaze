@@ -1,10 +1,9 @@
-from django.contrib import admin
-from django.urls import resolve
 from django.utils.safestring import mark_safe
 
 from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
+    GetParentObjectInlineMixin,
 )
 from formz.actions import formz_as_html
 
@@ -14,8 +13,10 @@ from ..sacerevisiaestrain.models import (
 )
 from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
 )
 from .actions import export_sacerevisiaestrain
@@ -23,7 +24,7 @@ from .forms import SaCerevisiaeStrainAdminForm
 from .search import SaCerevisiaeStrainQLSchema
 
 
-class SaCerevisiaeStrainEpisomalPlasmidInline(admin.TabularInline):
+class SaCerevisiaeStrainEpisomalPlasmidInline(GetParentObjectInlineMixin):
     autocomplete_fields = ["plasmid", "formz_projects"]
     model = SaCerevisiaeStrainEpisomalPlasmid
     verbose_name_plural = mark_safe(
@@ -38,19 +39,6 @@ class SaCerevisiaeStrainEpisomalPlasmidInline(admin.TabularInline):
     )
     extra = 0
     template = "admin/tabular.html"
-
-    def get_parent_object(self, request):
-        """
-        Returns the parent object from the request or None.
-
-        Note that this only works for Inlines, because the `parent_model`
-        is not available in the regular admin.ModelAdmin as an attribute.
-        """
-
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
-        return None
 
     def get_queryset(self, request):
         """Modify to conditionally collapse inline if there is an episomal
@@ -105,6 +93,8 @@ class SaCerevisiaeStrainAdmin(
     ]
     inlines = [
         SaCerevisiaeStrainEpisomalPlasmidInline,
+        LocationInline,
+        AddLocationInline,
         SaCerevisiaeStrainDocInline,
         SaCerevisiaeStrainAddDocInline,
     ]

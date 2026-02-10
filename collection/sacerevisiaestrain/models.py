@@ -7,6 +7,7 @@ from django.forms import ValidationError
 
 from common.models import (
     DocFileMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -17,6 +18,7 @@ from ..shared.models import (
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -49,12 +51,14 @@ CEREVISIAE_MATING_TYPE_CHOICES = (
 
 
 class SaCerevisiaeStrain(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -73,12 +77,14 @@ class SaCerevisiaeStrain(
         "history_formz_gentech_methods": "formz.GenTechMethod",
         "history_sequence_features": "formz.SequenceFeature",
         "history_documents": "collection.SaCerevisiaeStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _storage_requires_species = "Saccharomyces cerevisiae"
 
     name = models.CharField("name", max_length=255, blank=False)
     relevant_genotype = models.CharField(

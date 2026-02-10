@@ -1,5 +1,4 @@
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.core.exceptions import FieldError, ValidationError
 from django.db import DataError, models
 from django.db.models.functions import Collate
@@ -7,29 +6,14 @@ from djangoql.admin import DjangoQLSearchMixin
 from djangoql.exceptions import DjangoQLError
 from djangoql.parser import DjangoQLParser
 from djangoql.queryset import build_filter
-from djangoql.schema import DjangoQLSchema, StrField
-
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
+from djangoql.schema import StrField
 
 from ..shared.admin import (
     FieldCreated,
     FieldLastChanged,
     FieldUse,
 )
-from .models import Oligo
-
-User = get_user_model()
-
-
-class OligoSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = Oligo
-
-
-class OligoSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = Oligo
+from ..shared.search import CollectionQLSchema
 
 
 class OligoSearchFieldSequence(StrField):
@@ -50,43 +34,37 @@ class OligoSearchFieldSequence(StrField):
         return ~q if invert else q
 
 
-class OligoQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
+class OligoQLSchema(CollectionQLSchema):
+    """DjangoQL schema for Oligo collection model"""
 
-    include = (Oligo, User)
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == Oligo:
-            return [
-                "id",
-                "name",
-                OligoSearchFieldSequence(),
-                "length",
-                FieldUse(),
-                "gene",
-                "restriction_site",
-                "description",
-                "comment",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-            ]
-        elif model == User:
-            return [OligoSearchFieldUserUsername(), OligoSearchFieldUserLastname()]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "name",
+        OligoSearchFieldSequence(),
+        "length",
+        FieldUse(),
+        "gene",
+        "restriction_site",
+        "description",
+        "comment",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        "locations",
+    ]
 
 
 class OligoDjangoQLSearchMixin(DjangoQLSearchMixin):
     def get_search_results(self, request, queryset, search_term):
         """
-        Filter sequence using a non-deterministic collaction
+        Override parent's method to apply DjangoQL search on Oligo queryset with an
+        additional annotation to filter by sequence using a non-deterministic collation,
+        which is necessary to avoid errors when filtering by sequence in Postgres.
         """
 
         def apply_search(queryset, search, schema=None):
             ast = DjangoQLParser().parse(search)
-            schema = schema or DjangoQLSchema
+            schema = schema or OligoQLSchema
             schema_instance = schema(queryset.model)
             schema_instance.validate(ast)
             filter_params = build_filter(ast, schema_instance)

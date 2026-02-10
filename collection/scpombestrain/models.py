@@ -7,6 +7,7 @@ from django.forms import ValidationError
 
 from common.models import (
     DocFileMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -17,6 +18,7 @@ from ..shared.models import (
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -36,12 +38,14 @@ class ScPombeStrainDoc(DocFileMixin):
 
 
 class ScPombeStrain(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -64,8 +68,10 @@ class ScPombeStrain(
         "history_formz_gentech_methods": "formz.GenTechMethod",
         "history_sequence_features": "formz.SequenceFeature",
         "history_documents": "collection.ScPombeStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _storage_requires_species = "Schizosaccharomyces pombe"
 
     box_number = models.SmallIntegerField("box number", blank=False)
     parent_1 = models.ForeignKey(

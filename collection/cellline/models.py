@@ -2,10 +2,14 @@ import random
 from datetime import timedelta
 
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
+from simple_history.models import HistoricalRecords
+
 
 from common.models import (
     DocFileMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
@@ -18,6 +22,7 @@ from ..shared.models import (
     FormZFieldsMixin,
     HistoryDocFieldMixin,
     HistoryPlasmidsFieldsMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -48,6 +53,7 @@ class CellLineDoc(DocFileMixin):
 
 
 class CellLine(
+    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
@@ -55,6 +61,7 @@ class CellLine(
     HistoryPlasmidsFieldsMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -72,8 +79,9 @@ class CellLine(
         "history_formz_gentech_methods": "formz.GenTechMethod",
         "history_sequence_features": "formz.SequenceFeature",
         "history_documents": "collection.CellLineDoc",
-        "history_viruses_mammalian": "collection.VirusMammalian",
-        "history_viruses_insect": "collection.VirusInsect",
+        "history_locations": "collection.LocationItem",
+        "history_viruses_mammalian_integrated": "collection.VirusMammalian",
+        "history_viruses_transient": "collection.CellLineVirusTransient",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -115,23 +123,18 @@ class CellLine(
     integrated_plasmids = models.ManyToManyField(
         "Plasmid", related_name="%(class)s_integrated_plasmids", blank=True
     )
+    viruses_mammalian_integrated = models.ManyToManyField(
+        "VirusMammalian",
+        verbose_name="Integrated mammalian viruses",
+        help_text="Viruses used to create this cell line",
+        related_name="%(class)s_virus_mammalian_integrated",
+        blank=True,
+    )
     episomal_plasmids = models.ManyToManyField(
         "Plasmid",
         related_name="%(class)s_episomal_plasmids",
         blank=True,
         through="CellLineEpisomalPlasmid",
-    )
-    viruses_mammalian = models.ManyToManyField(
-        "VirusMammalian",
-        related_name="%(class)s_virus_mammalian",
-        blank=True,
-        through="CellLineVirusMammalian",
-    )
-    viruses_insect = models.ManyToManyField(
-        "VirusInsect",
-        related_name="%(class)s_virus_insect",
-        blank=True,
-        through="CellLineVirusInsect",
     )
     zkbs_cell_line = models.ForeignKey(
         "formz.ZkbsCellLine",
@@ -145,6 +148,20 @@ class CellLine(
 
     history_cassette_plasmids = None
     history_all_plasmids_in_stocked_strain = None
+    history_viruses_mammalian_integrated = ArrayField(
+        models.PositiveIntegerField(),
+        verbose_name="viruses - mammalian (integrated)",
+        blank=True,
+        null=True,
+        default=list,
+    )
+    history_viruses_transient = ArrayField(
+        models.PositiveIntegerField(),
+        verbose_name="viruses (transient)",
+        blank=True,
+        null=True,
+        default=list,
+    )
 
     def __str__(self):
         return f"{self.id} - {self.name}"
@@ -175,9 +192,10 @@ class CellLine(
     @property
     def all_sequence_features(self):
         elements = super().all_sequence_features
-        all_plasmids = self.all_instock_plasmids
-        for pl in all_plasmids:
+        for pl in self.all_instock_plasmids:
             elements = elements | pl.sequence_features.all()
+        for virus in self.all_instock_viruses:
+            elements = elements | virus.sequence_features.all()
         return elements.distinct().order_by("name")
 
     @property
@@ -219,6 +237,10 @@ class CellLine(
         labels[2] = "Passage:"
         return labels
 
+    @property
+    def all_instock_viruses(self):
+        return self.viruses_mammalian_integrated.all()
+
 
 class CellLineEpisomalPlasmid(models.Model):
     _inline_foreignkey_fieldname = "cell_line"
@@ -254,3 +276,72 @@ class CellLineEpisomalPlasmid(models.Model):
 
     def is_highlighted(self):
         return self.s2_work_episomal_plasmid
+
+
+class CellLineVirusTransient(OwnershipFieldsMixin, models.Model):
+    _inline_foreignkey_fieldname = "cell_line"
+    _history_use_through_model_id = True
+
+    cell_line = models.ForeignKey(
+        "CellLine", related_name="viruses_transient", on_delete=models.PROTECT
+    )
+
+    virus_mammalian = models.ForeignKey(
+        "VirusMammalian",
+        verbose_name="Mammalian virus",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    virus_insect = models.ForeignKey(
+        "VirusInsect",
+        verbose_name="Insect virus",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+
+    formz_projects = models.ManyToManyField(
+        "formz.Project", related_name="%(class)s_projects", blank=False
+    )
+    created_date = models.DateField("created", blank=False, null=True)
+    destroyed_date = models.DateField("destroyed", blank=True, null=True)
+    history = HistoricalRecords(m2m_fields=[formz_projects])
+
+    class Meta:
+        verbose_name = "transient virus"
+        verbose_name_plural = "transient viruses"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(virus_mammalian__isnull=False, virus_insect__isnull=True)
+                    | models.Q(virus_mammalian__isnull=True, virus_insect__isnull=False)
+                ),
+                name="mammalian_or_insect_virus_not_both",
+            )
+        ]
+
+    def clean(self):
+        """Validate that either virus_mammalian or virus_insect is set, but not both"""
+
+        super().clean()
+
+        if self.virus_mammalian and self.virus_insect:
+            raise ValidationError(
+                "Choose either a mammalian or an insect virus, not both."
+            )
+        if not self.virus_mammalian and not self.virus_insect:
+            raise ValidationError("Choose a mammalian virus or an insect virus.")
+
+    def __str__(self):
+        return f"{self.virus} ({self.virus_type}), {self.created_date}"
+
+    @property
+    def virus(self):
+        return self.virus_mammalian or self.virus_insect
+
+    @property
+    def virus_type(self):
+        if virus := self.virus:
+            return virus.get_typ_e_display()
+        return None

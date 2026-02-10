@@ -1,6 +1,10 @@
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
-from ..shared.admin import CollectionSimpleAdmin
+from ..shared.admin import (
+    AddLocationInline,
+    CollectionSimpleAdmin,
+    LocationInline,
+)
 from .actions import export_inhibitor
 from .models import InhibitorDoc
 from .search import InhibitorQLSchema
@@ -32,7 +36,12 @@ class InhibitorAdmin(CollectionSimpleAdmin):
     djangoql_schema = InhibitorQLSchema
     actions = [export_inhibitor]
     search_fields = ["id", "name"]
-    inlines = [InhibitorDocInline, InhibitorAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        InhibitorDocInline,
+        InhibitorAddDocInline,
+    ]
     clone_ignore_fields = ["info_sheet"]
     obj_specific_fields = [
         "name",

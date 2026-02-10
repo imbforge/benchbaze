@@ -1,10 +1,5 @@
-from django.contrib.auth import get_user_model
-from djangoql.schema import DjangoQLSchema, IntField, StrField
+from djangoql.schema import IntField, StrField
 
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
 from formz.models import Project as FormZProject
 
 from ..shared.admin import (
@@ -14,27 +9,22 @@ from ..shared.admin import (
     FieldIntegratedPlasmidM2M,
     FieldLastChanged,
 )
-from .models import CellLine
-
-User = get_user_model()
+from ..shared.search import CollectionQLSchema
 
 
 class CellLineSearchFieldParentalCellLineId(IntField):
+    """Search field for the id of the parental cell line of a cell line"""
+
     name = "parental_line_id"
 
     def get_lookup_name(self):
         return "parental_line__id"
 
 
-class CellLineSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = CellLine
-
-
-class CellLineSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = CellLine
-
-
 class CellLineSearchFieldEpisomalPlasmidFormZProject(StrField):
+    """Search field for the short title of FormZ projects linked
+    to episomal plasmids in a cell line"""
+
     name = "episomal_plasmids_formz_projects_title"
     suggest_options = True
 
@@ -45,39 +35,53 @@ class CellLineSearchFieldEpisomalPlasmidFormZProject(StrField):
         return "celllineepisomalplasmid__formz_projects__short_title"
 
 
-class CellLineQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
+class CellLineSearchFieldMammalianVirusId(IntField):
+    """Search field for the short title of FormZ projects linked
+    to episomal plasmids in a cell line"""
 
-    include = (CellLine, User)  # Include only the relevant models to be searched
+    name = "virus_transient_mammalian_id"
 
-    def get_fields(self, model):
-        """Define fields that can be searched"""
+    def get_lookup_name(self):
+        return "viruses_transient__virus_mammalian__id"
 
-        if model == CellLine:
-            return [
-                "id",
-                "name",
-                "box_name",
-                "alternative_name",
-                CellLineSearchFieldParentalCellLineId(),
-                "organism",
-                "cell_type_tissue",
-                "culture_type",
-                "growth_condition",
-                "freezing_medium",
-                "received_from",
-                FieldIntegratedPlasmidM2M(),
-                FieldEpisomalPlasmidM2M(),
-                "description_comment",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldFormZProject(),
-                CellLineSearchFieldEpisomalPlasmidFormZProject(),
-            ]
-        elif model == User:
-            return [
-                CellLineSearchFieldUserUsername(),
-                CellLineSearchFieldUserLastname(),
-            ]
-        return super().get_fields(model)
+    def get_lookup(self, path, operator, value):
+        return super().get_lookup(path, operator, value)
+
+
+class CellLineSearchFieldInsectVirusId(IntField):
+    """Search field for the short title of FormZ projects linked
+    to episomal plasmids in a cell line"""
+
+    name = "virus_transient_insect_id"
+
+    def get_lookup_name(self):
+        return "viruses_transient__virus_insect__id"
+
+
+class CellLineQLSchema(CollectionQLSchema):
+    """GraphQL schema for CellLine collection model"""
+
+    fields = [
+        "id",
+        "name",
+        "box_name",
+        "alternative_name",
+        CellLineSearchFieldParentalCellLineId(),
+        "organism",
+        "cell_type_tissue",
+        "culture_type",
+        "growth_condition",
+        "freezing_medium",
+        "received_from",
+        FieldIntegratedPlasmidM2M(),
+        FieldEpisomalPlasmidM2M(),
+        "description_comment",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        FieldFormZProject(),
+        CellLineSearchFieldEpisomalPlasmidFormZProject(),
+        CellLineSearchFieldMammalianVirusId(),
+        CellLineSearchFieldInsectVirusId(),
+        "locations",
+    ]

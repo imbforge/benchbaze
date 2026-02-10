@@ -1,52 +1,28 @@
-from django.contrib.auth import get_user_model
-from djangoql.schema import DjangoQLSchema
-
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
-
 from ..shared.admin import (
     FieldCreated,
     FieldLastChanged,
 )
-from .models import SiRna
-
-User = get_user_model()
+from ..shared.search import CollectionQLSchema
 
 
-class SiRnaSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    model_user_options = SiRna
+class SiRnaQLSchema(CollectionQLSchema):
+    """DjangoQL schema for SiRna collection model"""
 
-
-class SiRnaSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    model_user_options = SiRna
-
-
-class SiRnaQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == SiRna:
-            return [
-                "id",
-                "name",
-                "sequence",
-                "sequence_antisense",
-                "supplier",
-                "supplier_part_no",
-                "supplier_si_rna_id",
-                "species",
-                "target_genes",
-                "locus_ids",
-                "description_comment",
-                "info_sheet",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-            ]
-        elif model == User:
-            return [SiRnaSearchFieldUserUsername(), SiRnaSearchFieldUserLastname()]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "name",
+        "sequence",
+        "sequence_antisense",
+        "supplier",
+        "supplier_part_no",
+        "supplier_si_rna_id",
+        "species",
+        "target_genes",
+        "locus_ids",
+        "description_comment",
+        "info_sheet",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        "locations",
+    ]

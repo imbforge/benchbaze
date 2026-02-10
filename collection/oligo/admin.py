@@ -8,7 +8,9 @@ from common.admin import (
 
 from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
+    LocationInline,
     rename_info_sheet_save_obj_update_history,
 )
 from .actions import export_oligo
@@ -47,7 +49,12 @@ class OligoAdmin(
     search_fields = ["id", "name"]
     autocomplete_fields = ["sequence_features"]
     form = OligoAdminForm
-    inlines = [OligoDocInline, OligoAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        OligoDocInline,
+        OligoAddDocInline,
+    ]
     show_formz = False
     clone_ignore_fields = [
         "info_sheet",

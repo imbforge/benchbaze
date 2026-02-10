@@ -6,12 +6,14 @@ from django_better_admin_arrayfield.models.fields import ArrayField as BetterArr
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
 
 from ..shared.models import (
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -33,10 +35,12 @@ class SiRnaDoc(DocFileMixin):
 
 
 class SiRna(
+    EnhancedModelCleanMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryFieldMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
     models.Model,
 ):
@@ -49,6 +53,7 @@ class SiRna(
     _history_array_fields = {
         "history_orders": "purchasing.Order",
         "history_documents": "collection.SiRnaDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
 

@@ -1,26 +1,18 @@
-from djangoql.schema import DjangoQLSchema
-
-from .models import Inhibitor
-
-from ..shared.admin import FieldLocation
+from ..shared.search import CollectionQLSchema
 
 
-class InhibitorQLSchema(DjangoQLSchema):
-    """Customize search functionality for Inhibitor"""
+class InhibitorQLSchema(CollectionQLSchema):
+    """DjangoQL schema for Inhibitor collection model"""
 
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == Inhibitor:
-            return [
-                "id",
-                "name",
-                "other_names",
-                "target",
-                "received_from",
-                "catalogue_number",
-                FieldLocation(),
-                "description_comment",
-                "info_sheet",
-            ]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "name",
+        "other_names",
+        "target",
+        "received_from",
+        "catalogue_number",
+        "locations",
+        "description_comment",
+        "info_sheet",
+        "locations",
+    ]

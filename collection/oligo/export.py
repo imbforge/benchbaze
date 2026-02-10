@@ -1,10 +1,10 @@
-from import_export import resources
 from django.contrib.auth import get_user_model
 
+from ..shared.export import CollectionExportMixin
 from .models import Oligo
 
 
-class OligoExportResource(resources.ModelResource):
+class OligoExportResource(CollectionExportMixin):
     """Defines a custom export resource class for Oligo"""
 
     class Meta:
@@ -20,5 +20,6 @@ class OligoExportResource(resources.ModelResource):
             "comment",
             "created_date_time",
             f"created_by__{get_user_model().USERNAME_FIELD}",
+            "locations",
         )
         export_order = fields
