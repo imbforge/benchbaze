@@ -1,17 +1,21 @@
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
 
 from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -35,9 +39,12 @@ class AntibodyDoc(DocFileMixin):
 
 
 class Antibody(
+    EnhancedModelCleanMixin,
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
     OwnershipFieldsMixin,
@@ -48,6 +55,10 @@ class Antibody(
         verbose_name_plural = "antibodies"
 
     _model_upload_to = "collection/antibody/"
+    _history_array_fields = {
+        "history_documents": "collection.AntibodyDoc",
+        "history_locations": "collection.LocationItem",
+    }
 
     # Fields
     name = models.CharField("name", max_length=255, blank=False)
@@ -146,3 +157,10 @@ class Antibody(
     # Methods
     def __str__(self):
         return f"{self.id} - {self.name}"
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = "Glycerol:"
+        labels[-1] = ""
+        return labels

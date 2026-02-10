@@ -24,7 +24,9 @@ LAB_ABBREVIATION_FOR_FILES = ""
 WORM_ALLELE_LAB_IDS = []
 WORM_ALLELE_LAB_ID_DEFAULT = "worm_allele_lab_id_default"
 DEFAULT_ECOLI_STRAIN_IDS = []
-PLASMID_AS_ECOLI_STOCK = False
+PLASMID_STORAGE_TYPE = "plasmid"  # choose from ("plasmid", "bacteria", "both")
+DEFAULT_HELPER_ECOLI_VIRUS_INSECT_ID = 1
+DEFAULT_HELPER_CELLLINE_VIRUS_INSECT_ID = 1
 
 # OIDC settings, if available, otherwise set OIDC_ENABLE to False
 OIDC_ENABLE = True
@@ -62,4 +64,8 @@ FAIL2BAN_NUM_ATTEMPTS = 3
 # Others
 MS_TEAMS_WEBHOOK = "ms_teams_webhook"
 ORDER_EMAIL_ADDRESSES = ["order_email_address"]
-DOCS_URL = "DOCS_URL"
+MS_TEAMS_WEBHOOK_PURCHASING = "https://www.example.com"
+DOCS_URL = "https://www.example.com"
+MS_TEAMS_WEBHOOK_LOGGER = "https://www.example.com"
+IMPRESSUM_URL = "https://www.example.com"
+DATA_PROTECTION_URL = "https://www.example.com"

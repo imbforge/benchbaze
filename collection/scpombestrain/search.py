@@ -1,10 +1,5 @@
-from django.contrib.auth import get_user_model
-from djangoql.schema import DjangoQLSchema, StrField
+from djangoql.schema import StrField
 
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
 from formz.models import Project as FormZProject
 
 from ..shared.admin import (
@@ -17,24 +12,13 @@ from ..shared.admin import (
     FieldParent1,
     FieldParent2,
 )
-from .models import ScPombeStrain
-
-User = get_user_model()
-
-
-class ScPombeStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = (
-        ScPombeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
-
-
-class ScPombeStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = (
-        ScPombeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+from ..shared.search import CollectionQLSchema
 
 
 class ScPombeStrainFieldEpisomalPlasmidFormZProject(StrField):
+    """Search field for the short title of FormZ projects linked
+    to episomal plasmids in a ScPombeStrain"""
+
     name = "episomal_plasmids_formz_projects_title"
     suggest_options = True
 
@@ -45,39 +29,28 @@ class ScPombeStrainFieldEpisomalPlasmidFormZProject(StrField):
         return "scpombestrainepisomalplasmid__formz_projects__short_title"
 
 
-class ScPombeStrainQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
+class ScPombeStrainQLSchema(CollectionQLSchema):
+    """GraphQL schema for ScPombeStrain collection model"""
 
-    include = (ScPombeStrain, User)  # Include only the relevant models to be searched
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == ScPombeStrain:
-            return [
-                "id",
-                "box_number",
-                FieldParent1(),
-                FieldParent2(),
-                "parental_strain",
-                "mating_type",
-                "auxotrophic_marker",
-                "name",
-                FieldIntegratedPlasmidM2M(),
-                FieldCassettePlasmidM2M(),
-                FieldEpisomalPlasmidM2M(),
-                "phenotype",
-                "received_from",
-                "comment",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldFormZProject(),
-                ScPombeStrainFieldEpisomalPlasmidFormZProject(),
-            ]
-        elif model == User:
-            return [
-                ScPombeStrainSearchFieldUserUsername(),
-                ScPombeStrainSearchFieldUserLastname(),
-            ]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "box_number",
+        FieldParent1(),
+        FieldParent2(),
+        "parental_strain",
+        "mating_type",
+        "auxotrophic_marker",
+        "name",
+        FieldIntegratedPlasmidM2M(),
+        FieldCassettePlasmidM2M(),
+        FieldEpisomalPlasmidM2M(),
+        "phenotype",
+        "received_from",
+        "comment",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        FieldFormZProject(),
+        ScPombeStrainFieldEpisomalPlasmidFormZProject(),
+        "locations",
+    ]

@@ -1,6 +1,7 @@
 import itertools
 import os
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -345,7 +346,10 @@ class HistoryFieldMixin(models.Model):
                     )
 
                 elif field_type == "ArrayField":
-                    array_field_model = self._history_array_fields.get(field.name, None)
+                    array_field_model_name = self._history_array_fields.get(
+                        field.name, None
+                    )
+                    array_field_model = apps.get_model(array_field_model_name.lower())
                     if array_field_model:
                         value_out = (
                             ", ".join(
@@ -431,3 +435,43 @@ class HistoryFieldMixin(models.Model):
                     history_summary_data.append(history_change)
 
         return history_summary_data
+
+
+class ZebraLabelFieldsMixin:
+    @property
+    def zebra_n0jtt_label_content(self):
+        return [
+            f"<b>{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.id}</b>",
+            self.name,
+            "",
+            "",
+            str(self.created_by)[:17],
+        ]
+
+
+class EnhancedModelCleanMixin:
+    def clean(self):
+        """Enhanced clean method to call all methods starting with 'clean_field_'"""
+
+        super().clean()
+
+        errors = [
+            func()
+            for func_name in dir(self)
+            if func_name.startswith("clean_field_")
+            and callable(func := getattr(self, func_name))
+        ]
+
+        if errors:
+            # Combine ValidationError instances
+            combined_errors = {}
+            for err in errors:
+                # If err is a dict, it contains field-specific errors
+                if isinstance(err, dict):
+                    for field, field_errors in err.items():
+                        combined_errors.setdefault(field, []).extend(field_errors)
+                # If err is a list, it contains non-field errors
+                elif isinstance(err, list):
+                    combined_errors.setdefault("__all__", []).extend(err)
+
+            raise ValidationError(combined_errors)

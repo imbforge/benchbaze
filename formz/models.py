@@ -1,10 +1,9 @@
-from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.utils.html import format_html, mark_safe
 
-User = get_user_model()
+AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 class NucleicAcidPurity(models.Model):
@@ -84,14 +83,14 @@ class Project(models.Model):
         null=True,
     )
     project_leader = models.ManyToManyField(
-        User,
+        AUTH_USER_MODEL,
         verbose_name="project leaders",
         related_name="formz_project_leader",
         help_text="<i>Projektleiter</i>",
         blank=False,
     )
     deputy_project_leader = models.ManyToManyField(
-        User,
+        AUTH_USER_MODEL,
         verbose_name="deputy project leaders",
         related_name="formz_deputy_project_leader",
         help_text="<i>Stellvertretende Projektleiter</i>",
@@ -165,18 +164,45 @@ class Project(models.Model):
         blank=True,
     )
     users = models.ManyToManyField(
-        User, related_name="formz_project_users", blank=True, through="ProjectUser"
+        AUTH_USER_MODEL,
+        related_name="formz_project_users",
+        blank=True,
+        through="ProjectUser",
     )
 
     def __str__(self):
         return str(self.short_title_english)
 
+    def clean(self):
+        errors = {}
+
+        if '"' in self.short_title or '"' in self.short_title_english:
+            errors["short_title"] = (
+                'Double air quotes (") are not allowed in this field'
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        # Remove any leading and trailing white spaces
+        if self.short_title:
+            self.short_title = self.short_title.strip()
+        if self.short_title_english:
+            self.short_title_english = self.short_title_english.strip()
+
+        super().save(force_insert, force_update, using, update_fields)
+
 
 class ProjectUser(models.Model):
     formz_project = models.ForeignKey(
-        Project, verbose_name="formZ project", on_delete=models.PROTECT
+        "Project", verbose_name="formZ project", on_delete=models.PROTECT
     )
-    user = models.ForeignKey(User, verbose_name="user", on_delete=models.PROTECT)
+    user = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="user", on_delete=models.PROTECT
+    )
     beginning_work_date = models.DateField("beginning of work", blank=True, null=True)
     end_work_date = models.DateField("end of work", blank=True, null=True)
 
@@ -328,21 +354,21 @@ class SequenceFeature(models.Model):
         blank=False,
     )
     nuc_acid_purity = models.ForeignKey(
-        NucleicAcidPurity,
+        "NucleicAcidPurity",
         verbose_name="nucleic acid purity",
         on_delete=models.PROTECT,
         blank=False,
         null=True,
     )
     nuc_acid_risk = models.ForeignKey(
-        NucleicAcidRisk,
+        "NucleicAcidRisk",
         verbose_name="nucleic acid risk potential",
         on_delete=models.PROTECT,
         blank=False,
         null=True,
     )
     zkbs_oncogene = models.ForeignKey(
-        ZkbsOncogene,
+        "ZkbsOncogene",
         verbose_name="ZKBS database oncogene",
         on_delete=models.PROTECT,
         blank=True,
@@ -405,7 +431,7 @@ class SequenceFeatureAlias(models.Model):
 
     label = models.CharField("alias", max_length=255, blank=True, unique=True)
     sequence_feature = models.ForeignKey(
-        SequenceFeature, on_delete=models.PROTECT, related_name="alias"
+        "SequenceFeature", on_delete=models.PROTECT, related_name="alias"
     )
 
     def __str__(self):
@@ -455,38 +481,3 @@ class Header(models.Model):
 
     def __str__(self):
         return str(self.operator)
-
-
-class StorageLocation(models.Model):
-    collection_model = models.OneToOneField(
-        ContentType,
-        verbose_name="collection",
-        help_text="Strain, plasmids, cell lines, etc.",
-        on_delete=models.PROTECT,
-        blank=False,
-        null=True,
-        unique=True,
-    )
-    storage_location = models.CharField(
-        "storage location",
-        help_text="Room where the collection is stored",
-        max_length=255,
-        blank=False,
-    )
-    species = models.ForeignKey(
-        Species,
-        verbose_name="species",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-    )
-    species_risk_group = models.PositiveSmallIntegerField(
-        "species risk group", choices=((1, 1), (2, 2)), blank=False, null=True
-    )
-
-    class Meta:
-        verbose_name = "storage location"
-        verbose_name_plural = "storage locations"
-
-    def __str__(self):
-        return str(self.storage_location)

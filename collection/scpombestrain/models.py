@@ -12,12 +12,21 @@ from formz.actions import formz_as_html
 from formz.models import GenTechMethod, SequenceFeature
 from formz.models import Project as FormZProject
 
+from common.models import (
+    DocFileMixin,
+    EnhancedModelCleanMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
+)
+
 from ..plasmid.models import Plasmid
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -37,11 +46,14 @@ class ScPombeStrainDoc(DocFileMixin):
 
 
 class ScPombeStrain(
+    EnhancedModelCleanMixin,
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -50,7 +62,25 @@ class ScPombeStrain(
         verbose_name = "strain - Sc. pombe"
         verbose_name_plural = "strains - Sc. pombe"
 
-    # Fields
+    _model_abbreviation = "sp"
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _history_array_fields = {
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_cassette_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_all_plasmids_in_stocked_strain": "collection.Plasmid",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.ScPombeStrainDoc",
+        "history_locations": "collection.LocationItem",
+    }
+    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+    _storage_requires_species = "Schizosaccharomyces pombe"
+
     box_number = models.SmallIntegerField("box number", blank=False)
     parent_1 = models.ForeignKey(
         "self",
@@ -299,6 +329,12 @@ class ScPombeStrain(
     def formz_genotype(self):
         return self.genotype
 
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = f"MT: {self.mating_type}"
+        return labels
+
 
 class ScPombeStrainEpisomalPlasmid(models.Model):
     _inline_foreignkey_fieldname = "scpombe_strain"
@@ -311,7 +347,7 @@ class ScPombeStrainEpisomalPlasmid(models.Model):
         "present in -80° C stock?", default=False
     )
     formz_projects = models.ManyToManyField(
-        FormZProject, related_name="%(class)s_episomal_plasmid_projects", blank=True
+        "formz.Project", related_name="%(class)s_episomal_plasmid_projects", blank=True
     )
     created_date = models.DateField("created", blank=True, null=True)
     destroyed_date = models.DateField("destroyed", blank=True, null=True)

@@ -1,14 +1,16 @@
-from django.contrib import admin
-from django.urls import resolve
 from django.utils.safestring import mark_safe
 
 from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
+    GetParentObjectInlineMixin,
 )
 
+from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
 )
 from .forms import ScPombeStrainAdminForm
@@ -19,7 +21,7 @@ from .models import (
 from .search import ScPombeStrainQLSchema
 
 
-class ScPombeStrainEpisomalPlasmidInline(admin.TabularInline):
+class ScPombeStrainEpisomalPlasmidInline(GetParentObjectInlineMixin):
     autocomplete_fields = ["plasmid", "formz_projects"]
     model = ScPombeStrainEpisomalPlasmid
     verbose_name_plural = mark_safe(
@@ -34,16 +36,6 @@ class ScPombeStrainEpisomalPlasmidInline(admin.TabularInline):
     )
     extra = 0
     template = "admin/tabular.html"
-
-    def get_parent_object(self, request):
-        """
-        Returns the parent object from the request or None.
-        """
-
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
-        return None
 
     def get_queryset(self, request):
         """Modify to conditionally collapse inline if there is an episomal
@@ -80,9 +72,12 @@ class ScPombeStrainAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = ScPombeStrainQLSchema
+    actions = [export_scpombestrain, formz_as_html, create_label]
     form = ScPombeStrainAdminForm
     inlines = [
         ScPombeStrainEpisomalPlasmidInline,
+        LocationInline,
+        AddLocationInline,
         ScPombeStrainDocInline,
         ScPombeStrainAddDocInline,
     ]

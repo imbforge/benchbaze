@@ -6,15 +6,17 @@ from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
-from formz.models import SequenceFeature
 
 from ..shared.models import (
     ApprovalFieldsMixin,
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -36,11 +38,14 @@ class OligoDoc(DocFileMixin):
 
 
 class Oligo(
+    EnhancedModelCleanMixin,
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -50,8 +55,16 @@ class Oligo(
         verbose_name_plural = "oligos"
 
     _model_upload_to = "collection/oligo/"
+    _history_array_fields = {
+        "history_sequence_features": "forms.SequenceFeature",
+        "history_documents": "collection.OligoDoc",
+        "history_locations": "collection.LocationItem",
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
 
-    # Fields
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     sequence = models.CharField(
         "sequence",
@@ -75,7 +88,7 @@ class Oligo(
     )
 
     sequence_features = models.ManyToManyField(
-        SequenceFeature,
+        "formz.SequenceFeature",
         verbose_name="elements",
         related_name="%(class)s_sequence_features",
         blank=True,
@@ -184,6 +197,12 @@ class Oligo(
         self.length = len(self.sequence)
 
         super().save(force_insert, force_update, using, update_fields)
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = "10 µM"
+        return labels
 
     def sequence_formatted(self):
         if self.sequence:

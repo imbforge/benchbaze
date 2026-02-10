@@ -5,6 +5,7 @@ from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
@@ -12,6 +13,7 @@ from common.models import (
 from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -33,11 +35,13 @@ class InhibitorDoc(DocFileMixin):
 
 
 class Inhibitor(
+    EnhancedModelCleanMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryDocFieldMixin,
     HistoryFieldMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
     models.Model,
 ):
@@ -46,8 +50,11 @@ class Inhibitor(
         verbose_name_plural = "inhibitors"
 
     _model_upload_to = "collection/inhibitor/"
+    _history_array_fields = {
+        "history_documents": "collection.InhibitorDoc",
+        "history_locations": "collection.LocationItem",
+    }
 
-    # Fields
     name = models.CharField("name", max_length=255, blank=False)
     other_names = models.CharField("other names", max_length=255, blank=False)
     target = models.CharField("target", max_length=255, blank=True)

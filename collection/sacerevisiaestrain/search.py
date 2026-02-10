@@ -1,10 +1,5 @@
-from django.contrib.auth import get_user_model
-from djangoql.schema import DjangoQLSchema, StrField
+from djangoql.schema import StrField
 
-from common.search import (
-    SearchFieldUserLastnameWithOptions,
-    SearchFieldUserUsernameWithOptions,
-)
 from formz.models import Project as FormZProject
 
 from ..shared.admin import (
@@ -18,24 +13,13 @@ from ..shared.admin import (
     FieldParent2,
     FieldUse,
 )
-from .models import SaCerevisiaeStrain
-
-User = get_user_model()
-
-
-class SaCerevisiaeStrainSearchFieldUserUsername(SearchFieldUserUsernameWithOptions):
-    id_list = (
-        SaCerevisiaeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
-
-
-class SaCerevisiaeStrainSearchFieldUserLastname(SearchFieldUserLastnameWithOptions):
-    id_list = (
-        SaCerevisiaeStrain.objects.all().values_list("created_by", flat=True).distinct()
-    )
+from ..shared.search import CollectionQLSchema
 
 
 class SaCerevisiaeStrainSearchFieldEpisomalPlasmidFormZProject(StrField):
+    """Search field for the short title of FormZ projects linked
+    to episomal plasmids in a SaCerevisiaeStrain"""
+
     name = "episomal_plasmids_formz_projects_title"
     suggest_options = True
 
@@ -46,49 +30,35 @@ class SaCerevisiaeStrainSearchFieldEpisomalPlasmidFormZProject(StrField):
         return "sacerevisiaestrainepisomalplasmid__formz_projects__short_title"
 
 
-class SaCerevisiaeStrainQLSchema(DjangoQLSchema):
-    """Customize search functionality"""
+class SaCerevisiaeStrainQLSchema(CollectionQLSchema):
+    """GraphQL schema for SaCerevisiaeStrain collection model"""
 
-    include = (
-        SaCerevisiaeStrain,
-        User,
-    )  # Include only the relevant models to be searched
-
-    def get_fields(self, model):
-        """Define fields that can be searched"""
-
-        if model == SaCerevisiaeStrain:
-            return [
-                "id",
-                "name",
-                "relevant_genotype",
-                "mating_type",
-                "chromosomal_genotype",
-                FieldParent1(),
-                FieldParent2(),
-                "parental_strain",
-                "construction",
-                "modification",
-                FieldIntegratedPlasmidM2M(),
-                FieldCassettePlasmidM2M(),
-                FieldEpisomalPlasmidM2M(),
-                "plasmids",
-                "selection",
-                "phenotype",
-                "background",
-                "received_from",
-                FieldUse(),
-                "note",
-                "reference",
-                "created_by",
-                FieldCreated(),
-                FieldLastChanged(),
-                FieldFormZProject(),
-                SaCerevisiaeStrainSearchFieldEpisomalPlasmidFormZProject(),
-            ]
-        elif model == User:
-            return [
-                SaCerevisiaeStrainSearchFieldUserUsername(),
-                SaCerevisiaeStrainSearchFieldUserLastname(),
-            ]
-        return super().get_fields(model)
+    fields = [
+        "id",
+        "name",
+        "relevant_genotype",
+        "mating_type",
+        "chromosomal_genotype",
+        FieldParent1(),
+        FieldParent2(),
+        "parental_strain",
+        "construction",
+        "modification",
+        FieldIntegratedPlasmidM2M(),
+        FieldCassettePlasmidM2M(),
+        FieldEpisomalPlasmidM2M(),
+        "plasmids",
+        "selection",
+        "phenotype",
+        "background",
+        "received_from",
+        FieldUse(),
+        "note",
+        "reference",
+        "created_by",
+        FieldCreated(),
+        FieldLastChanged(),
+        FieldFormZProject(),
+        SaCerevisiaeStrainSearchFieldEpisomalPlasmidFormZProject(),
+        "locations",
+    ]

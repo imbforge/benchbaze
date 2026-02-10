@@ -1,15 +1,12 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.forms import ValidationError
 
-from approval.models import Approval
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
 
-from ..ghssymbol.models import GhsSymbol
-from ..hazardstatement.models import HazardStatement
-from ..signalword.models import SignalWord
+AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 def validate_absence_airquotes(value):
@@ -20,8 +17,6 @@ def validate_absence_airquotes(value):
             )
         )
 
-
-User = get_user_model()
 
 ORDER_STATUS_CHOICES = (
     ("submitted", "submitted"),
@@ -48,9 +43,9 @@ class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
         "last_changed_date_time",
     ]
     _history_array_fields = {
-        "history_ghs_symbols": GhsSymbol,
-        "history_signal_words": SignalWord,
-        "history_hazard_statements": HazardStatement,
+        "history_ghs_symbols": "GhsSymbol",
+        "history_signal_words": "SignalWord",
+        "history_hazard_statements": "HazardStatement",
     }
     _show_in_frontend = True
 
@@ -172,9 +167,9 @@ class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
     last_changed_date_time = models.DateTimeField(
         "last changed", auto_now=True, null=True
     )
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_approval_by_pi = models.BooleanField(default=False, null=True)
-    approval = GenericRelation(Approval)
+    approval = GenericRelation("approval.Approval")
 
     class Meta:
         verbose_name = "order"
@@ -206,7 +201,7 @@ class OrderExtraDoc(DocFileMixin):
     comment = None
     description = models.CharField("description", max_length=255, blank=False)
 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, null=True)
+    order = models.ForeignKey("Order", on_delete=models.PROTECT, null=True)
 
     class Meta:
         verbose_name = "order extra document"

@@ -5,7 +5,11 @@ from import_export.fields import Field
 from .models import Order
 
 
-class BaseOrdeExportResource:
+class OrderChemicalExportResource(resources.ModelResource):
+    """
+    Export resource for chemicals
+    """
+
     ghs_symbols_field = Field(column_name="ghs_symbols")
     signal_words_field = Field(column_name="signal_words")
     hazard_statements_field = Field(column_name="hazard_statements")
@@ -22,12 +26,6 @@ class BaseOrdeExportResource:
 
     def dehydrate_is_cmr_field(self, order):
         return "Yes" if order.hazard_statements.filter(is_cmr=True).exists() else ""
-
-
-class OrderChemicalExportResource(BaseOrdeExportResource, resources.ModelResource):
-    """
-    Export resource for chemicals
-    """
 
     class Meta:
         model = Order
@@ -48,10 +46,19 @@ class OrderChemicalExportResource(BaseOrdeExportResource, resources.ModelResourc
         export_order = fields
 
 
-class OrderExportResource(BaseOrdeExportResource, resources.ModelResource):
+class OrderExportResource(resources.ModelResource):
     """
     Export resource for orders
     """
+
+    ghs_symbols_field = Field(column_name="ghs_symbols")
+    signal_words_field = Field(column_name="signal_words")
+
+    def dehydrate_ghs_symbols_field(self, order):
+        return ", ".join(order.ghs_symbols.all().values_list("code", flat=True))
+
+    def dehydrate_signal_words_field(self, order):
+        return ", ".join(order.signal_words.all().values_list("signal_word", flat=True))
 
     class Meta:
         model = Order

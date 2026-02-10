@@ -12,9 +12,12 @@ from common.admin import (
 )
 
 from ..plasmid.admin import PlasmidAdmin
+from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
     convert_map_gbk_to_dna,
     create_map_preview,
@@ -81,11 +84,23 @@ class WormStrainAdmin(
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
+    list_display = (
+        "id",
+        "name",
+        "chromosomal_genotype",
+        "stocked",
+        "created_by",
+        "approval",
+    )
+    list_display_links = ("id",)
+    actions = [export_wormstrain, formz_as_html, create_label]
     form = WormStrainAdminForm
     djangoql_schema = WormStrainQLSchema
     inlines = [
         WormStrainGenotypingAssayInline,
         AddWormStrainGenotypingAssayInline,
+        LocationInline,
+        AddLocationInline,
         WormStrainDocInline,
         WormStrainAddDocInline,
     ]
@@ -203,16 +218,13 @@ class WormStrainAdmin(
         return super().change_view(request, object_id, form_url, extra_context)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        try:
-            request.resolver_match.args[0]
-        except Exception:
-            # Exclude certain users from the 'Created by' field in the order form
-            if db_field.name == "created_by":
-                if request.user.is_elevated_user:
-                    kwargs["queryset"] = User.objects.exclude(
-                        is_system_user=True
-                    ).order_by("last_name")
-                # kwargs["initial"] = request.user.id # disable this for now
+        # Exclude certain users from the 'Created by' field in the form
+        if db_field.name == "created_by":
+            if request.user.is_elevated_user:
+                kwargs["queryset"] = User.objects.exclude(is_system_user=True).order_by(
+                    "last_name"
+                )
+            # kwargs["initial"] = request.user.id # disable this for now
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -454,16 +466,13 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
         return super().change_view(request, object_id, form_url, extra_context)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        try:
-            request.resolver_match.args[0]
-        except Exception:
-            # Exclude certain users from the 'Created by' field in the order form
-            if db_field.name == "created_by":
-                if request.user.is_elevated_user:
-                    kwargs["queryset"] = User.objects.exclude(
-                        is_system_user=True
-                    ).order_by("last_name")
-                # kwargs["initial"] = request.user.id # disable this for now
+        # Exclude certain users from the 'Created by' field in the form
+        if db_field.name == "created_by":
+            if request.user.is_elevated_user:
+                kwargs["queryset"] = User.objects.exclude(is_system_user=True).order_by(
+                    "last_name"
+                )
+            # kwargs["initial"] = request.user.id # disable this for now
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

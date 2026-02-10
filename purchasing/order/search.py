@@ -65,13 +65,13 @@ class OrderSearchFieldHazardousPregnancy(StrField):
 class OrderSearchFieldCreatedbyUsername(SearchFieldUserUsernameWithOptions):
     """Search an Order's users' usernames"""
 
-    id_list = Order.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Order
 
 
 class OrderSearchFieldCreatedbyLastname(SearchFieldUserLastnameWithOptions):
     """Search an Order's users' last names"""
 
-    id_list = Order.objects.all().values_list("created_by", flat=True).distinct()
+    model_user_options = Order
 
 
 class OrderSearchFieldGhsSymbol(SearchFieldWithOptions):

@@ -12,12 +12,21 @@ from formz.actions import formz_as_html
 from formz.models import GenTechMethod, SequenceFeature
 from formz.models import Project as FormZProject
 
+from common.models import (
+    DocFileMixin,
+    EnhancedModelCleanMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
+)
+
 from ..plasmid.models import Plasmid
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
+    LocationMixin,
     OwnershipFieldsMixin,
 )
 
@@ -50,11 +59,14 @@ CEREVISIAE_MATING_TYPE_CHOICES = (
 
 
 class SaCerevisiaeStrain(
+    EnhancedModelCleanMixin,
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     HistoryFieldMixin,
+    LocationMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -63,7 +75,23 @@ class SaCerevisiaeStrain(
         verbose_name = "strain - Sa. cerevisiae"
         verbose_name_plural = "strains - Sa. cerevisiae"
 
-    # Fields
+    _model_abbreviation = "sc"
+    _history_array_fields = {
+        "history_integrated_plasmids": Plasmid,
+        "history_cassette_plasmids": Plasmid,
+        "history_episomal_plasmids": Plasmid,
+        "history_all_plasmids_in_stocked_strain": Plasmid,
+        "history_formz_projects": FormZProject,
+        "history_formz_gentech_methods": GenTechMethod,
+        "history_sequence_features": SequenceFeature,
+        "history_documents": SaCerevisiaeStrainDoc,
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
+
     name = models.CharField("name", max_length=255, blank=False)
     relevant_genotype = models.CharField(
         "relevant genotype", max_length=255, blank=False
@@ -353,6 +381,12 @@ class SaCerevisiaeStrain(
     def formz_genotype(self):
         return self.relevant_genotype
 
+    @property
+    def zebra_n0jtt_label_content(self):
+        labels = super().zebra_n0jtt_label_content
+        labels[2] = f"MT: {self.mating_type}"
+        return labels
+
 
 class SaCerevisiaeStrainEpisomalPlasmid(models.Model):
     _inline_foreignkey_fieldname = "sacerevisiae_strain"
@@ -372,7 +406,7 @@ class SaCerevisiaeStrainEpisomalPlasmid(models.Model):
         default=False,
     )
     formz_projects = models.ManyToManyField(
-        FormZProject, related_name="cerevisiae_episomal_plasmid_projects", blank=True
+        "formz.Project", related_name="cerevisiae_episomal_plasmid_projects", blank=True
     )
     created_date = models.DateField("created", blank=True, null=True)
     destroyed_date = models.DateField("destroyed", blank=True, null=True)

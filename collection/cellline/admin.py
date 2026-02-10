@@ -1,19 +1,23 @@
 from django.contrib import admin
-from django.urls import resolve
 from django.utils.safestring import mark_safe
 
 from common.admin import (
     AddDocFileInlineMixin,
     DocFileInlineMixin,
+    GetParentObjectInlineMixin,
 )
 from formz.actions import formz_as_html
 from formz.models import Species
 
+from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
 )
+from .actions import export_cellline
 from .models import CellLineDoc, CellLineEpisomalPlasmid
 from .search import CellLineQLSchema
 
@@ -81,7 +85,7 @@ class AddCellLineDocInline(AddDocFileInlineMixin):
     fields = ["description", "date_of_test", "name", "comment"]
 
 
-class CellLineEpisomalPlasmidInline(admin.TabularInline):
+class CellLineEpisomalPlasmidInline(GetParentObjectInlineMixin):
     autocomplete_fields = ["plasmid", "formz_projects"]
     model = CellLineEpisomalPlasmid
     verbose_name_plural = mark_safe(
@@ -92,16 +96,6 @@ class CellLineEpisomalPlasmidInline(admin.TabularInline):
     verbose_name = "Episomal Plasmid"
     extra = 0
     template = "admin/tabular.html"
-
-    def get_parent_object(self, request):
-        """
-        Returns the parent object from the request or None.
-        """
-
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
-        return None
 
     def get_queryset(self, request):
         """Do not show as collapsed in add view"""
@@ -120,6 +114,36 @@ class CellLineEpisomalPlasmidInline(admin.TabularInline):
         return super().get_queryset(request)
 
 
+class CellLineVirusTransientInline(GetParentObjectInlineMixin):
+    extra = 0
+    template = "admin/tabular.html"
+    model = CellLineVirusTransient
+    autocomplete_fields = ["virus_mammalian", "virus_insect", "formz_projects"]
+    fields = [
+        ["virus_mammalian", "virus_insect"],
+        "formz_projects",
+        "created_date",
+        "destroyed_date",
+    ]
+    verbose_name_plural = "Viruses (transient)"
+    verbose_name = "Virus (transient)"
+
+    def get_queryset(self, request):
+        """Do not show as collapsed in add view if there are safety level 2 viruses"""
+        parent_object = self.get_parent_object(request)
+        self.classes = ["collapse"]
+
+        if (
+            parent_object
+            and parent_object.viruses_transient.filter(
+                formz_projects__safety_level__gt=1
+            ).exists()
+        ):
+            self.classes = None
+
+        return super().get_queryset(request)
+
+
 class CellLineAdmin(
     SortAutocompleteResultsId,
     CustomGuardedModelAdmin,
@@ -127,16 +151,72 @@ class CellLineAdmin(
 ):
     djangoql_schema = CellLineQLSchema
     inlines = [CellLineEpisomalPlasmidInline, CellLineDocInline, AddCellLineDocInline]
+    actions = [export_cellline, formz_as_html]
+    search_fields = ["id", "name"]
+    show_plasmids_in_model = True
+    autocomplete_fields = [
+        "parental_line",
+        "integrated_plasmids",
+        "formz_projects",
+        "zkbs_cell_line",
+        "formz_gentech_methods",
+        "sequence_features",
+    ]
+    obj_specific_fields = [
+        "name",
+        "box_name",
+        "alternative_name",
+        "parental_line",
+        "organism",
+        "cell_type_tissue",
+        "culture_type",
+        "growth_condition",
+        "freezing_medium",
+        "received_from",
+        "integrated_plasmids",
+        "description_comment",
+        "s2_work",
+        "formz_projects",
+        "formz_risk_group",
+        "zkbs_cell_line",
+        "formz_gentech_methods",
+        "sequence_features",
+        "destroyed_date",
+    ]
+    obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    add_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields[:13]},
+        ],
+        [
+            "FormZ",
+            {"classes": tuple(), "fields": obj_specific_fields[13:]},
+        ],
+    ]
+    change_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields[:13] + obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {"classes": (("collapse",)), "fields": obj_specific_fields[13:]},
+        ],
+    ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        try:
-            request.resolver_match.args[0]
-        except Exception:
-            # For organism field, only show those species for
-            # which show_in_cell_line_collect was ticked
-            if db_field.name == "organism":
-                kwargs["queryset"] = Species.objects.filter(
-                    show_in_cell_line_collection=True
-                )
+        # For organism field, only show those species for
+        # which show_in_cell_line_collect was ticked
+        if db_field.name == "organism":
+            kwargs["queryset"] = Species.objects.filter(
+                show_in_cell_line_collection=True
+            )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

@@ -2,24 +2,23 @@ import base64
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.forms import ValidationError
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from approval.models import Approval
-from formz.models import GenTechMethod, SequenceFeature, StorageLocation
-from formz.models import Project as FormZProject
 
-User = get_user_model()
+from ..storage.models import Location
+
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
+AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 class ApprovalFieldsMixin(models.Model):
@@ -38,7 +37,7 @@ class ApprovalFieldsMixin(models.Model):
     approval_by_pi_date_time = models.DateTimeField(null=True, default=None)
     approval = GenericRelation(Approval)
     approval_user = models.ForeignKey(
-        User,
+        AUTH_USER_MODEL,
         related_name="%(class)s_approval_user",
         on_delete=models.PROTECT,
         null=True,
@@ -76,7 +75,9 @@ class OwnershipFieldsMixin(models.Model):
     created_date_time = models.DateTimeField("created", auto_now_add=True)
     last_changed_date_time = models.DateTimeField("last changed", auto_now=True)
     created_by = models.ForeignKey(
-        User, related_name="%(class)s_createdby_user", on_delete=models.PROTECT
+        AUTH_USER_MODEL,
+        related_name="%(class)s_createdby_user",
+        on_delete=models.PROTECT,
     )
 
     # Static properties
@@ -163,9 +164,11 @@ class FormZFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
+    _formz_enable = True
+
     # Fields
     formz_projects = models.ManyToManyField(
-        FormZProject,
+        "formz.Project",
         verbose_name="projects",
         related_name="%(class)s_formz_projects",
         blank=False,
@@ -174,14 +177,14 @@ class FormZFieldsMixin(models.Model):
         "risk group", choices=((1, 1), (2, 2)), blank=False, null=True
     )
     formz_gentech_methods = models.ManyToManyField(
-        GenTechMethod,
+        "formz.GenTechMethod",
         verbose_name="genTech methods",
         help_text="The genetic method(s) used to create this record",
         related_name="%(class)s_gentech_methods",
         blank=True,
     )
     sequence_features = models.ManyToManyField(
-        SequenceFeature,
+        "formz.SequenceFeature",
         verbose_name="sequence features",
         help_text="Use only when a feature is not present in the chosen plasmid(s), if any. "
         "Searching against the aliases of a feature is case-sensitive. "
@@ -219,23 +222,21 @@ class FormZFieldsMixin(models.Model):
     @property
     def formz_species(self):
         species = None
-        storage_location = self.formz_storage_location
-        if storage_location:
-            species = storage_location.species
-            species.risk_group = storage_location.species_risk_group
+        if storage := getattr(self, "get_model_storage", lambda: None)():
+            species = storage.species
+            species.risk_group = storage.species_risk_group
         return species
 
     @property
-    def formz_storage_location(self):
-        storage_location = None
-        try:
-            model_content_type = ContentType.objects.get_for_model(self)
-            storage_location = StorageLocation.objects.get(
-                collection_model=model_content_type
-            )
-        except Exception:
-            pass
-        return storage_location
+    def formz_locations(self):
+        locations = getattr(self, "locations", [])
+        if not locations:
+            locations = getattr(self.__class__, "get_model_locations", [])
+        return locations
+
+    @property
+    def formz_s2(self):
+        return getattr(self, "s2_work", False) or self.formz_risk_group == 2
 
     @property
     def formz_s2_plasmids(self):
@@ -276,7 +277,7 @@ class InfoSheetMaxSizeMixin:
     info_sheet_formatted.field_type = "FileField"
     info_sheet_formatted.short_description = "Info Sheet"
 
-    def clean(self):
+    def clean_field_info_sheet_max_size(self):
         errors = {}
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
 
@@ -297,14 +298,13 @@ class InfoSheetMaxSizeMixin:
                     "Invalid file format. Please select a valid .pdf file"
                 ]
 
-        if errors:
-            raise ValidationError(errors)
+        return errors
 
 
-class DnaMapMixin:
+class MapFileCheckPropertiesMixin:
     """Clean method and common properties for models that have a map sheet"""
 
-    def clean(self):
+    def clean_field_map_file(self):
         errors = {}
 
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
@@ -356,8 +356,7 @@ class DnaMapMixin:
                     "Invalid file format. Please select a valid GenBank (.gbk or .gb) file"
                 ]
 
-        if errors:
-            raise ValidationError(errors)
+        return errors
 
     @property
     def png_map_as_base64(self):
@@ -463,3 +462,51 @@ class CommonCollectionModelPropertiesMixin:
         """Returns all common features in stocked organism"""
 
         return self.all_sequence_features.filter(common_feature=True)
+
+    @property
+    def url_admin(self):
+        """Returns the url to the admin change page for this record"""
+
+        return reverse(
+            f"admin:{self._meta.app_label}_{self._meta.model_name}_change",
+            args=(self.pk,),
+        )
+
+    @property
+    def all_instock_viruses(self):
+        """Returns all viruses present in the stocked organism"""
+
+        return []
+
+
+class LocationMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    _storage_requires_species = False
+
+    locations = GenericRelation(
+        "collection.LocationItem", related_query_name="%(class)s"
+    )
+
+    history_locations = ArrayField(
+        models.PositiveIntegerField(),
+        verbose_name="locations",
+        blank=True,
+        null=True,
+        default=list,
+    )
+
+    @classmethod
+    def get_model_locations(cls):
+        """Returns all locations for this model class"""
+        return Location.objects.filter(
+            storage__collection__app_label=cls._meta.app_label,
+            storage__collection__model=cls._meta.model_name,
+        )
+
+    @classmethod
+    def get_model_storage(cls):
+        """Returns the storage that has mandatory location for this model class"""
+        content_type = ContentType.objects.get_for_model(cls)
+        return getattr(content_type, "storage", None)

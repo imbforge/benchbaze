@@ -11,11 +11,13 @@ from common.admin import (
 )
 from formz.actions import formz_as_html
 from formz.models import SequenceFeature
-
+from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     AdminOligosInMap,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
+    LocationInline,
     SortAutocompleteResultsId,
     convert_map_gbk_to_dna,
     create_map_preview,
@@ -28,6 +30,7 @@ from .search import PlasmidQLSchema
 MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 DEFAULT_ECOLI_STRAIN_IDS = getattr(settings, "DEFAULT_ECOLI_STRAIN_IDS", [])
+PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
 
 
 class PlasmidDocInline(DocFileInlineMixin):
@@ -49,10 +52,83 @@ class PlasmidAdmin(
     AdminOligosInMap,
 ):
     djangoql_schema = PlasmidQLSchema
-    inlines = [PlasmidDocInline, PlasmidAddDocInline]
+    actions = [export_plasmid, formz_as_html, create_label]
+    search_fields = ["id", "name"]
+    autocomplete_fields = [
+        "parent_vector",
+        "formz_projects",
+        "sequence_features",
+        "vector_zkbs",
+        "formz_ecoli_strains",
+        "formz_gentech_methods",
+    ]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        PlasmidDocInline,
+        PlasmidAddDocInline,
+    ]
     form = PlasmidAdminForm
     change_form_template = "admin/collection/plasmid/change_form.html"
     add_form_template = "admin/collection/plasmid/change_form.html"
+    clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
+    obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    obj_specific_fields = [
+        "name",
+        "other_name",
+        "parent_vector",
+        "selection",
+        "us_e",
+        "construction_feature",
+        "received_from",
+        "note",
+        "reference",
+        "map",
+        "map_png",
+        "map_gbk",
+        "formz_projects",
+        "formz_risk_group",
+        "vector_zkbs",
+        "formz_gentech_methods",
+        "sequence_features",
+        "formz_ecoli_strains",
+        "destroyed_date",
+    ]
+    set_readonly_fields = [
+        "map_png",
+    ]
+    add_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields[:10] + obj_specific_fields[11:12]},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": tuple(),
+                "fields": obj_specific_fields[12:],
+            },
+        ],
+    ]
+    change_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields[:12] + obj_unmodifiable_fields},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": (("collapse",)),
+                "fields": obj_specific_fields[12:],
+            },
+        ],
+    ]
 
     def save_model(self, request, obj, form, change):
         rename_and_preview = False
@@ -352,6 +428,14 @@ class PlasmidAdmin(
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
-        if not obj and "formz_ecoli_strains" in form.base_fields:
-            form.base_fields["formz_ecoli_strains"].initial = DEFAULT_ECOLI_STRAIN_IDS
+        # For new objects
+        if not obj:
+            # Set default E. coli strains
+            if "formz_ecoli_strains" in form.base_fields:
+                form.base_fields[
+                    "formz_ecoli_strains"
+                ].initial = DEFAULT_ECOLI_STRAIN_IDS
+            # Set storage type
+            if "storage_type" in form.base_fields and PLASMID_STORAGE_TYPE:
+                form.base_fields["storage_type"].initial = PLASMID_STORAGE_TYPE
         return form

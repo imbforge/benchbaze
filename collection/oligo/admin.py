@@ -6,8 +6,11 @@ from common.admin import (
     DocFileInlineMixin,
 )
 
+from ..shared.actions import create_label
 from ..shared.admin import (
+    AddLocationInline,
     CollectionUserProtectionAdmin,
+    LocationInline,
     rename_info_sheet_save_obj_update_history,
 )
 from .forms import OligoAdminForm
@@ -32,8 +35,50 @@ class OligoAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = OligoQLSchema
+    actions = [export_oligo, create_label]
+    search_fields = ["id", "name"]
+    autocomplete_fields = ["sequence_features"]
     form = OligoAdminForm
-    inlines = [OligoDocInline, OligoAddDocInline]
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        OligoDocInline,
+        OligoAddDocInline,
+    ]
+    show_formz = False
+    clone_ignore_fields = [
+        "info_sheet",
+    ]
+    obj_specific_fields = [
+        "name",
+        "sequence",
+        "us_e",
+        "gene",
+        "restriction_site",
+        "description",
+        "comment",
+        "info_sheet",
+        "sequence_features",
+    ]
+    obj_unmodifiable_fields = [
+        "created_date_time",
+        "created_approval_by_pi",
+        "last_changed_date_time",
+        "last_changed_approval_by_pi",
+        "created_by",
+    ]
+    add_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields},
+        ],
+    ]
+    change_view_fieldsets = [
+        [
+            None,
+            {"fields": obj_specific_fields + obj_unmodifiable_fields},
+        ],
+    ]
 
     def save_model(self, request, obj, form, change):
         rename_doc = False

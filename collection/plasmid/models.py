@@ -10,26 +10,25 @@ from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
+    EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
+    ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
-from formz.models import GenTechMethod, SequenceFeature, ZkbsPlasmid
-from formz.models import Project as FormZProject
 
-from ..ecolistrain.models import EColiStrain
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
     DnaMapMixin,
     FormZFieldsMixin,
+    LocationMixin,
+    MapFileCheckPropertiesMixin,
     OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
-
-
-PLASMID_AS_ECOLI_STOCK = getattr(settings, "PLASMID_AS_ECOLI_STOCK", False)
+PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
 
 
 class PlasmidDoc(DocFileMixin):
@@ -47,12 +46,15 @@ class PlasmidDoc(DocFileMixin):
 
 
 class Plasmid(
+    EnhancedModelCleanMixin,
+    ZebraLabelFieldsMixin,
     SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
+    LocationMixin,
     HistoryFieldMixin,
-    DnaMapMixin,
+    MapFileCheckPropertiesMixin,
     ApprovalFieldsMixin,
     OwnershipFieldsMixin,
     models.Model,
@@ -62,8 +64,23 @@ class Plasmid(
         verbose_name_plural = "plasmids"
 
     _model_upload_to = "collection/plasmid/"
+    _history_array_fields = {
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_formz_ecoli_strains": "collection.EColiStrain",
+        "history_documents": "collection.PlasmidDoc",
+        "history_locations": "collection.LocationItem",
+    }
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+        + ["map_png", "map_gbk"]
+    )
+    _unified_map_field = True
+    german_name = "Plasmid"
+    _storage_requires_species = "Escherichia coli"
 
-    # Fields
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     other_name = models.CharField("other name", max_length=255, blank=True)
     parent_vector = models.ForeignKey(
@@ -86,6 +103,16 @@ class Plasmid(
     received_from = models.CharField("received from", max_length=255, blank=True)
     note = models.CharField("note", max_length=300, blank=True)
     reference = models.CharField("reference", max_length=255, blank=True)
+    storage_type = models.CharField(
+        "storage type",
+        choices=(
+            ("plasmid", "Purified plasmid"),
+            ("bacteria", "Bacterial stock"),
+            ("both", "Both"),
+        ),
+        max_length=20,
+        blank=False,
+    )
     map = models.FileField(
         "Map (.dna)",
         help_text=f"only SnapGene .dna files, max. {FILE_SIZE_LIMIT_MB} MB",
@@ -102,7 +129,7 @@ class Plasmid(
         blank=True,
     )
     vector_zkbs = models.ForeignKey(
-        ZkbsPlasmid,
+        "formz.ZkbsPlasmid",
         verbose_name="ZKBS database vector",
         on_delete=models.PROTECT,
         blank=False,
@@ -262,9 +289,9 @@ class Plasmid(
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        # If destroyed date not present, automatically set it if a plasmid is
-        # not kept as E. coli stock
-        if not PLASMID_AS_ECOLI_STOCK and not self.destroyed_date:
+        # If a plasmid is kept exclusively as a purified stock and a destroyed
+        # date is not set, automatically set it
+        if PLASMID_STORAGE_TYPE == "plasmid" and not self.destroyed_date:
             self.destroyed_date = datetime.now().date() + timedelta(
                 days=random.randint(7, 21)
             )

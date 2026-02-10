@@ -1,9 +1,8 @@
-from import_export import resources
-
+from ..shared.export import CollectionExportMixin
 from .models import Antibody
 
 
-class AntibodyExportResource(resources.ModelResource):
+class AntibodyExportResource(CollectionExportMixin):
     """Defines a custom export resource class for Antibody"""
 
     class Meta:
@@ -20,5 +19,6 @@ class AntibodyExportResource(resources.ModelResource):
             "description_comment",
             "info_sheet",
             "availability",
+            "locations",
         )
         export_order = fields

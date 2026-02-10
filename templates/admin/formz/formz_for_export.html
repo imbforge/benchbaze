@@ -74,6 +74,10 @@
         
       }
 
+      .field-keine {
+        border: 1px solid black;
+      }
+
     </style>
     <title>Formblatt Z:{% if pi %} AG {{pi.first_name}} {{pi.last_name}}{% endif %} {{object.formz_species.display_name}} #{{object}}</title>
   </head>
@@ -94,7 +98,7 @@
           <div><span class="formztextbold">Anschrift: </span>{{formz_header.address}}</div>
           <div><span class="formztextbold">Beauftragter für Biologische Sicherheit: </span>{{formz_header.name_biosafety_officer}}</div>
           <div><span class="formztextbold">S1 Genehmigung: </span>{{formz_header.s1_approval_file_num}}; erteilt am {{formz_header.s1_approval_date | date:"d.m.Y"}}</div>
-          {% if object.s2_work %}
+          {% if object.formz_s2 %}
             <div><span class="formztextbold">S2 Genehmigung: </span>{{formz_header.s2_approval_file_num}}; erteilt am {{formz_header.s2_approval_date | date:"d.m.Y"}}</div>
           {% endif %}
         {% else %}
@@ -122,7 +126,7 @@
             {% if forloop.first %}(Stamm: {% endif %}{{ecoli.name}} - Hintergrund {{ecoli.background}}, RG{{ecoli.formz_risk_group}}{% if forloop.first and not forloop.last or not forloop.first and not forloop.last %};{% else %}){% endif %}
           {% endfor %}
         {% else %}
-          (Risikogruppe: {{object.formz_species.risk_group}})
+          (Risikogruppe: {{object.formz_species.risk_group}}{% if object.formz_species.virus_helper %}, {{object.formz_species.virus_helper}}{% endif %}) 
         {% endif %}
       </div>
 
@@ -180,7 +184,15 @@
       </div>
 
       <!-- Storage location -->
-      <div><span class="formztextbold">Lagerort: </span>{{object.formz_storage_location.storage_location}}</div>
+      <div><span class="formztextbold">Lagerort: </span>
+        {% if object.formz_locations.exists %}
+        <ul>
+          {% for location in object.formz_locations.all %}
+            <li>{{location}}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
 
       {% if object.all_instock_plasmids %}
         <!-- Plasmids used to create the organism -->
@@ -196,6 +208,18 @@
                   {% endif %}
                 {% endif %}
               </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if object.all_instock_viruses.exists %}
+        <!-- Viruses used to create the organism -->
+        <div id='instock-viruses'>
+          <h3>Virus/Viren, die zur Erschaffung des Organismus genutzt wurden</h3>
+          <ul>
+            {% for virus in object.all_instock_viruses.all %}
+              <li>Virus #{{virus}} ({{virus.get_typ_e_display}})</li>
             {% endfor %}
           </ul>
         </div>
@@ -254,7 +278,7 @@
               {% endfor %}
             {% else %}
               <tr class="row">
-                <td colspan="6" class="field">Keine</td>
+                <td colspan="6" class="field field-keine">Keine</td>
               </tr>
             {% endif %}
           </tbody>
@@ -277,7 +301,7 @@
               {% endfor %}
             {% else %}
               <tr class="row">
-                <td colspan="6" class="field">Keine</td>
+                <td colspan="6" class="field field-keine">Keine</td>
               </tr>
             {% endif %}
           </tbody>
@@ -371,7 +395,7 @@
                   {% endfor %}
                 {% else %}
                   <tr class="row">
-                    <td colspan="6" class="field">Keine</td>
+                    <td colspan="6" class="field field-keine">Keine</td>
                   </tr>
                 {% endif %}
               </tbody>
@@ -394,7 +418,7 @@
                   {% endfor %}
                 {% else %}
                   <tr class="row">
-                    <td colspan="6" class="field">Keine</td>
+                    <td colspan="6" class="field field-keine">Keine</td>
                   </tr>
                 {% endif %}
               </tbody>
@@ -476,12 +500,12 @@
                       <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                       <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                       <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %} {{feat.description}} {% endif %}</td>
+                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
                   <tr class="row">
-                    <td colspan="6" class="field">Keine</td>
+                    <td colspan="6" class="field field-keine">Keine</td>
                   </tr>
                 {% endif %}
               </tbody>
@@ -499,12 +523,111 @@
                     <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %} {{feat.description}} {% endif %}</td>
+                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
                   </tr>
                   {% endfor %}
                 {% else %}
                   <tr class="row">
-                    <td colspan="6" class="field">Keine</td>
+                    <td colspan="6" class="field field-keine">Keine</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+
+    {% if object.viruses_transient.exists %}
+      <!-- Viruses -->
+
+      <div id='viruses'>
+        
+        <h2 style="padding-bottom: 10px;">In den Organismus transduzierte Viren</h2>
+
+        <!-- Transient viruses -->
+        {% for virus in object.viruses_transient.all %}
+
+          <div class="formzvirusitem" style="padding-bottom: 10px;">
+
+            #{{virus.virus}} ({{virus.virus.get_typ_e_display}})
+
+            <div>
+              Organismus transduziert am {{virus.created_date | date:"d.m.Y"}}, unter Projekt/e:
+
+              <!-- Virus projects -->
+              {% for project in virus.formz_projects.all %}
+                {{project.short_title}}{% if forloop.first and not forloop.last or not forloop.first and not forloop.last %},{% else %};{% endif %}
+              {% endfor %}
+
+              {% if plasmid.destroyed_date %}
+              <!-- Virus destroyed date -->
+                entsorgt am {{virus.destroyed_date | date:"d.m.Y"}}
+              {% else %}
+                noch nicht entsorgt
+              {% endif %}
+            </div>
+
+            <!-- Virus sequence features -->
+            <table>
+              <thead class="formztableheader">
+                <tr>
+                  <th colspan="1" scope="col" rowspan="2" class="column-name formztableverticalborder">Bezeichnung</th>
+                  <th colspan="2" scope="col" class="column-donor_organism formztableverticalborder">Spenderorganismus</th>
+                  <th colspan="3" scope="col" class="column-nuc_acid">Nukleinsäure</th>
+                </tr>
+                <tr>
+                  <th scope="col" class="column-donor_organism_name">Bezeichnung</th>
+                  <th scope="col" class="column-donor_organism_risk formztableverticalborder">Risikogruppe</th>
+                  <th scope="col" class="column-nuc_acid_purity">Reinheitsgrad</th>
+                  <th scope="col" class="column-nuc_acid_risk">Gefährdungspotential</th>
+                  <th scope="col" class="column-nuc_acid_description">Beschreibung</th>
+                </tr>
+              <thead>
+
+              <!-- Virus uncommon features -->
+              <tbody>
+                <tr class="row">
+                    <td class="column-subheader formztextbold" colspan="6">Spezifische Merkmale</td>
+                </tr>
+                {% if virus.virus.all_uncommon_sequence_features.exists %}
+                  {% for feat in virus.virus.all_uncommon_sequence_features %}
+                    <tr class="row">
+                      <td class="field-name formztableverticalborder">{{feat.name}}</td>
+                      <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
+                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                      <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
+                      <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
+                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr class="row">
+                    <td colspan="6" class="field field-keine">Keine</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+
+              <!-- Virus common features -->
+              <tbody>
+                <tr class="row">
+                  <td class="column-subheader formztextbold" colspan="6">Andere Merkmale, nicht relevant für die Sicherheitsbeurteilung</td>
+                </tr>
+                {% if virus.virus.all_common_sequence_features %}
+                  {% for feat in virus.virus.all_common_sequence_features %}
+                  <tr class="row">
+                    <td class="field-name formztableverticalborder">{{feat.name}}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
+                    <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
+                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr class="row">
+                    <td colspan="6" class="field field-keine">Keine</td>
                   </tr>
                 {% endif %}
               </tbody>

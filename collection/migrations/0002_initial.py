@@ -2900,7 +2900,7 @@ class Migration(migrations.Migration):
                 common.models.SaveWithoutHistoricalRecord,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
-                collection.shared.models.DnaMapMixin,
+                collection.shared.models.MapFileChecPropertieskMixin,
                 models.Model,
             ),
         ),
@@ -4067,7 +4067,7 @@ class Migration(migrations.Migration):
                 "verbose_name": "allele - Worm",
                 "verbose_name_plural": "alleles - Worm",
             },
-            bases=(collection.shared.models.DnaMapMixin, models.Model),
+            bases=(collection.shared.models.MapFileChecPropertieskMixin, models.Model),
         ),
         migrations.CreateModel(
             name="WormStrainGenotypingAssay",

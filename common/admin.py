@@ -1,5 +1,4 @@
-import itertools
-
+from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
@@ -265,14 +264,6 @@ class SimpleHistoryWithSummaryAdmin(SimpleHistoryAdmin):
     def history_view(self, request, object_id, extra_context=None):
         """The 'history' admin view for this model."""
 
-        def pairwise(iterable):
-            """Create pairs of consecutive items from
-            iterable"""
-
-            a, b = itertools.tee(iterable)
-            next(b, None)
-            return zip(a, b)
-
         request.current_app = self.admin_site.name
         model = self.model
         opts = model._meta
@@ -350,7 +341,29 @@ class AdminChangeFormWithNavigation(admin.ModelAdmin):
         return JsonResponse({"id": obj_redirect_id})
 
 
-class DocFileInlineMixin(admin.TabularInline):
+class GetParentObjectInlineMixin(admin.TabularInline):
+    def get_parent_object(self, request):
+        """
+        Returns the parent object from the request or None.
+        """
+
+        resolved = resolve(request.path_info)
+        if resolved.kwargs:
+            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
+        return None
+
+
+class ExistingInlineMixin(GetParentObjectInlineMixin):
+    """Inline to view existing ForeignKey"""
+
+    clone_ignore = True
+    _inline_type = "existing"
+
+    def has_add_permission(self, request, obj):
+        return False
+
+
+class DocFileInlineMixin(ExistingInlineMixin):
     """Inline to view existing documents"""
 
     verbose_name_plural = "Existing docs"
@@ -363,19 +376,6 @@ class DocFileInlineMixin(admin.TabularInline):
         "created_date_time",
     ]
 
-    def get_parent_object(self, request):
-        """
-        Returns the parent object from the request or None.
-
-        Note that this only works for Inlines, because the `parent_model`
-        is not available in the regular admin.ModelAdmin as an attribute.
-        """
-
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
-        return None
-
     def get_queryset(self, request):
         """Show inline uncollapsed only if docs exist"""
         self.classes = [
@@ -383,17 +383,17 @@ class DocFileInlineMixin(admin.TabularInline):
         ]
 
         qs = super().get_queryset(request)
-        parent_object = self.get_parent_object(request)
-        if parent_object:
-            filter_params = {
-                f"{self.model._mixin_props.get('parent_field_name')}__pk": parent_object.pk
-            }
-            if qs.filter(**filter_params).exists():
-                self.classes = []
-        return qs
 
-    def has_add_permission(self, request, obj):
-        return False
+        # Check if parent_field_name is defined in mixin props, otherwise return super queryset
+        if getattr(self.model, "_mixin_props", dict()).get("parent_field_name", None):
+            parent_object = self.get_parent_object(request)
+            if parent_object:
+                filter_params = {
+                    f"{self.model._mixin_props.get('parent_field_name')}__pk": parent_object.pk
+                }
+                if qs.filter(**filter_params).exists():
+                    self.classes = []
+        return qs
 
     @admin.display(description="Document")
     def get_doc_short_name(self, instance):
@@ -404,28 +404,13 @@ class DocFileInlineMixin(admin.TabularInline):
         return mark_safe(f'<a href="{instance.name.url}">Download</a>')
 
 
-class AddDocFileInlineMixin(admin.TabularInline):
-    """Inline to add new documents"""
+class AddInlineMixin(GetParentObjectInlineMixin):
+    """Inline to add new ForeignKey"""
 
-    verbose_name_plural = "New docs"
-    extra = 0
-    fields = ["description", "name", "comment"]
-
-    def get_parent_object(self, request):
-        """
-        Returns the parent object from the request or None.
-
-        Note that this only works for Inlines, because the `parent_model`
-        is not available in the regular admin.ModelAdmin as an attribute.
-        """
-
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs["object_id"])
-        return None
+    _inline_type = "add"
 
     def get_queryset(self, request):
-        """show inline uncollpased only when adding a new record,
+        """Show inline uncollapsed only when adding a new record,
         also return an empty qs"""
 
         self.classes = [
@@ -435,31 +420,48 @@ class AddDocFileInlineMixin(admin.TabularInline):
         parent_object = self.get_parent_object(request)
         if not parent_object:
             self.classes = []
+
         return self.model.objects.none()
 
     def has_change_permission(self, request, obj=None):
         return False
 
 
-class ToggleDocInlineMixin(admin.ModelAdmin):
+class AddDocFileInlineMixin(AddInlineMixin):
+    """Inline to add new documents"""
+
+    verbose_name_plural = "New docs"
+    extra = 0
+    fields = ["description", "name", "comment"]
+
+
+class ToggleExistingInlineMixin(admin.ModelAdmin):
     def get_inline_instances(self, request, obj=None):
+        """
+        Show existing object inline only in change view
+        Do not allow guests to add, ever
+        """
+
         inline_instances = super().get_inline_instances(request, obj)
         filtered_inline_instances = []
+        is_clone_view = request.resolver_match.view_name.endswith("_clone")
 
-        # New objects
-        if not obj:
+        # New objects or clone view, show only add inline
+        if not obj or is_clone_view:
             filtered_inline_instances = [
-                i for i in inline_instances if i.verbose_name_plural != "Existing docs"
+                inline
+                for inline in inline_instances
+                if getattr(inline, "_inline_type", None) != "existing"
             ]
 
-        # Existing objects
+        # Existing objects or clone view
         else:
             for inline in inline_instances:
                 # Always show existing docs
-                if inline.verbose_name_plural == "Existing docs":
+                if getattr(inline, "_inline_type", None) == "existing":
                     filtered_inline_instances.append(inline)
                 else:
-                    # Do not allow guests to add docs, ever
+                    # Do not allow guests to add, ever
                     if not request.user.is_guest:
                         filtered_inline_instances.append(inline)
 
@@ -492,6 +494,8 @@ class ToggleDocInlineMixin(admin.ModelAdmin):
 
 
 def save_history_fields(obj, history_obj):
+    # History array fields are defined on the model as a dict with the field name as
+    # key and the model of the M2M field as value
     history_array_fields = obj._history_array_fields.copy()
     m2m_save_ignore_fields = getattr(obj, "_m2m_save_ignore_fields", [])
     if m2m_save_ignore_fields:
@@ -503,27 +507,47 @@ def save_history_fields(obj, history_obj):
 
     # Keep a record of the IDs of linked M2M fields in the main obj record
     # Not pretty, but it works
-
     for m2m_history_field_name, m2m_model in history_array_fields.items():
+        # Get the related objects for the M2M field. Try different names to account for
+        # different ways of defining the M2M relationship
         try:
-            m2m_set = getattr(obj, f"{m2m_history_field_name[8:]}")
+            m2m_set = getattr(obj, f"{m2m_history_field_name.replace('history_', '')}")
         except Exception:
             try:
+                m2m_model = apps.get_model(
+                    m2m_model
+                )  # m2m_model is a string in the format "app_label.ModelName"
                 m2m_set = getattr(obj, f"{m2m_model._meta.model_name}_set")
             except Exception:
                 continue
+
+        # Get the IDs of the related objects
+        # If a through model exists and has _history_use_through_model_id set to True rather use its IDs
+        id_field_name = "id"
+        if (through_model := getattr(m2m_set, "through", None)) and getattr(
+            through_model, "_history_use_through_model_id", False
+        ):
+            id_field_name = f"{through_model._meta.model_name}"
+        list_of_ids = (
+            list(
+                m2m_set.order_by(id_field_name)
+                .distinct(id_field_name)
+                .values_list(id_field_name, flat=True)
+            )
+            if m2m_set.exists()
+            else []
+        )
+
+        # Set the list of IDs on the main obj record
         setattr(
             obj,
             m2m_history_field_name,
-            (
-                list(m2m_set.order_by("id").distinct("id").values_list("id", flat=True))
-                if m2m_set.exists()
-                else []
-            ),
+            (list_of_ids),
         )
 
     obj.save_without_historical_record()
 
+    # Now set the same list of IDs on the history object
     if history_obj:
         for (
             m2m_history_field_name,

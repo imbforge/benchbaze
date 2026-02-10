@@ -14,7 +14,9 @@ certifi==2024.12.14
 cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.1
-    # via requests
+    # via
+    #   reportlab
+    #   requests
 cryptography==44.0.0
     # via
     #   josepy
@@ -61,7 +63,9 @@ mozilla-django-oidc==4.0.1
 openpyxl==3.1.2
     # via -r requirements/base.in
 pillow==11.1.0
-    # via -r requirements/base.in
+    # via
+    #   -r requirements/base.in
+    #   reportlab
 ply==3.11
     # via djangoql
 psycopg==3.2.3
@@ -74,6 +78,8 @@ pytz==2024.2
     # via django-adminactions
 pyzmq==26.2.0
     # via zmq
+reportlab==4.4.3
+    # via -r requirements/base.in
 requests==2.32.3
     # via mozilla-django-oidc
 six==1.17.0

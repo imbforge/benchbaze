@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.exceptions import PermissionDenied
 from django.core.mail import mail_admins
 from django.db.models import CharField
@@ -35,9 +36,11 @@ from guardian.shortcuts import (
 
 from collection.models import Oligo
 from common.admin import (
+    AddInlineMixin,
     AdminChangeFormWithNavigation,
+    ExistingInlineMixin,
     SimpleHistoryWithSummaryAdmin,
-    ToggleDocInlineMixin,
+    ToggleExistingInlineMixin,
     save_history_fields,
 )
 from common.model_clone import CustomClonableModelAdmin
@@ -49,6 +52,9 @@ from formz.models import (
 )
 from snapgene.pyclasses.client import Client
 from snapgene.pyclasses.config import Config
+
+from ..storage.models import LocationItem
+from .forms import LocationCheckNumberInlineFormSet
 
 User = get_user_model()
 BASE_DIR = settings.BASE_DIR
@@ -328,7 +334,7 @@ class CollectionBaseAdmin(
     DjangoQLSearchMixin,
     SimpleHistoryWithSummaryAdmin,
     AdminChangeFormWithNavigation,
-    ToggleDocInlineMixin,
+    ToggleExistingInlineMixin,
     CustomClonableModelAdmin,
     admin.ModelAdmin,
 ):
@@ -375,6 +381,29 @@ class CollectionBaseAdmin(
         self.readonly_fields = self.set_readonly_fields + self.obj_unmodifiable_fields
 
         return super().add_view(request, form_url, extra_context)
+
+    def save_formset(self, request, form, formset, change):
+        # Check if formset model has created_by field. If so,
+        # set it to the request's user for new objects
+        if "created_by" in [field.name for field in formset.model._meta.fields]:
+            instances = formset.save(commit=False)
+            for instance in instances:
+                if instance.pk is None:
+                    try:
+                        instance.created_by
+                    except Exception:
+                        instance.created_by = request.user
+
+        return super().save_formset(request, form, formset, change)
+
+    def get_search_results(self, request, queryset, search_term):
+        """Override default search to enforce distinct and avoid
+        duplicates when searching with djangoql"""
+
+        # Ensure that no duplicates are returned ever
+        queryset = queryset.distinct("id")
+
+        return super().get_search_results(request, queryset, search_term)
 
 
 class CollectionSimpleAdmin(CollectionBaseAdmin):
@@ -952,6 +981,17 @@ class OptionalChoiceField(forms.MultiValueField):
 ################################################
 
 
+class FieldType(StrField):
+    name = "type"
+    suggest_options = True
+
+    def get_lookup_name(self):
+        return "typ_e"
+
+    def _field_choices(self):
+        return self.model._meta.get_field("typ_e").choices
+
+
 class FieldUse(StrField):
     name = "use"
 
@@ -1047,3 +1087,70 @@ class FieldSequenceFeature(StrField):
 
     def get_lookup_name(self):
         return "sequence_features__name"
+
+
+class LocationInlineBaseMixin(GenericStackedInline):
+    """Base inline to view/add item locations"""
+
+    model = LocationItem
+    template = "admin/tabular.html"
+    ordering = ["location__level"]
+    extra = 0
+    verbose_name = "location"
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        """Make box and coordinate fields smaller"""
+        field_names = ["box", "coordinate"]
+
+        field = super().formfield_for_dbfield(db_field, **kwargs)
+        if db_field.name in field_names:
+            field.widget.attrs["style"] = "width: 5em;"
+        return field
+
+
+class LocationInline(LocationInlineBaseMixin, ExistingInlineMixin):
+    """Inline to view item locations"""
+
+    verbose_name_plural = "Existing locations"
+    readonly_fields = ["location", "box", "coordinate", "comment"]
+
+    def get_queryset(self, request):
+        """Show inline uncollapsed only if docs exist"""
+        self.classes = [
+            "collapse",
+        ]
+
+        parent_object = self.get_parent_object(request)
+        if parent_object and parent_object.locations.exists():
+            self.classes = []
+        return super().get_queryset(request)
+
+
+class AddLocationInline(LocationInlineBaseMixin, AddInlineMixin):
+    """Inline to add new item locations"""
+
+    verbose_name_plural = "New locations"
+    formset = LocationCheckNumberInlineFormSet
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Include only locations linked to the parent model"""
+
+        if db_field.name == "location":
+            # Get all active locations for this model
+            kwargs["queryset"] = self.parent_model.get_model_locations().filter(
+                active=True
+            )
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_queryset(self, request):
+        """For a clone view, return standard queryset"""
+
+        self.classes = []
+
+        # If clone view, return standard queryset, not empty one
+        if request.resolver_match.view_name.endswith("_clone"):
+            return LocationInlineBaseMixin.get_queryset(self, request)
+
+        # This returns empty queryset for add inline
+        return super().get_queryset(request)

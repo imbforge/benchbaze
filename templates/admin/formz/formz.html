@@ -105,7 +105,7 @@
         <div><span class="formztextbold">Anschrift: </span>{{formz_header.address}}</div>
         <div><span class="formztextbold">Beauftragter für Biologische Sicherheit: </span>{{formz_header.name_biosafety_officer}}</div>
         <div><span class="formztextbold">S1 Genehmigung: </span>{{formz_header.s1_approval_file_num}}; erteilt am {{formz_header.s1_approval_date | date:"d.m.Y"}}</div>
-        {% if object.s2_work %}
+        {% if object.formz_s2 %}
           <div><span class="formztextbold">S2 Genehmigung: </span>{{formz_header.s2_approval_file_num}}; erteilt am {{formz_header.s2_approval_date | date:"d.m.Y"}}</div>
         {% endif %}
       {% else %}
@@ -133,7 +133,7 @@
           {% if forloop.first %}(Stamm: {% endif %}<a class='magnific-popup-iframe-ecolistrain' href="{% url 'admin:collection_ecolistrain_change' ecoli.id %}?_to_field=id&_popup=1" target="_blank">{{ecoli.name}}</a> - Hintergrund {{ecoli.background}}, RG{{ecoli.formz_risk_group}}{% if forloop.first and not forloop.last or not forloop.first and not forloop.last %};{% else %}){% endif %}
         {% endfor %}
       {% else %}
-        (Risikogruppe: {{object.formz_species.risk_group}})
+        (Risikogruppe: {{object.formz_species.risk_group}}{% if object.formz_species.virus_helper %}, <a class='magnific-popup-iframe-virushelper' href="{{object.formz_species.virus_helper.url_admin}}?_to_field=id&_popup=1" target="_blank">{{object.formz_species.virus_helper}}</a>{% endif %}) 
       {% endif %}
     </div>
 
@@ -191,7 +191,15 @@
     </div>
 
     <!-- Storage location -->
-    <div><span class="formztextbold">Lagerort: </span>{{object.formz_storage_location.storage_location}}</div>
+    <div><span class="formztextbold">Lagerort: </span>
+      {% if object.formz_locations.exists %}
+      <ul>
+        {% for location in object.formz_locations.all %}
+          <li>{{location}}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
 
     {% if object.all_instock_plasmids %}
       <!-- Plasmids used to create the organism -->
@@ -211,6 +219,20 @@
                 {% endif %}
               {% endif %}
             </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if object.all_instock_viruses.exists %}
+      <!-- Viruses used to create the organism -->
+      <div id='instock-viruses'>
+        <h3>Virus/Viren, die zur Erschaffung des Organismus genutzt wurden</h3>
+        <ul>
+          {% for virus in object.all_instock_viruses.all %}
+          <li>
+            <a class="magnific-popup-iframe-instock-virus" href="{{virus.url_admin}}?_to_field=id&_popup=1" target="_blank">Virus #{{virus}} ({{virus.get_typ_e_display}})</a>
+          </li>
           {% endfor %}
         </ul>
       </div>
@@ -531,6 +553,102 @@
   {% endif %}
 
 </div>
+
+{% if object.viruses_transient.exists %}
+  <!-- Viruses -->
+
+  <div id='viruses'>
+    
+    <h2 style="padding-bottom: 10px;">In den Organismus transduzierte Viren</h2>
+
+    <!-- S2 plasmids -->
+    {% for virus in object.viruses_transient.all %}
+
+      <div class="formzvirusitem" style="padding-bottom: 10px;">
+
+        <a class="magnific-popup-iframe-virus-transient" href="{{virus.virus.url_admin}}?_to_field=id&_popup=1" target="_blank"><span class="formztextbold">#{{virus.virus}} ({{virus.virus.get_typ_e_display}})</a>
+
+        <div>
+          Organismus transduziert am {{virus.created_date | date:"d.m.Y"}}, unter Projekt/e:
+
+          <!-- S2 plasmid projects -->
+          {% for project in virus.formz_projects.all %}
+            <a class="magnific-popup-iframe-virus-formzproject" href="{% url 'admin:formz_project_change' project.id %}?_to_field=id&_popup=1" target="_blank">{{project.short_title}}</a>{% if forloop.first and not forloop.last or not forloop.first and not forloop.last %},{% else %};{% endif %}
+          {% endfor %}
+
+          {% if plasmid.destroyed_date %}
+          <!-- S2 plasmid destroyed date -->
+            entsorgt am {{virus.destroyed_date | date:"d.m.Y"}}
+          {% else %}
+            noch nicht entsorgt
+          {% endif %}
+        </div>
+
+        <!-- S2 plasmid sequence features -->
+        <table>
+          <thead class="formztableheader">
+            <tr>
+              <th colspan="1" scope="col" rowspan="2" class="column-name formztableverticalborder">Bezeichnung</th>
+              <th colspan="2" scope="col" class="column-donor_organism formztableverticalborder">Spenderorganismus</th>
+              <th colspan="2" scope="col" class="column-nuc_acid">Nukleinsäure</th>
+            </tr>
+            <tr>
+              <th scope="col" class="column-donor_organism_name">Bezeichnung</th>
+              <th scope="col" class="column-donor_organism_risk formztableverticalborder">Risikogruppe</th>
+              <th scope="col" class="column-nuc_acid_purity">Reinheitsgrad</th>
+              <th scope="col" class="column-nuc_acid_risk">Gefährdungspotential</th>
+            </tr>
+          <thead>
+
+          <!-- S2 plasmid uncommon features -->
+          <tbody>
+            <tr class="row">
+                <td class="column-subheader formztextbold" colspan="5">Spezifische Merkmale</td>
+            </tr>
+            {% if virus.virus.all_uncommon_sequence_features.exists %}
+              {% for feat in virus.virus.all_uncommon_sequence_features %}
+                <tr class="row">
+                  <td class="field-name formztableverticalborder"><a class="magnific-popup-iframe-virus-sequencefeature-uncommon" href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
+                  <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
+                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                  <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
+                  <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr class="row">
+                <td colspan="5" class="field">Keine</td>
+              </tr>
+            {% endif %}
+          </tbody>
+
+          <!-- S2 plasmid common features -->
+          <tbody>
+            <tr class="row">
+              <td class="column-subheader formztextbold" colspan="5">Andere Merkmale, nicht relevant für die Sicherheitsbeurteilung</td>
+            </tr>
+            {% if virus.virus.all_common_sequence_features %}
+              {% for feat in virus.virus.all_common_sequence_features %}
+              <tr class="row">
+                <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-virus-sequencefeature-common' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
+                <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
+                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
+                <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr class="row">
+                <td colspan="5" class="field">Keine</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 {% endblock %}
 
 {% block footer %}
@@ -538,34 +656,41 @@
   <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
   <script type="text/javascript" src="{% static 'admin/js/vendor/jquery.magnific-popup.min.js' %}"></script>
   <script type="text/javascript">
-    const iFrameClassIds = ['ecolistrain',
-                                    'formzproject',
-                                    'formzproject-parent',
-                                    'zkbscellline',
-                                    'zkbsplasmid',
-                                    'sequencefeature-common',
-                                    'sequencefeature-uncommon',
-                                    'plasmid',
-                                    'transient-episomal-plasmid',
-                                    'transient-episomal-plasmid-formzproject',
-                                    'transient-episomal-plasmid-zkbsplasmid',
-                                    'transient-episomal-plasmid-sequencefeature-uncommon',
-                                    'transient-episomal-plasmid-sequencefeature-common',
-                                    's2-plasmid',
-                                    's2-formzproject',
-                                    's2-zkbsplasmid',
-                                    's2-sequencefeature-uncommon',
-                                    's2-sequencefeature-common',
-                                    's2-plasmid-map',
-                                    'transient-episomal-plasmid-map',
-                                    'plasmid-map',
-                                    'virus_packaging_cell_line',
-                                    'oligo',];
-    const MagnificiFrameClassIds = iFrameClassIds.map(e => 'magnific-popup-iframe-' + e)
-
-    const MagnificImgClassIds = ['magnific-popup-img-plasmid-map',
-                                 'magnific-popup-img-s2-plasmid-map',
-                                 'magnific-popup-img-transient-episomal-plasmid-map'];
+    const iFrameClassIds = [
+        'ecolistrain',
+        'formzproject',
+        'formzproject-parent',
+        'zkbscellline',
+        'zkbsplasmid',
+        'sequencefeature-common',
+        'sequencefeature-uncommon',
+        'plasmid',
+        'transient-episomal-plasmid',
+        'transient-episomal-plasmid-formzproject',
+        'transient-episomal-plasmid-zkbsplasmid',
+        'transient-episomal-plasmid-sequencefeature-uncommon',
+        'transient-episomal-plasmid-sequencefeature-common',
+        's2-plasmid',
+        's2-formzproject',
+        's2-zkbsplasmid',
+        's2-sequencefeature-uncommon',
+        's2-sequencefeature-common',
+        's2-plasmid-map',
+        'transient-episomal-plasmid-map',
+        'plasmid-map',
+        'virus_packaging_cell_line',
+        'oligo',
+        'virushelper',
+        'virus-transient',
+        'virus-formzproject',
+        'virus-sequencefeature-uncommon',
+        'virus-sequencefeature-common',
+        'instock-virus'
+    ];
+      const MagnificiFrameClassIds = iFrameClassIds.map(e => 'magnific-popup-iframe-' + e);
+      const MagnificImgClassIds = ['magnific-popup-img-plasmid-map',
+        'magnific-popup-img-s2-plasmid-map',
+        'magnific-popup-img-transient-episomal-plasmid-map'];
   </script>
   <script type="text/javascript" src="{% static 'admin/js/admin/MagnificPopUpiFrame.js' %}"></script>
   <script type="text/javascript" src="{% static 'admin/js/admin/MagnificPopUpImg.js' %}"></script>

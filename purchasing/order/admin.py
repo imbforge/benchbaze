@@ -573,13 +573,12 @@ class OrderAdmin(
                     + safety_info_fields
                     + self.obj_unmodifiable_fields
                 )
-        else:
-            return self.obj_unmodifiable_fields[:3]
+
         return self.obj_unmodifiable_fields[:3]
 
     def add_view(self, request, extra_context=None):
         self.raw_id_fields = self.safety_info_fields[1:-1]
-        self.autocomplete_fields = []
+        self.autocomplete_fields = ["created_by"]
         safety_info_fields = self.safety_info_fields.copy()
         safety_info_fields.remove("ghs_pict_img")
         if request.user.is_elevated_user or request.user.is_order_manager:
@@ -686,26 +685,19 @@ class OrderAdmin(
                     yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        try:
-            request.resolver_match.args[0]
-        except Exception:
-            # Exclude certain users from the 'Created by' field in the order form
-            if db_field.name == "created_by":
-                if request.user.is_elevated_user or request.user.is_order_manager:
-                    kwargs["queryset"] = User.objects.exclude(
-                        is_system_user=True
-                    ).order_by("last_name")
-                kwargs["initial"] = request.user.id
+        # Exclude certain users from the 'Created by' field in the order form
+        if db_field.name == "created_by":
+            if request.user.is_elevated_user or request.user.is_order_manager:
+                kwargs["queryset"] = User.objects.exclude(is_system_user=True).order_by(
+                    "last_name"
+                )
+            kwargs["initial"] = request.user.id
 
-            # Sort cost_unit and locations fields by name
-            if db_field.name == "cost_unit":
-                kwargs["queryset"] = CostUnit.objects.exclude(status=True).order_by(
-                    "name"
-                )
-            if db_field.name == "location":
-                kwargs["queryset"] = Location.objects.exclude(status=True).order_by(
-                    "name"
-                )
+        # Sort cost_unit and locations fields by name
+        if db_field.name == "cost_unit":
+            kwargs["queryset"] = CostUnit.objects.exclude(status=True).order_by("name")
+        if db_field.name == "location":
+            kwargs["queryset"] = Location.objects.exclude(status=True).order_by("name")
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

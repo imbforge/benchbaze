@@ -31,3 +31,5 @@ from .wormstrain.models import (
     WormStrainDoc,
     WormStrainGenotypingAssay,
 )
+from .virus.models import VirusMammalian, VirusInsect
+from .storage.models import Storage, Location, LocationName
