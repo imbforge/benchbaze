@@ -229,10 +229,9 @@ class FormZFieldsMixin(models.Model):
 
     @property
     def formz_locations(self):
-        locations = getattr(self, "locations", [])
-        if not locations:
-            locations = getattr(self.__class__, "get_model_locations", [])
-        return locations
+        return getattr(self, "locations", []) or getattr(
+            self.__class__, "get_model_locations", []
+        )
 
     @property
     def formz_s2(self):

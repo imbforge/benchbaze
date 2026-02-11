@@ -178,6 +178,10 @@ class Location(models.Model):
         self.description = self.description.strip()
         super().save(force_insert, force_update, using, update_fields)
 
+    @property
+    def formz_label(self):
+        return self.name
+
 
 class LocationName(models.Model):
     name = models.CharField(
@@ -307,3 +311,9 @@ class LocationItem(models.Model):
     @property
     def minimal_str(self):
         return f"({self.location.level}) {self.location.name} {'-'.join([self.box, self.coordinate])}"
+
+    @property
+    def formz_label(self):
+        return " | ".join(
+            [str(e) for e in [self.location.name, self.box, self.coordinate] if e]
+        )

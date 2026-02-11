@@ -188,7 +188,7 @@
         {% if object.formz_locations.exists %}
         <ul>
           {% for location in object.formz_locations.all %}
-            <li>{{location}}</li>
+            <li>{{location.formz_label}}</li>
           {% endfor %}
         </ul>
         {% endif %}
