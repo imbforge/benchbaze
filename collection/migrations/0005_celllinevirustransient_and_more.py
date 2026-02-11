@@ -856,6 +856,7 @@ class Migration(migrations.Migration):
                 related_name="%(class)s_helper_cellline",
                 to="collection.cellline",
                 verbose_name="helper cell line",
+                help_text="The cell line used to produce the virus",
             ),
         ),
         migrations.AddField(
@@ -941,6 +942,7 @@ class Migration(migrations.Migration):
                 related_name="%(class)s_helper_cellline",
                 to="collection.cellline",
                 verbose_name="helper cell line",
+                help_text="The cell line used to produce the virus",
             ),
         ),
         migrations.AddField(
@@ -1320,6 +1322,7 @@ class Migration(migrations.Migration):
                         related_name="+",
                         to="collection.cellline",
                         verbose_name="helper cell line",
+                        help_text="The cell line used to produce the virus",
                     ),
                 ),
                 (
@@ -1526,6 +1529,7 @@ class Migration(migrations.Migration):
                         related_name="+",
                         to="collection.cellline",
                         verbose_name="helper cell line",
+                        help_text="The cell line used to produce the virus",
                     ),
                 ),
                 (

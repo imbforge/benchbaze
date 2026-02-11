@@ -104,6 +104,7 @@ class VirusBase(
     helper_cellline = models.ForeignKey(
         "CellLine",
         verbose_name="helper cell line",
+        help_text="The cell line used to produce the virus",
         on_delete=models.PROTECT,
         related_name="%(class)s_helper_cellline",
         blank=False,
