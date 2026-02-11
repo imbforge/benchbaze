@@ -7,11 +7,6 @@ from django.forms import ValidationError
 from import_export.fields import Field
 
 from common.actions import export_tsv_action, export_xlsx_action
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
-from formz.actions import formz_as_html
-from formz.models import GenTechMethod, SequenceFeature
-from formz.models import Project as FormZProject
-
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -19,8 +14,12 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
+from formz.actions import formz_as_html
+from formz.models import GenTechMethod, SequenceFeature
+from formz.models import Project as FormZProject
 
 from ..plasmid.models import Plasmid
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -74,23 +73,6 @@ class SaCerevisiaeStrain(
     class Meta:
         verbose_name = "strain - Sa. cerevisiae"
         verbose_name_plural = "strains - Sa. cerevisiae"
-
-    _model_abbreviation = "sc"
-    _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_cassette_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_all_plasmids_in_stocked_strain": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": SaCerevisiaeStrainDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
 
     name = models.CharField("name", max_length=255, blank=False)
     relevant_genotype = models.CharField(
@@ -220,6 +202,7 @@ class SaCerevisiaeStrain(
         "reference",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {
@@ -235,20 +218,17 @@ class SaCerevisiaeStrain(
             ),
         },
         "dehydrate_methods": {
-            "episomal_plasmids_in_stock": lambda obj: (
-                ",".join(
-                    [
-                        str(i)
-                        for i in obj.episomal_plasmids.filter(
-                            sacerevisiaestrainepisomalplasmid__present_in_stocked_strain=True
-                        ).values_list("id", flat=True)
-                    ]
-                )
+            "episomal_plasmids_in_stock": lambda obj: ",".join(
+                [
+                    str(i)
+                    for i in obj.episomal_plasmids.filter(
+                        sacerevisiaestrainepisomalplasmid__present_in_stocked_strain=True
+                    ).values_list("id", flat=True)
+                ]
             )
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
-
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
     _show_formz = True
     _show_plasmids_in_model = True
     _autocomplete_fields = [

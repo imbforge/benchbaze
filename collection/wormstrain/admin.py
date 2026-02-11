@@ -12,7 +12,6 @@ from common.admin import (
 )
 
 from ..plasmid.admin import PlasmidAdmin
-from ..shared.actions import create_label
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
@@ -84,16 +83,6 @@ class WormStrainAdmin(
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
-    list_display = (
-        "id",
-        "name",
-        "chromosomal_genotype",
-        "stocked",
-        "created_by",
-        "approval",
-    )
-    list_display_links = ("id",)
-    actions = [export_wormstrain, formz_as_html, create_label]
     form = WormStrainAdminForm
     djangoql_schema = WormStrainQLSchema
     inlines = [

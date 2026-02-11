@@ -10,7 +10,6 @@ from ..sacerevisiaestrain.models import (
     SaCerevisiaeStrainDoc,
     SaCerevisiaeStrainEpisomalPlasmid,
 )
-from ..shared.actions import create_label
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
@@ -74,19 +73,7 @@ class SaCerevisiaeStrainAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = SaCerevisiaeStrainQLSchema
-    actions = [export_sacerevisiaestrain, formz_as_html, create_label]
     form = SaCerevisiaeStrainAdminForm
-    search_fields = ["id", "name"]
-    show_plasmids_in_model = True
-    autocomplete_fields = [
-        "parent_1",
-        "parent_2",
-        "integrated_plasmids",
-        "cassette_plasmids",
-        "formz_projects",
-        "formz_gentech_methods",
-        "sequence_features",
-    ]
     inlines = [
         SaCerevisiaeStrainEpisomalPlasmidInline,
         LocationInline,

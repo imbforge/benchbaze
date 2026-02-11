@@ -7,11 +7,6 @@ from django.forms import ValidationError
 from import_export.fields import Field
 
 from common.actions import export_tsv_action, export_xlsx_action
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
-from formz.actions import formz_as_html
-from formz.models import GenTechMethod, SequenceFeature
-from formz.models import Project as FormZProject
-
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -19,8 +14,9 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
+from formz.actions import formz_as_html
 
-from ..plasmid.models import Plasmid
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -61,25 +57,6 @@ class ScPombeStrain(
     class Meta:
         verbose_name = "strain - Sc. pombe"
         verbose_name_plural = "strains - Sc. pombe"
-
-    _model_abbreviation = "sp"
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _history_array_fields = {
-        "history_integrated_plasmids": "collection.Plasmid",
-        "history_cassette_plasmids": "collection.Plasmid",
-        "history_episomal_plasmids": "collection.Plasmid",
-        "history_all_plasmids_in_stocked_strain": "collection.Plasmid",
-        "history_formz_projects": "formz.Project",
-        "history_formz_gentech_methods": "formz.GenTechMethod",
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_documents": "collection.ScPombeStrainDoc",
-        "history_locations": "collection.LocationItem",
-    }
-    _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
-    _storage_requires_species = "Schizosaccharomyces pombe"
 
     box_number = models.SmallIntegerField("box number", blank=False)
     parent_1 = models.ForeignKey(
@@ -143,14 +120,15 @@ class ScPombeStrain(
         + OwnershipFieldsMixin._history_view_ignore_fields
     )
     _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_cassette_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_all_plasmids_in_stocked_strain": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": ScPombeStrainDoc,
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_cassette_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_all_plasmids_in_stocked_strain": "collection.Plasmid",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.ScPombeStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
     _representation_field = "name"
@@ -167,6 +145,7 @@ class ScPombeStrain(
     ]
     _show_formz = True
     _show_plasmids_in_model = True
+    _storage_requires_species = "Schizosaccharomyces pombe"
     _autocomplete_fields = [
         "parent_1",
         "parent_2",
@@ -193,6 +172,7 @@ class ScPombeStrain(
         "comment",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {
@@ -205,19 +185,17 @@ class ScPombeStrain(
             ),
         },
         "dehydrate_methods": {
-            "episomal_plasmids_in_stock": lambda obj: (
-                ",".join(
-                    [
-                        str(i)
-                        for i in obj.episomal_plasmids.filter(
-                            scpombestrainepisomalplasmid__present_in_stocked_strain=True
-                        ).values_list("id", flat=True)
-                    ]
-                )
+            "episomal_plasmids_in_stock": lambda obj: ",".join(
+                [
+                    str(i)
+                    for i in obj.episomal_plasmids.filter(
+                        scpombestrainepisomalplasmid__present_in_stocked_strain=True
+                    ).values_list("id", flat=True)
+                ]
             )
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
 
     _obj_specific_fields = [
         "box_number",

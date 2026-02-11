@@ -17,10 +17,10 @@ from common.models import (
 )
 from formz.actions import formz_as_html
 
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
-    DnaMapMixin,
     FormZFieldsMixin,
     LocationMixin,
     MapFileCheckPropertiesMixin,
@@ -64,22 +64,6 @@ class Plasmid(
         verbose_name_plural = "plasmids"
 
     _model_upload_to = "collection/plasmid/"
-    _history_array_fields = {
-        "history_formz_projects": "formz.Project",
-        "history_formz_gentech_methods": "formz.GenTechMethod",
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_formz_ecoli_strains": "collection.EColiStrain",
-        "history_documents": "collection.PlasmidDoc",
-        "history_locations": "collection.LocationItem",
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-        + ["map_png", "map_gbk"]
-    )
-    _unified_map_field = True
-    german_name = "Plasmid"
-    _storage_requires_species = "Escherichia coli"
 
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     other_name = models.CharField("other name", max_length=255, blank=True)
@@ -163,11 +147,12 @@ class Plasmid(
     _model_abbreviation = "p"
     _show_in_frontend = True
     _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_formz_ecoli_strains": EColiStrain,
-        "history_documents": PlasmidDoc,
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_formz_ecoli_strains": "collection.EColiStrain",
+        "history_documents": "collection.PlasmidDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -183,6 +168,7 @@ class Plasmid(
         "id",
         "name",
     ]
+    _storage_requires_species = "Escherichia coli"
     _list_display_frozen = _search_fields
     _list_display = [
         "selection",
@@ -210,9 +196,11 @@ class Plasmid(
         "received_from",
         "note",
         "reference",
+        "storage_type",
         "map",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {
@@ -222,7 +210,7 @@ class Plasmid(
         },
         "dehydrate_methods": dict(),
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
     _clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
     _obj_unmodifiable_fields = [
         "created_date_time",
@@ -241,6 +229,7 @@ class Plasmid(
         "received_from",
         "note",
         "reference",
+        "storage_type",
         "map",
         "map_png",
         "map_gbk",
@@ -258,26 +247,26 @@ class Plasmid(
     _add_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:10] + _obj_specific_fields[11:12]},
+            {"fields": _obj_specific_fields[:11] + _obj_specific_fields[12:13]},
         ],
         [
             "FormZ",
             {
                 "classes": tuple(),
-                "fields": _obj_specific_fields[12:],
+                "fields": _obj_specific_fields[13:],
             },
         ],
     ]
     _change_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:12] + _obj_unmodifiable_fields},
+            {"fields": _obj_specific_fields[:13] + _obj_unmodifiable_fields},
         ],
         [
             "FormZ",
             {
                 "classes": (("collapse",)),
-                "fields": _obj_specific_fields[12:],
+                "fields": _obj_specific_fields[13:],
             },
         ],
     ]

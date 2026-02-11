@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from common.actions import export_tsv_action, export_xlsx_action
@@ -12,6 +11,7 @@ from common.models import (
     ZebraLabelFieldsMixin,
 )
 
+from ..shared.actions import create_label
 from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
@@ -55,10 +55,6 @@ class Antibody(
         verbose_name_plural = "antibodies"
 
     _model_upload_to = "collection/antibody/"
-    _history_array_fields = {
-        "history_documents": "collection.AntibodyDoc",
-        "history_locations": "collection.LocationItem",
-    }
 
     # Fields
     name = models.CharField("name", max_length=255, blank=False)
@@ -83,7 +79,8 @@ class Antibody(
     _show_in_frontend = True
     _is_guarded_model = False
     _history_array_fields = {
-        "history_documents": AntibodyDoc,
+        "history_documents": "collection.AntibodyDoc",
+        "history_locations": "collection.LocationItem",
     }
     _representation_field = "name"
     _list_display_links = ["id"]
@@ -103,6 +100,7 @@ class Antibody(
         "description_comment",
         "info_sheet",
         "availability",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": dict(),
@@ -113,6 +111,7 @@ class Antibody(
     _actions = [
         export_xlsx_action,
         export_tsv_action,
+        create_label,
     ]
     _list_display_frozen = _search_fields
     _list_display = [

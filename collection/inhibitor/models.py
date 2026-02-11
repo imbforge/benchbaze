@@ -50,10 +50,6 @@ class Inhibitor(
         verbose_name_plural = "inhibitors"
 
     _model_upload_to = "collection/inhibitor/"
-    _history_array_fields = {
-        "history_documents": "collection.InhibitorDoc",
-        "history_locations": "collection.LocationItem",
-    }
 
     name = models.CharField("name", max_length=255, blank=False)
     other_names = models.CharField("other names", max_length=255, blank=False)
@@ -76,7 +72,10 @@ class Inhibitor(
     # Static properties
     _model_abbreviation = "ib"
     _show_in_frontend = True
-    _history_array_fields = {"history_documents": InhibitorDoc}
+    _history_array_fields = {
+        "history_documents": "collection.InhibitorDoc",
+        "history_locations": "collection.LocationItem",
+    }
     _representation_field = "name"
     _list_display_links = ["id"]
     _search_fields = [
@@ -104,6 +103,7 @@ class Inhibitor(
         "stock_solution",
         "description_comment",
         "info_sheet",
+        "locations",
     ]
     _actions = [
         export_xlsx_action,

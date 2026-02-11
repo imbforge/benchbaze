@@ -360,7 +360,7 @@ class CollectionBaseAdmin(
         self.show_plasmids_in_model = getattr(model, "_show_plasmids_in_model", False)
         self.is_guarded_model = getattr(model, "_is_guarded_model", False)
         self.set_readonly_fields = getattr(model, "_set_readonly_fields", [])
-        self.show_formz = getattr(model, "_set_readonly_fields", False)
+        self.show_formz = getattr(model, "_show_formz", False)
         self.autocomplete_fields = getattr(model, "_autocomplete_fields", [])
         self.clone_ignore_fields = getattr(model, "_clone_ignore_fields", [])
         self.actions = getattr(model, "_actions", [])

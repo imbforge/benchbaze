@@ -16,10 +16,10 @@ from formz.models import Species
 
 from ..oligo.models import Oligo
 from ..plasmid.models import Plasmid
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
-    DnaMapMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
     LocationMixin,
@@ -57,17 +57,6 @@ class WormStrainAllele(
         verbose_name_plural = "alleles - Worm"
 
     _model_upload_to = "collection/wormstrainallele/"
-    german_name = "Allel"
-    _history_array_fields = {
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_made_with_plasmids": "collection.Plasmid",
-        "history_transgene_plasmids": "collection.Plasmid",
-        "history_documents": "collection.WormStrainAlleleDoc",
-    }
-    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
-        "map_png",
-        "map_gbk",
-    ]
 
     lab_identifier = models.CharField(
         "prefix/Lab identifier",
@@ -173,10 +162,10 @@ class WormStrainAllele(
     _model_abbreviation = "wa"
     german_name = "Allel"
     _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_made_with_plasmids": Plasmid,
-        "history_transgene_plasmids": Plasmid,
-        "history_documents": WormStrainAlleleDoc,
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_made_with_plasmids": "collection.Plasmid",
+        "history_transgene_plasmids": "collection.Plasmid",
+        "history_documents": "collection.WormStrainAlleleDoc",
     }
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
         "map_png",
@@ -228,7 +217,7 @@ class WormStrainAllele(
             "type": lambda obj: obj.get_typ_e_display(),
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
 
     _show_formz = False
     _show_plasmids_in_model = True
@@ -324,24 +313,6 @@ class WormStrain(
     class Meta:
         verbose_name = "strain - Worm"
         verbose_name_plural = "strains - Worm"
-
-    _model_abbreviation = "w"
-    _history_array_fields = {
-        "history_integrated_dna_plasmids": "collection.Plasmid",
-        "history_integrated_dna_oligos": "collection.Oligo",
-        "history_formz_projects": "formz.Project",
-        "history_formz_gentech_methods": "formz.GenTechMethod",
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_genotyping_oligos": "collection.Oligo",
-        "history_documents": "collection.WormStrainDoc",
-        "history_alleles": "collection.WormStrainAllele",
-        "history_locations": "collection.LocationItem",
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _m2m_save_ignore_fields = ["history_genotyping_oligos"]
 
     name = models.CharField("name", max_length=255, blank=False)
     chromosomal_genotype = models.TextField("chromosomal genotype", blank=True)
@@ -446,14 +417,15 @@ class WormStrain(
     _model_abbreviation = "w"
     _show_in_frontend = True
     _history_array_fields = {
-        "history_integrated_dna_plasmids": Plasmid,
-        "history_integrated_dna_oligos": Oligo,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_genotyping_oligos": Oligo,
-        "history_documents": WormStrainDoc,
-        "history_alleles": WormStrainAllele,
+        "history_integrated_dna_plasmids": "collection.Plasmid",
+        "history_integrated_dna_oligos": "collection.Oligo",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_genotyping_oligos": "collection.Oligo",
+        "history_documents": "collection.WormStrainDoc",
+        "history_alleles": "collection.WormStrainAllele",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -491,6 +463,7 @@ class WormStrain(
         "primers_for_genotyping",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {

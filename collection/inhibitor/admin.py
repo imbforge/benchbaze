@@ -23,36 +23,9 @@ class InhibitorAddDocInline(AddDocFileInlineMixin):
 
 class InhibitorAdmin(CollectionSimpleAdmin):
     djangoql_schema = InhibitorQLSchema
-    actions = [export_inhibitor]
-    search_fields = ["id", "name"]
-    inlines = [InhibitorDocInline, InhibitorAddDocInline]
-    clone_ignore_fields = ["info_sheet"]
-    obj_specific_fields = [
-        "name",
-        "other_names",
-        "target",
-        "received_from",
-        "catalogue_number",
-        "l_ocation",
-        "ic50",
-        "amount",
-        "stock_solution",
-        "description_comment",
-        "info_sheet",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "last_changed_date_time",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields},
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields + obj_unmodifiable_fields},
-        ],
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        InhibitorDocInline,
+        InhibitorAddDocInline,
     ]

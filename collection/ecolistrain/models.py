@@ -1,18 +1,14 @@
 from django.db import models
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
-)from formz.models import Project as FormZProject
-from formz.models import SequenceFeature
-
-from common.actions import export_tsv_action, export_xlsx_action
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+)
 from formz.actions import formz_as_html
-from formz.models import Project as FormZProject
-from formz.models import SequenceFeature
+
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -53,19 +49,6 @@ class EColiStrain(
         verbose_name = "strain - E. coli"
         verbose_name_plural = "strains - E. coli"
 
-    _model_abbreviation = "ec"
-    _history_array_fields = {
-        "history_formz_projects": "formz.Project",
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_documents": "collection.EColiStrainDoc",
-        "history_locations": "collection.LocationItem",
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-    _storage_requires_species = "Escherichia coli"
-
     name = models.CharField("name", max_length=255, blank=False)
     resistance = models.CharField("resistance", max_length=255, blank=True)
     genotype = models.TextField("genotype", blank=True)
@@ -96,11 +79,13 @@ class EColiStrain(
     _show_formz = True
     _show_in_frontend = "Strains - <em>E. coli</em>"
     _frontend_verbose_name = "Strain - <em>E. coli</em>"
+    _storage_requires_species = "Escherichia coli"
     _frontend_verbose_plural = _show_in_frontend
     _history_array_fields = {
-        "history_formz_projects": FormZProject,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": EColiStrainDoc,
+        "history_formz_projects": "formz.Project",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.EColiStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -126,9 +111,9 @@ class EColiStrain(
         "note",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
-
     _obj_specific_fields = [
         "name",
         "resistance",

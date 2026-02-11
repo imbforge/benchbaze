@@ -35,50 +35,11 @@ class SiRnaAdmin(
     CollectionSimpleAdmin,
 ):
     djangoql_schema = SiRnaQLSchema
-    actions = [export_si_rna]
-    search_fields = ["id", "name"]
-    autocomplete_fields = ["created_by", "orders"]
     inlines = [
         LocationInline,
         AddLocationInline,
         InhibitorDocInline,
         InhibitorAddDocInline,
-    ]
-    clone_ignore_fields = ["info_sheet"]
-    obj_specific_fields = [
-        "name",
-        "sequence",
-        "sequence_antisense",
-        "species",
-        "target_genes",
-        "locus_ids",
-        "description_comment",
-        "info_sheet",
-        "supplier",
-        "supplier_part_no",
-        "supplier_si_rna_id",
-        "orders",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "last_changed_date_time",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {
-                "fields": obj_specific_fields[:8]
-                + [
-                    "created_by",
-                ]
-            },
-        ],
-        ["Supplier information", {"fields": obj_specific_fields[8:]}],
-    ]
-    change_view_fieldsets = [
-        [None, {"fields": obj_specific_fields[:8] + obj_unmodifiable_fields}],
-        ["Supplier information", {"fields": obj_specific_fields[8:]}],
     ]
 
     def add_view(self, request, form_url="", extra_context=None):

@@ -12,6 +12,7 @@ from common.models import (
     ZebraLabelFieldsMixin,
 )
 
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     HistoryDocFieldMixin,
@@ -55,15 +56,6 @@ class Oligo(
         verbose_name_plural = "oligos"
 
     _model_upload_to = "collection/oligo/"
-    _history_array_fields = {
-        "history_sequence_features": "forms.SequenceFeature",
-        "history_documents": "collection.OligoDoc",
-        "history_locations": "collection.LocationItem",
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
 
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     sequence = models.CharField(
@@ -109,8 +101,9 @@ class Oligo(
     _is_guarded_model = False
     _show_formz = False
     _history_array_fields = {
-        "history_sequence_features": SequenceFeature,
-        "history_documents": OligoDoc,
+        "history_sequence_features": "forms.SequenceFeature",
+        "history_documents": "collection.OligoDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
@@ -140,10 +133,12 @@ class Oligo(
         "comment",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _actions = [
         export_xlsx_action,
         export_tsv_action,
+        create_label,
     ]
 
     _autocomplete_fields = ["sequence_features"]

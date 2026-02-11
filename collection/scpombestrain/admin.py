@@ -6,7 +6,6 @@ from common.admin import (
     GetParentObjectInlineMixin,
 )
 
-from ..shared.actions import create_label
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
@@ -72,7 +71,6 @@ class ScPombeStrainAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = ScPombeStrainQLSchema
-    actions = [export_scpombestrain, formz_as_html, create_label]
     form = ScPombeStrainAdminForm
     inlines = [
         ScPombeStrainEpisomalPlasmidInline,

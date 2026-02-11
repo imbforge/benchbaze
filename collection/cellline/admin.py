@@ -6,10 +6,8 @@ from common.admin import (
     DocFileInlineMixin,
     GetParentObjectInlineMixin,
 )
-from formz.actions import formz_as_html
 from formz.models import Species
 
-from ..shared.actions import create_label
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
@@ -17,8 +15,7 @@ from ..shared.admin import (
     LocationInline,
     SortAutocompleteResultsId,
 )
-from .actions import export_cellline
-from .models import CellLineDoc, CellLineEpisomalPlasmid
+from .models import CellLineDoc, CellLineEpisomalPlasmid, CellLineVirusTransient
 from .search import CellLineQLSchema
 
 
@@ -150,65 +147,12 @@ class CellLineAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = CellLineQLSchema
-    inlines = [CellLineEpisomalPlasmidInline, CellLineDocInline, AddCellLineDocInline]
-    actions = [export_cellline, formz_as_html]
-    search_fields = ["id", "name"]
-    show_plasmids_in_model = True
-    autocomplete_fields = [
-        "parental_line",
-        "integrated_plasmids",
-        "formz_projects",
-        "zkbs_cell_line",
-        "formz_gentech_methods",
-        "sequence_features",
-    ]
-    obj_specific_fields = [
-        "name",
-        "box_name",
-        "alternative_name",
-        "parental_line",
-        "organism",
-        "cell_type_tissue",
-        "culture_type",
-        "growth_condition",
-        "freezing_medium",
-        "received_from",
-        "integrated_plasmids",
-        "description_comment",
-        "s2_work",
-        "formz_projects",
-        "formz_risk_group",
-        "zkbs_cell_line",
-        "formz_gentech_methods",
-        "sequence_features",
-        "destroyed_date",
-    ]
-    obj_unmodifiable_fields = [
-        "created_date_time",
-        "created_approval_by_pi",
-        "last_changed_date_time",
-        "last_changed_approval_by_pi",
-        "created_by",
-    ]
-    add_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:13]},
-        ],
-        [
-            "FormZ",
-            {"classes": tuple(), "fields": obj_specific_fields[13:]},
-        ],
-    ]
-    change_view_fieldsets = [
-        [
-            None,
-            {"fields": obj_specific_fields[:13] + obj_unmodifiable_fields},
-        ],
-        [
-            "FormZ",
-            {"classes": (("collapse",)), "fields": obj_specific_fields[13:]},
-        ],
+    inlines = [
+        CellLineEpisomalPlasmidInline,
+        LocationInline,
+        AddLocationInline,
+        CellLineDocInline,
+        AddCellLineDocInline,
     ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

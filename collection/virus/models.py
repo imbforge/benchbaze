@@ -1,12 +1,14 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
     HistoryFieldMixin,
     SaveWithoutHistoricalRecord,
 )
+from formz.actions import formz_as_html
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -16,6 +18,65 @@ from ..shared.models import (
     LocationMixin,
     OwnershipFieldsMixin,
 )
+
+# Static properties
+VIRUS_BASE_LIST_DISPLAY = [
+    "typ_e",
+    "resistance",
+    "created_by",
+    "approval_formatted",
+]
+VIRUS_BASE_EXPORT_FIELD_NAMES = [
+    "id",
+    "name",
+    "typ_e",
+    "resistance",
+    "us_e",
+    "helper_plasmids",
+    "helper_cellline",
+    "construction",
+    "note",
+    "locations",
+    "created_date_time",
+    "created_by",
+    "locations",
+]
+VIRUS_BASE_AUTOCOMPLETE_FIELDS = [
+    "formz_projects",
+    "sequence_features",
+    "helper_plasmids",
+    "helper_cellline",
+    "formz_gentech_methods",
+]
+VIRUS_BASE_SPECIFIC_FIELDS = [
+    "name",
+    "typ_e",
+    "resistance",
+    "us_e",
+    "helper_plasmids",
+    "helper_cellline",
+    "construction",
+    "note",
+    "formz_projects",
+    "formz_risk_group",
+    "formz_gentech_methods",
+    "sequence_features",
+    "destroyed_date",
+]
+VIRUS_BASE_HISTORY_ARRAY_FIELDS = {
+    "history_formz_projects": "formz.Project",
+    "history_formz_gentech_methods": "formz.GenTechMethod",
+    "history_sequence_features": "formz.SequenceFeature",
+    "history_helper_plasmids": "collection.Plasmid",
+    "history_locations": "collection.LocationItem",
+}
+VIRUS_BASE_UNMODIFIABLE_FIELDS = [
+    "created_date_time",
+    "created_approval_by_pi",
+    "last_changed_date_time",
+    "last_changed_approval_by_pi",
+    "created_by",
+]
 
 
 class VirusBase(
@@ -33,20 +94,7 @@ class VirusBase(
     class Meta:
         abstract = True
 
-    _model_abbreviation = "v"
-    _history_array_fields = {
-        "history_formz_projects": "formz.Project",
-        "history_formz_gentech_methods": "formz.GenTechMethod",
-        "history_sequence_features": "formz.SequenceFeature",
-        "history_helper_plasmids": "collection.Plasmid",
-        "history_locations": "collection.LocationItem",
-    }
-
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
-
+    # Fields
     name = models.CharField("name", max_length=255, blank=False, unique=True)
     typ_e = models.CharField(
         "type",
@@ -80,6 +128,24 @@ class VirusBase(
         null=True,
         default=list,
     )
+
+    # Static properties
+    _history_view_ignore_fields = (
+        ApprovalFieldsMixin._history_view_ignore_fields
+        + OwnershipFieldsMixin._history_view_ignore_fields
+    )
+    _representation_field = "name"
+    _list_display_links = ["id"]
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _list_display_frozen = _search_fields
+    _actions = [
+        export_xlsx_action,
+        export_tsv_action,
+        formz_as_html,
+    ]
 
     def __str__(self):
         return f"{self.id} - {self.name}"
@@ -141,9 +207,6 @@ class VirusMammalian(VirusBase):
         verbose_name = "virus - Mammalian"
         verbose_name_plural = "viruses - Mammalian"
 
-    _history_array_fields = VirusBase._history_array_fields.copy()
-    _history_array_fields["history_documents"] = "collection.VirusMammalianDoc"
-
     typ_e = models.CharField(
         "type",
         choices=(
@@ -154,6 +217,49 @@ class VirusMammalian(VirusBase):
         max_length=15,
         blank=False,
     )
+
+    # Static properties
+    _model_abbreviation = "vm"
+    _show_in_frontend = True
+    _frontend_verbose_name = "virus - Mammalian"
+    _frontend_verbose_plural = "viruses - Mammalian"
+    _history_array_fields = VIRUS_BASE_HISTORY_ARRAY_FIELDS.copy()
+    _history_array_fields["history_documents"] = "collection.VirusMammalianDoc"
+    _list_display = VIRUS_BASE_LIST_DISPLAY.copy()
+    _export_field_names = VIRUS_BASE_EXPORT_FIELD_NAMES.copy()
+    _autocomplete_fields = VIRUS_BASE_AUTOCOMPLETE_FIELDS.copy()
+    _obj_specific_fields = VIRUS_BASE_SPECIFIC_FIELDS.copy()
+    _obj_unmodifiable_fields = VIRUS_BASE_UNMODIFIABLE_FIELDS
+    formz_field_index = _obj_specific_fields.index("formz_projects") - 1
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:formz_field_index]},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": tuple(),
+                "fields": _obj_specific_fields[formz_field_index:],
+            },
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {
+                "fields": _obj_specific_fields[:formz_field_index]
+                + _obj_unmodifiable_fields
+            },
+        ],
+        [
+            "FormZ",
+            {
+                "classes": (("collapse",)),
+                "fields": _obj_specific_fields[formz_field_index:],
+            },
+        ],
+    ]
 
 
 # Virus insect
@@ -179,9 +285,7 @@ class VirusInsect(VirusBase):
         verbose_name = "virus - Insect"
         verbose_name_plural = "viruses - Insect"
 
-    _history_array_fields = VirusBase._history_array_fields.copy()
-    _history_array_fields["history_documents"] = "collection.VirusInsectDoc"
-
+    # Fields
     typ_e = models.CharField(
         "type",
         choices=(("baculo", "Baculovirus"),),
@@ -198,6 +302,58 @@ class VirusInsect(VirusBase):
         blank=False,
         null=True,
     )
+
+    # Static properties
+    _model_abbreviation = "vi"
+    _show_in_frontend = True
+    _frontend_verbose_name = "virus - Insect"
+    _frontend_verbose_plural = "viruses - Insect"
+    _history_array_fields = VIRUS_BASE_HISTORY_ARRAY_FIELDS.copy()
+    _history_array_fields["history_documents"] = "collection.VirusInsectDoc"
+    _list_display = VIRUS_BASE_LIST_DISPLAY.copy()
+    _export_field_names = VIRUS_BASE_EXPORT_FIELD_NAMES.copy()
+    _autocomplete_fields = VIRUS_BASE_AUTOCOMPLETE_FIELDS.copy()
+    _obj_specific_fields = VIRUS_BASE_SPECIFIC_FIELDS.copy()
+    _obj_unmodifiable_fields = VIRUS_BASE_UNMODIFIABLE_FIELDS
+    _autocomplete_fields.append("helper_ecolistrain")
+    _obj_specific_fields.insert(
+        _obj_specific_fields.index("helper_cellline"),
+        "helper_ecolistrain",
+    )
+    _export_field_names.insert(
+        _export_field_names.index("helper_cellline"),
+        "helper_ecolistrain",
+    )
+    formz_field_index = _obj_specific_fields.index("formz_projects") - 1
+    _add_view_fieldsets = [
+        [
+            None,
+            {"fields": _obj_specific_fields[:formz_field_index]},
+        ],
+        [
+            "FormZ",
+            {
+                "classes": tuple(),
+                "fields": _obj_specific_fields[formz_field_index:],
+            },
+        ],
+    ]
+    _change_view_fieldsets = [
+        [
+            None,
+            {
+                "fields": _obj_specific_fields[:formz_field_index]
+                + _obj_unmodifiable_fields
+            },
+        ],
+        [
+            "FormZ",
+            {
+                "classes": (("collapse",)),
+                "fields": _obj_specific_fields[formz_field_index:],
+            },
+        ],
+    ]
 
     @property
     def all_sequence_features(self):

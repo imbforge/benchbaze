@@ -51,12 +51,6 @@ class SiRna(
         verbose_name_plural = "siRNAs"
 
     _model_upload_to = "collection/sirna/"
-    _history_array_fields = {
-        "history_orders": "purchasing.Order",
-        "history_documents": "collection.SiRnaDoc",
-        "history_locations": "collection.LocationItem",
-    }
-    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
 
     # Fields
     name = models.CharField("name", max_length=255, blank=False)
@@ -127,7 +121,11 @@ class SiRna(
     _show_in_frontend = "siRNAs"
     _frontend_verbose_name = "siRNA"
     _frontend_verbose_plural = _show_in_frontend
-    _history_array_fields = {"history_orders": Order, "history_documents": SiRnaDoc}
+    _history_array_fields = {
+        "history_orders": "purchasing.Order",
+        "history_documents": "collection.SiRnaDoc",
+        "history_locations": "collection.LocationItem",
+    }
     _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
     _representation_field = "name"
     _list_display_links = ["id"]
@@ -160,6 +158,7 @@ class SiRna(
         "orders",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {

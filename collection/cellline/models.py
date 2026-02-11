@@ -5,11 +5,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 from import_export.fields import Field
-from common.actions import export_tsv_action, export_xlsx_action
 from simple_history.models import HistoricalRecords
 
-
-from formz.actions import formz_as_html
+from common.actions import export_tsv_action, export_xlsx_action
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -17,8 +15,10 @@ from common.models import (
     SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
+from formz.actions import formz_as_html
 from formz.models import ZkbsCellLine
 
+from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     CommonCollectionModelPropertiesMixin,
@@ -72,21 +72,6 @@ class CellLine(
     class Meta:
         verbose_name = "cell line"
         verbose_name_plural = "cell lines"
-
-    _model_abbreviation = "cl"
-    _related_name_base = "cellline"
-    _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": CellLineDoc,
-    }
-    _history_view_ignore_fields = (
-        ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
-    )
 
     name = models.CharField("name", max_length=255, unique=True, blank=False)
     box_name = models.CharField("box", max_length=255, blank=False)
@@ -192,16 +177,18 @@ class CellLine(
         "integrated_plasmids",
         "created_date_time",
         "created_by",
+        "locations",
     ]
     _export_custom_fields = {
         "fields": {"organism_name": Field(column_name="Organism name")},
         "dehydrate_methods": {"organism_name": lambda obj: str(obj.organism)},
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
     _show_plasmids_in_model = True
     _autocomplete_fields = [
         "parental_line",
         "integrated_plasmids",
+        "viruses_mammalian_integrated",
         "formz_projects",
         "zkbs_cell_line",
         "formz_gentech_methods",
@@ -219,6 +206,7 @@ class CellLine(
         "freezing_medium",
         "received_from",
         "integrated_plasmids",
+        "viruses_mammalian_integrated",
         "description_comment",
         "s2_work",
         "formz_projects",
@@ -238,30 +226,33 @@ class CellLine(
     _add_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:13]},
+            {"fields": _obj_specific_fields[:14]},
         ],
         [
             "FormZ",
-            {"classes": tuple(), "fields": _obj_specific_fields[13:]},
+            {"classes": tuple(), "fields": _obj_specific_fields[14:]},
         ],
     ]
     _change_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:13] + _obj_unmodifiable_fields},
+            {"fields": _obj_specific_fields[:14] + _obj_unmodifiable_fields},
         ],
         [
             "FormZ",
-            {"classes": (("collapse",)), "fields": _obj_specific_fields[13:]},
+            {"classes": (("collapse",)), "fields": _obj_specific_fields[14:]},
         ],
     ]
     _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": CellLineDoc,
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_formz_projects": "forms.FormZProject",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.CellLineDoc",
+        "history_locations": "collection.LocationItem",
+        "history_viruses_mammalian_integrated": "collection.VirusMammalian",
+        "history_viruses_transient": "collection.CellLineVirusTransient",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
