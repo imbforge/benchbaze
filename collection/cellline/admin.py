@@ -149,6 +149,7 @@ class CellLineAdmin(
     djangoql_schema = CellLineQLSchema
     inlines = [
         CellLineEpisomalPlasmidInline,
+        CellLineVirusTransientInline,
         LocationInline,
         AddLocationInline,
         CellLineDocInline,
