@@ -196,7 +196,6 @@ class Plasmid(
         "received_from",
         "note",
         "reference",
-        "storage_type",
         "map",
         "created_date_time",
         "created_by",
