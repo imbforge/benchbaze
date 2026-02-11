@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_str
 from django.utils.text import capfirst
+from import_export.fields import Field
 from import_export.resources import ModelResource, modelresource_factory
 
 from common.export import export_objects_tsv, export_objects_xlsx
@@ -38,12 +39,21 @@ def base_export_action(this, queryset):
     )
 
     # If created_by in list of export fields, add it as a custom
-    # nicely formatted field
+    # field that includes the user's full name and USERNAME_FIELD
     if "created_by" in field_names:
-        custom_fields["dehydrate_methods"]["created_by"] = (
-            lambda obj: f"{obj.created_by.first_name} {obj.created_by.last_name}, "
+        custom_fields["dehydrate_methods"]["created_by"] = lambda obj: (
+            f"{obj.created_by.first_name} {obj.created_by.last_name}, "
             f"{getattr(obj.created_by, get_user_model().USERNAME_FIELD)}"
         )
+
+    # If locations in list of export fields, add it as a custom field
+    # that includes a nicely formatted list of locations
+    if "locations" in field_names:
+        custom_fields["dehydrate_methods"]["locations"] = lambda obj: "; ".join(
+            str(location.minimal_str)
+            for location in obj.locations.all().order_by("location__level")
+        )
+        custom_fields["fields"]["locations"] = Field(column_name="Locations")
 
     # Create export resource on the fly
     export_resource = modelresource_factory(
