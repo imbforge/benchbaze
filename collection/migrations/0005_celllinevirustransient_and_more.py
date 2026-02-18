@@ -234,7 +234,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "resistance",
-                    models.CharField(max_length=255, verbose_name="resistance"),
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="resistance"
+                    ),
                 ),
                 (
                     "us_e",
@@ -422,7 +424,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "resistance",
-                    models.CharField(max_length=255, verbose_name="resistance"),
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="resistance"
+                    ),
                 ),
                 (
                     "us_e",
@@ -851,12 +855,12 @@ class Migration(migrations.Migration):
             model_name="virusmammalian",
             name="helper_cellline",
             field=models.ForeignKey(
+                help_text="The cell line used to produce the virus",
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
                 related_name="%(class)s_helper_cellline",
                 to="collection.cellline",
                 verbose_name="helper cell line",
-                help_text="The cell line used to produce the virus",
             ),
         ),
         migrations.AddField(
@@ -937,12 +941,12 @@ class Migration(migrations.Migration):
             model_name="virusinsect",
             name="helper_cellline",
             field=models.ForeignKey(
+                help_text="The cell line used to produce the virus",
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
                 related_name="%(class)s_helper_cellline",
                 to="collection.cellline",
                 verbose_name="helper cell line",
-                help_text="The cell line used to produce the virus",
             ),
         ),
         migrations.AddField(
@@ -1243,7 +1247,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "resistance",
-                    models.CharField(max_length=255, verbose_name="resistance"),
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="resistance"
+                    ),
                 ),
                 (
                     "us_e",
@@ -1317,12 +1323,12 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         blank=True,
                         db_constraint=False,
+                        help_text="The cell line used to produce the virus",
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
                         to="collection.cellline",
                         verbose_name="helper cell line",
-                        help_text="The cell line used to produce the virus",
                     ),
                 ),
                 (
@@ -1453,7 +1459,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "resistance",
-                    models.CharField(max_length=255, verbose_name="resistance"),
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="resistance"
+                    ),
                 ),
                 (
                     "us_e",
@@ -1524,12 +1532,12 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         blank=True,
                         db_constraint=False,
+                        help_text="The cell line used to produce the virus",
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
                         to="collection.cellline",
                         verbose_name="helper cell line",
-                        help_text="The cell line used to produce the virus",
                     ),
                 ),
                 (
@@ -2143,6 +2151,7 @@ class Migration(migrations.Migration):
                     _connector="OR",
                 ),
                 name="mammalian_or_insect_virus_not_both",
+                violation_error_message="Choose either a mammalian or an insect virus, not both.",
             ),
         ),
     ]

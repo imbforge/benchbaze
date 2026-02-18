@@ -110,7 +110,7 @@ class VirusBase(
         blank=False,
         null=True,
     )
-    resistance = models.CharField("resistance", max_length=255, blank=False)
+    resistance = models.CharField("resistance", max_length=255, blank=True)
     us_e = models.CharField("use", max_length=255, blank=True)
     helper_plasmids = models.ManyToManyField(
         "Plasmid",

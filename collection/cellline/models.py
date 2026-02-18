@@ -415,20 +415,9 @@ class CellLineVirusTransient(OwnershipFieldsMixin, models.Model):
                     | models.Q(virus_mammalian__isnull=True, virus_insect__isnull=False)
                 ),
                 name="mammalian_or_insect_virus_not_both",
+                violation_error_message="Choose either a mammalian or an insect virus, not both.",
             )
         ]
-
-    def clean(self):
-        """Validate that either virus_mammalian or virus_insect is set, but not both"""
-
-        super().clean()
-
-        if self.virus_mammalian and self.virus_insect:
-            raise ValidationError(
-                "Choose either a mammalian or an insect virus, not both."
-            )
-        if not self.virus_mammalian and not self.virus_insect:
-            raise ValidationError("Choose a mammalian virus or an insect virus.")
 
     def __str__(self):
         return f"{self.virus} ({self.virus_type}), {self.created_date}"
