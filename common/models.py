@@ -365,7 +365,8 @@ class HistoryFieldMixin(models.Model):
                         value_out = ", ".join(value)
 
                 elif field_type == "DateField" or field_type == "DateTimeField":
-                    value_out = value.isoformat()
+                    if value:
+                        value_out = value.isoformat()
 
                 return value_out
 
