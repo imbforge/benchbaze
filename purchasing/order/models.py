@@ -43,9 +43,9 @@ class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
         "last_changed_date_time",
     ]
     _history_array_fields = {
-        "history_ghs_symbols": "GhsSymbol",
-        "history_signal_words": "SignalWord",
-        "history_hazard_statements": "HazardStatement",
+        "history_ghs_symbols": "purchasing.GhsSymbol",
+        "history_signal_words": "purchasing.SignalWord",
+        "history_hazard_statements": "purchasing.HazardStatement",
     }
     _show_in_frontend = True
 
