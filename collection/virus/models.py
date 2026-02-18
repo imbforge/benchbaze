@@ -231,7 +231,7 @@ class VirusMammalian(VirusBase):
     _autocomplete_fields = VIRUS_BASE_AUTOCOMPLETE_FIELDS.copy()
     _obj_specific_fields = VIRUS_BASE_SPECIFIC_FIELDS.copy()
     _obj_unmodifiable_fields = VIRUS_BASE_UNMODIFIABLE_FIELDS
-    formz_field_index = _obj_specific_fields.index("formz_projects") - 1
+    formz_field_index = _obj_specific_fields.index("formz_projects")
     _add_view_fieldsets = [
         [
             None,
@@ -325,7 +325,7 @@ class VirusInsect(VirusBase):
         _export_field_names.index("helper_cellline"),
         "helper_ecolistrain",
     )
-    formz_field_index = _obj_specific_fields.index("formz_projects") - 1
+    formz_field_index = _obj_specific_fields.index("formz_projects")
     _add_view_fieldsets = [
         [
             None,
