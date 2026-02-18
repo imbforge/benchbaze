@@ -564,7 +564,12 @@ class OrderAdmin(
     def get_readonly_fields(self, request, obj=None):
         if obj:
             if self.can_change:
-                return self.obj_specific_fields[8:10] + self.obj_unmodifiable_fields
+                # If an order is already set as delivered, allow changing the delivery date
+                obj_unmodifiable_fields = self.obj_unmodifiable_fields.copy()
+                if obj.status == "delivered":
+                    obj_unmodifiable_fields.remove("delivered_date")
+                # Make urgent and delivery_alert fields always read-only
+                return self.obj_specific_fields[8:10] + obj_unmodifiable_fields
             else:
                 safety_info_fields = self.safety_info_fields.copy()
                 safety_info_fields.remove("ghs_pict_img")
