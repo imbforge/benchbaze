@@ -112,6 +112,8 @@ class CustomClonableModelAdmin(ClonableModelAdmin):
                     # In Django 1.9 we need one more param
                     self.log_addition(request, new_object, "Cloned object")
 
+                new_object.cloned = True
+
                 return self.response_add(request, new_object, None)
 
         # Handle GET request - populate form and formsets with data from original object

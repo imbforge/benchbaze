@@ -325,10 +325,21 @@ class PlasmidAdmin(
         super().save_history_fields(form, obj)
 
     def response_add(self, request, obj, post_url_continue=None):
+        # If the map features could not be automatically added to sequence features because
+        # they were not found in the database, redirect back to the object page
         if self.redirect_to_obj_page:
             post = request.POST.copy()
             post.update({"_continue": ""})
             request.POST = post
+
+        # If the object was cloned and has a map or gbk file, clear all sequence features,
+        # as these will likely not be relevant for the new object
+        if (
+            getattr(obj, "cloned", False)
+            and (obj.map or obj.map_gbk)
+            and obj.sequence_features.exists()
+        ):
+            obj.sequence_features.clear()
 
         return super().response_add(request, obj, post_url_continue)
 
