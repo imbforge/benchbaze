@@ -34,10 +34,10 @@ from collection.admin import (
     WormStrainAlleleAdmin,
 )
 from collection.admin import (
-    StorageAdmin as CollectionStorageAdmin,
+    LocationNameAdmin as CollectionLocationNameAdmin,
 )
 from collection.admin import (
-    LocationNameAdmin as CollectionLocationNameAdmin,
+    StorageAdmin as CollectionStorageAdmin,
 )
 from collection.models import (
     Antibody,
@@ -54,9 +54,8 @@ from collection.models import (
     WormStrain,
     WormStrainAllele,
 )
-from collection.models import Storage as CollectionStorage
 from collection.models import LocationName as CollectionLocationName
-
+from collection.models import Storage as CollectionStorage
 from formz.admin import (
     FormZAdminSite,
     GenTechMethodAdmin,
@@ -137,7 +136,7 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
             + [
                 re_path(r"uploads/(?P<url_path>.*)$", self.admin_view(self.uploads)),
                 re_path(
-                    r"(?P<root_path>ove)/(?P<url_path>.*)$",
+                    r"(?P<root_path>ove|frontend)/(?P<url_path>.*)$",
                     self.admin_view(self.protect_non_django_view),
                 ),
             ]
@@ -206,7 +205,7 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
             raise Http404
 
     def protect_non_django_view(self, request, *args, **kwargs):
-        """Put OVE behind Django's authentication system"""
+        """Protected view for non-django views (e.g. ove and frontend)"""
 
         url_path = str(kwargs["url_path"])
         response = HttpResponse()
