@@ -29,5 +29,10 @@ export default defineConfig({
   server: {
     allowedHosts: true,
     hmr: false // disable hot reload
+  },
+  esbuild: {
+    supported: {
+      "top-level-await": true //browsers can handle top-level-await features
+    }
   }
 });
