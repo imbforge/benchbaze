@@ -3,7 +3,7 @@ uploads/
 logs/
 temp/
 db_backup/
-private_settings.py
+private_settings*.py
 others/
 .vscode/
 .vscode
