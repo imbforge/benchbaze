@@ -117,7 +117,7 @@ class CellLineVirusTransientInline(GetParentObjectInlineMixin):
     model = CellLineVirusTransient
     autocomplete_fields = ["virus_mammalian", "virus_insect", "formz_projects"]
     fields = [
-        ["virus_mammalian", "virus_insect"],
+        ("virus_mammalian", "virus_insect"),
         "formz_projects",
         "created_date",
         "destroyed_date",
