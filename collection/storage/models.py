@@ -34,8 +34,8 @@ class Storage(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        verbose_name = "storage location"
-        verbose_name_plural = "storage locations"
+        verbose_name = "storage"
+        verbose_name_plural = "storage"
 
     def __str__(self):
         return capfirst(self.collection.model_class()._meta.verbose_name)
@@ -112,7 +112,6 @@ class Location(models.Model):
     )
     name = models.ForeignKey(
         "LocationName",
-        verbose_name="location",
         on_delete=models.PROTECT,
         blank=False,
         null=True,

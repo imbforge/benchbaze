@@ -1033,8 +1033,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "storage location",
-                "verbose_name_plural": "storage locations",
+                "verbose_name": "storage",
+                "verbose_name_plural": "storage",
             },
         ),
         migrations.CreateModel(
@@ -1120,7 +1120,6 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.PROTECT,
                         to="collection.locationname",
-                        verbose_name="location",
                     ),
                 ),
                 (
@@ -1642,8 +1641,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "historical storage location",
-                "verbose_name_plural": "historical storage locations",
+                "verbose_name": "historical storage",
+                "verbose_name_plural": "historical storage",
                 "ordering": ("-history_date", "-history_id"),
                 "get_latest_by": ("history_date", "history_id"),
             },
@@ -1882,7 +1881,6 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
                         to="collection.locationname",
-                        verbose_name="location",
                     ),
                 ),
                 (
