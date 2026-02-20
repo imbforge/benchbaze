@@ -68,12 +68,15 @@ class OwnUserAdmin(BaseUserAdmin):
 
             obj.save()
 
-        # If is_pi is True check whether a principal_investigator already exists
-        # and if so set the field to False
-        if obj.is_pi:
-            if User.objects.filter(is_pi=True).exists():
-                obj.is_pi = False
-                obj.save()
+        # Do not allow more than one PI, if somebody tries to save a user as PI while
+        # another PI already exists, remove the PI status from the other user
+        if (
+            obj.is_pi
+            and User.objects.filter(is_pi=True).exists()
+            and obj.id != User.objects.get(is_pi=True).id
+        ):
+            obj.is_pi = False
+            obj.save()
 
     def save_related(self, request, form, formsets, change):
         """If somebody tries to save a user for which it cannot see some of its groups,
