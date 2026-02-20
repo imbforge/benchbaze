@@ -26,6 +26,8 @@ COLLECTION_MODELS = [
     "SiRna",
     "WormStrain",
     "WormStrainAllele",
+    "VirusMammalian",
+    "VirusInsect",
 ]
 
 DB_TABLES = [
@@ -57,13 +59,15 @@ warnings.simplefilter("ignore")
 def export_db_table(model, export_resource):
     """Export a database table to both XLSX and TSV formats"""
     file_name_base = join(BASE_DIR, f"db_backup/excel_tables/{model.__name__}")
-    dataset = export_resource().export(model.objects.all().order_by("-id"))
 
-    with open(f"{file_name_base}.xlsx", "wb") as out_handle:
-        out_handle.write(dataset.xlsx)
+    if model.objects.exists():
+        dataset = export_resource().export(model.objects.all().order_by("-id"))
 
-    with open(f"{file_name_base}.tsv", "w", encoding="utf-8") as out_handle:
-        out_handle.write(dataset.tsv)
+        with open(f"{file_name_base}.xlsx", "wb") as out_handle:
+            out_handle.write(dataset.xlsx)
+
+        with open(f"{file_name_base}.tsv", "w", encoding="utf-8") as out_handle:
+            out_handle.write(dataset.tsv)
 
 
 def ensure_backup_directories():
