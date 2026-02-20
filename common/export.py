@@ -57,15 +57,5 @@ def export_objects_tsv(queryset, export_data):
     response = HttpResponse(content_type="text/tab-separated-values")
     response["Content-Disposition"] = f'attachment; filename="{file_name}.tsv'
     response.write(export_data.tsv)
-    # xlsx_file = xlrd.open_workbook(file_contents=export_data.xlsx)
-    # sheet = xlsx_file.sheet_by_index(0)
-    # wr = csv.writer(response, delimiter="\t")
-    # # Get rid of return chars
-    # for rownum in range(sheet.nrows):
-    #     row_values = [
-    #         str(i).replace("\n", "").replace("\r", "").replace("\t", "")
-    #         for i in sheet.row_values(rownum)
-    #     ]
-    #     wr.writerow(row_values)
 
     return response

@@ -24,7 +24,7 @@ class OwnExportResource(ModelResource):
         return headers
 
 
-def base_export_action(this, queryset):
+def create_export_resource(this):
     """Export action"""
 
     # Depending on whether the action is used from the admin or
@@ -67,12 +67,13 @@ def base_export_action(this, queryset):
         dehydrate_methods=custom_fields["dehydrate_methods"] if custom_fields else None,
     )
 
-    # Export data
-    return export_resource().export(queryset)
+    return export_resource
 
 
 def export_xlsx_action(this, request, queryset):
-    export_data = base_export_action(this, queryset)
+    """Create export resource on the fly and export as XLSX"""
+    export_resource = create_export_resource(this)
+    export_data = export_resource().export(queryset)
     return export_objects_xlsx(queryset, export_data)
 
 
@@ -80,7 +81,9 @@ export_xlsx_action.short_description = "Export selected as XLSX"
 
 
 def export_tsv_action(this, request, queryset):
-    export_data = base_export_action(this, queryset)
+    """Create export resource on the fly and export as TSV"""
+    export_resource = create_export_resource(this)
+    export_data = export_resource().export(queryset)
     return export_objects_tsv(queryset, export_data)
 
 
