@@ -401,7 +401,7 @@ class CollectionBaseAdmin(
         duplicates when searching with djangoql"""
 
         # Ensure that no duplicates are returned ever
-        queryset = queryset.distinct("id")
+        queryset = queryset.distinct()
 
         return super().get_search_results(request, queryset, search_term)
 
