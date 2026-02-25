@@ -105,6 +105,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Like super().update() but for the logged user as instance
         partial = kwargs.pop("partial", False)
         instance = self.request.user
 
