@@ -151,25 +151,21 @@ export function useLayout() {
   // Sync layout changes back to the DB
   const syncLayout = async (payload) => {
     try {
-      await axios.put("/api/layout/1/", payload);
+      await axios.put("/api/common/user/theme/", payload);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const setLayoutInitial = async (primeTheme) => {
+  const setLayoutInitial = async (primeTheme, user) => {
     try {
-      // Get layout values stored in DB
-      const response = await axios.get("/api/layout/1/");
-      const data = response.data;
-
       // Set retrieved values in layoutConfig
-      layoutConfig.primary = data.primary_colour;
-      layoutConfig.surface = data.surface_colour;
-      layoutConfig.darkTheme = data.theme === "dark";
+      layoutConfig.primary = user.primary_colour;
+      layoutConfig.surface = user.surface_colour;
+      layoutConfig.darkTheme = user.theme === "dark";
 
       // Update primary colour in primeTheme
-      const presetExt = getPresetExt({ primary: data.primary_colour });
+      const presetExt = getPresetExt({ primary: user.primary_colour });
       primeTheme.semantic.primary = presetExt.semantic.primary;
       primeTheme.semantic.colorScheme.light.primary =
         presetExt.semantic.colorScheme.light.primary;
@@ -182,7 +178,7 @@ export function useLayout() {
 
       // Update surface colour primeTheme
       const surface = surfaces.value.find(
-        (s) => s.name === data.surface_colour
+        (s) => s.name === user.surface_colour
       );
       primeTheme.semantic.colorScheme.light.surface = surface.palette;
       primeTheme.semantic.colorScheme.dark.surface = surface.palette;
@@ -192,7 +188,11 @@ export function useLayout() {
         document.documentElement.classList.toggle("app-dark");
       }
 
-      return data;
+      return {
+        theme: user.theme,
+        surface_colour: user.surface_colour,
+        primary_colour: user.primary_colour
+      };
     } catch (error) {
       console.error(error);
     }

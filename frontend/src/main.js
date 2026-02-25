@@ -28,7 +28,7 @@ const app = createApp(App);
 
 // Set layout based on values in DB
 const { setLayoutInitial } = useLayout();
-await setLayoutInitial(Aura);
+await setLayoutInitial(Aura, user);
 
 app.use(PrimeVue, {
   theme: {

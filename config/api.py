@@ -1,7 +1,6 @@
 from rest_framework import routers
 
 from common.viewsets import (
-    LayoutFrontendViewSet,
     ModelViewSet,
     NavigationListViewSet,
     NavigationViewSet,
@@ -10,7 +9,6 @@ from common.viewsets import (
 
 router = routers.DefaultRouter()
 router.register(r"common/user", UserViewSet, basename="user")
-router.register(r"layout", LayoutFrontendViewSet, basename="layout")
 router.register(r"navigation", NavigationListViewSet, basename="navigation-tree")
 router.register(
     r"navigation/(?P<app_label>[^/.]+)/(?P<model>[^/.]+)",

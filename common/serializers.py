@@ -3,8 +3,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
-from .models import LayoutFrontend
-
 User = get_user_model()
 
 
@@ -48,9 +46,41 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             "is_active",
             "representation",
         )
+        read_only_fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+        )
 
     def get_representation(self, obj):
         return str(obj)
+
+
+class UserLoggedSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "representation",
+            "theme",
+            "primary_colour",
+            "surface_colour",
+        )
+        # Make username and email not required otherwise updating
+        # the theme via the dedicated endpoint will fail as these
+        # fields are required by default in the UserSerializer
+        extra_kwargs = {
+            "username": {"required": False, "allow_null": False},
+            "email": {"required": False, "allow_null": False},
+        }
 
 
 class LogEntrySerializer(serializers.ModelSerializer):
@@ -81,12 +111,6 @@ class LogEntrySerializer(serializers.ModelSerializer):
 
     def get_id(self, obj):
         return obj.object_id
-
-
-class LayoutFrontendSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LayoutFrontend
-        fields = "__all__"
 
 
 class NavigationSerializer(serializers.ModelSerializer):
@@ -122,23 +146,6 @@ class NavigationSerializer(serializers.ModelSerializer):
 
     def get_permissions(self, obj):
         return obj.permissions
-
-
-class UserMinimalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "first_name",
-            "last_name",
-            "email",
-        )
-        read_only = (
-            "id",
-            "first_name",
-            "last_name",
-            "email",
-        )
 
 
 class ListSerializer(serializers.ModelSerializer):

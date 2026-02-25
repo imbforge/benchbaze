@@ -13,20 +13,19 @@ from django.db.models.functions import DenseRank
 from django.utils.text import capfirst
 from djangoql.queryset import apply_search as apply_djangoql_search
 from djangoql.serializers import SuggestionsAPISerializer
-from rest_framework import mixins, permissions, renderers, status, viewsets
+from rest_framework import mixins, renderers, status, viewsets
 from rest_framework.decorators import action as rest_action
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.viewsets import GenericViewSet
 
-from .models import LayoutFrontend
 from .paginators import StandardResultsSetPagination
 from .serializers import (
     ItemSerializer,
-    LayoutFrontendSerializer,
     ListSerializer,
     LogEntrySerializer,
     NavigationSerializer,
+    UserLoggedSerializer,
     UserSerializer,
     build_model_serializer,
 )
@@ -67,6 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     pagination_class = None
     serializer_class = UserSerializer
+    serializer_logged_class = UserLoggedSerializer
 
     def list(self, request, *args, **kwargs):
         """The same as super but accepts a request too"""
@@ -83,7 +83,42 @@ class UserViewSet(viewsets.ModelViewSet):
     @rest_action(methods=["get"], detail=False)
     def logged(self, request):
         """Show the logged user"""
-        serializer = self.serializer_class(request.user)
+        serializer = self.serializer_logged_class(request.user)
+        return Response(serializer.data)
+
+    @rest_action(methods=["put"], detail=False)
+    def theme(self, request, *args, **kwargs):
+        """Update the theme of the logged user"""
+
+        # Only allow theme, primary_colour and surface_colour fields to be
+        # updated via this endpoint
+        allowed_fields = {"theme", "primary_colour", "surface_colour"}
+        incoming_fields = set(request.data.keys())
+        invalid_fields = sorted(incoming_fields - allowed_fields)
+        if invalid_fields:
+            return Response(
+                {
+                    "error": "Invalid fields in request data",
+                    "invalid_fields": invalid_fields,
+                    "allowed_fields": sorted(allowed_fields),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        partial = kwargs.pop("partial", False)
+        instance = self.request.user
+
+        serializer = self.serializer_logged_class(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=False)
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
         return Response(serializer.data)
 
     @rest_action(methods=["get"], detail=False, url_path="logged/recent_events")
@@ -125,15 +160,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
         data = LogEntrySerializer(queryset, many=True).data
         return Response(data)
-
-
-class LayoutFrontendViewSet(viewsets.ModelViewSet):
-    """Show frontend layout information"""
-
-    queryset = LayoutFrontend.objects.all()
-    serializer_class = LayoutFrontendSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = None
 
 
 class NavigationBaseViewSet(GenericViewSet):
