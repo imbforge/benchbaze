@@ -1,87 +1,172 @@
 {% extends 'authentication/base.html' %} {% load static %} {% block content %}
-{% if oidc_enable %}
-<h4>Sign in with</h4>
-<form
-  method="get"
-  action="{% url 'oidc_authentication_init' %}"
-  class="bb-full-opacity"
->
-  <input type="hidden" name="next" value="{{ next }}" />
+<section class="bb-auth-card">
+  <header class="bb-auth-card-header">
+    <h3>Sign In</h3>
+  </header>
+
+  {% if form.errors or messages %}
+  <div class="alert alert-danger" role="alert">
+    {% if form.errors %}
+    <p>Your username and/or password are not valid. Please try again.</p>
+    {% endif %} {% if messages %} {% for message in messages %}
+    <p>{{ message|capfirst }}</p>
+    {% endfor %} {% endif %}
+  </div>
+  {% endif %}
+
+  {% if oidc_enable %}
+  <form method="get" action="{% url 'oidc_authentication_init' %}">
+    <input
+      type="hidden"
+      name="next"
+      value="{{ next }}"
+    />
+    <button type="submit" class="btn btn-default btn-block bb-auth-sso-btn">
+      <img
+        src="{% static 'authentication/oidc_provider_logo.png' %}"
+        class="bb-authentication-box-oidc-logo"
+        alt="oidc-provider-logo"
+      />
+      Continue with {{oidc_provider_name}}
+    </button>
+  </form>
+
+  <div class="bb-auth-divider"><span>or use your BenchBaze account</span></div>
+
   <button
-    type="submit"
-    class="btn btn-default btn-block bb-authentication-box-submit-button"
+    type="button"
+    class="btn btn-default btn-block bb-auth-form-toggle"
+    data-auth-form-toggle
+    aria-expanded="false"
+    aria-controls="bb-auth-form-panel"
   >
-    <img
-      src="{% static 'authentication/oidc_provider_logo.png' %}"
-      class="bb-authentication-box-oidc-logo"
-      alt="oidc-provider-logo"
-    />{{oidc_provider_name}}
+    BenchBaze login +
   </button>
-</form>
+  
+  {% endif %}
 
-<button
-  class="btn btn-default btn-block collapsible"
-  style="text-align: left; font-size: large"
->
-  <img
-    src="{% static 'authentication/logo-small.svg' %}"
-    class="bb-authentication-box-local-login"
-    alt="BenchBaze"
-  />BenchBaze
-</button>
-{% endif %}
+  <div
+    id="bb-auth-form-panel"
+    class="bb-auth-form-panel{% if oidc_enable %} is-collapsed{% endif %}"
+    {% if oidc_enable %}hidden{% endif %}
+  >
+    {% if oidc_enable %}
+    <template id="bb-auth-form-template">
+      <form class="bb-auth-form" method="post" action="">
+        {% csrf_token %}
+        <label for="id_username">{{username_field|capfirst}}</label>
+        <input
+          type="text"
+          class="form-control"
+          id="id_username"
+          name="username"
+          placeholder="Your {{username_field|capfirst}}"
+          required=""
+          autofocus=""
+        />
 
-<form
-  class="bb-authentication-box bb-full-opacity"
-  style="display: {% if oidc_enable %} none {% else %} block {% endif %};"
-  method="post"
-  action="{% url 'login' %}"
->
-  {% csrf_token %}
-  <input
-    type="text"
-    class="form-control"
-    id="id_username"
-    name="username"
-    placeholder="Email"
-    required=""
-    autofocus=""
-  />
-  <input
-    type="password"
-    class="form-control"
-    id="id_password"
-    name="password"
-    placeholder="Password"
-    required=""
-  />
-  <input class="btn btn-lg btn-primary btn-block" type="submit" value="Login" />
-  <input type="hidden" name="next" value="{{ next }}" />
-</form>
+        <label for="id_password">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="id_password"
+          name="password"
+          placeholder="Your password"
+          required=""
+        />
 
-{% if form.errors or messages %}
-<div class="alert alert-danger" role="alert">
-  {% if form.errors %}
-  <p class="lead text-center">
-    Your username and/or password are not valid. Please try again.
-  </p>
-  {% endif %} {% if messages %} {% for message in messages %}
-  <p class="lead text-center">{{ message|capfirst }}</p>
-  {% endfor %} {% endif %}
-</div>
-{% endif %} {% endblock content %} {% block js %}
-<script type="text/javascript">
-  var button = document.getElementsByClassName("collapsible")[0];
-  if (button) {
-    button.addEventListener("click", function () {
-      this.classList.toggle("active");
-      var content = this.nextElementSibling;
-      if (content.style.display === "block") {
-        content.style.display = "none";
-      } else {
-        content.style.display = "block";
+        <input class="btn btn-lg btn-primary btn-block" type="submit" value="Log In" />
+        <input
+          type="hidden"
+          name="next"
+          value="{{ next }}"
+        />
+      </form>
+    </template>
+    {% else %}
+    <form class="bb-auth-form" method="post" action="">
+      {% csrf_token %}
+      <label for="id_username">{{username_field|capfirst}}</label>
+      <input
+        type="text"
+        class="form-control"
+        id="id_username"
+        name="username"
+        placeholder="Your {{username_field|capfirst}}"
+        required=""
+        autofocus=""
+      />
+
+      <label for="id_password">Password</label>
+      <input
+        type="password"
+        class="form-control"
+        id="id_password"
+        name="password"
+        placeholder="Your password"
+        required=""
+      />
+
+      <input class="btn btn-lg btn-primary btn-block" type="submit" value="Log In" />
+      <input
+        type="hidden"
+        name="next"
+        value="{{ next }}"
+      />
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock content %}
+
+{% block js %}
+<script>
+  (function () {
+    const toggle = document.querySelector("[data-auth-form-toggle]");
+    const panel = document.getElementById("bb-auth-form-panel");
+    const formTemplate = document.getElementById("bb-auth-form-template");
+
+    if (!toggle || !panel) {
+      return;
+    }
+
+    const mountForm = () => {
+      if (!formTemplate || panel.querySelector("form")) {
+        return;
       }
+      panel.appendChild(formTemplate.content.cloneNode(true));
+    };
+
+    const unmountForm = () => {
+      const form = panel.querySelector("form");
+      if (form) {
+        form.remove();
+      }
+    };
+
+    const setExpandedState = (isExpanded) => {
+      toggle.setAttribute("aria-expanded", String(isExpanded));
+      toggle.textContent = isExpanded ? "BenchBaze login –" : "BenchBaze login +";
+      panel.classList.toggle("is-collapsed", !isExpanded);
+      panel.hidden = !isExpanded;
+
+      if (isExpanded) {
+        mountForm();
+        const usernameInput = panel.querySelector("#id_username");
+        if (usernameInput) {
+          usernameInput.focus();
+        }
+      } else {
+        unmountForm();
+      }
+    };
+
+    setExpandedState(false);
+
+    toggle.addEventListener("click", () => {
+      const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+      setExpandedState(!isExpanded);
     });
-  }
+  })();
 </script>
 {% endblock js %}

@@ -1,12 +1,23 @@
 {% extends 'authentication/base.html' %} {% load static %} {% block content %}
 {% if user.is_authenticated %}
-<form action="{% url 'logout' %}" method="post" class="bb-authentication-box bb-full-opacity">
-  {% csrf_token %}
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Log Out</button>
-</form>
+<section class="bb-auth-card text-center">
+  <header class="bb-auth-card-header">
+    <h3>Sign Out</h3>
+    <p>You are currently signed in.</p>
+  </header>
+
+  <form action="{% url 'logout' %}" method="post" class="bb-auth-form">
+    {% csrf_token %}
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Log Out</button>
+  </form>
+</section>
 {% else %}
-<div class="bb-authentication-box bb-full-opacity text-center">
-<h4>Logged out</h4>
-<a class="btn btn-lg btn-primary btn-block bb-authentication-box-logout-button" href="/">Log In</a>
-</div>
+<section class="bb-auth-card text-center">
+  <header class="bb-auth-card-header">
+    <h3>Logged Out</h3>
+    <p>Your session has ended successfully.</p>
+  </header>
+
+  <a class="btn btn-lg btn-primary btn-block bb-authentication-box-logout-button" href="/">Return to Log In</a>
+</section>
 {% endif %} {% endblock content %}

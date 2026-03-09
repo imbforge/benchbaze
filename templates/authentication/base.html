@@ -18,35 +18,44 @@
       type="image/png"
       href="{% static 'authentication/favicon.ico' %}"
     />
-    <link rel="stylesheet" href="{% static 'authentication/style.css' %}" />
+    <link
+      rel="stylesheet"
+      href="{% static 'authentication/style.css' %}"
+    />
 
     {% block css %}{% endblock %} {% block extrahead %}{% endblock %}
   </head>
 
-  <body>
-    <div id="authentication-box" class="bb-authentication-box">
-      <div class="bb-authentication-box-heading container text-center">
-        <div class="row bb-authentication-box-row">
-          <img
-            src="{% static 'authentication/logo.svg' %}"
-            class="col-xs-2 img-fluid bb-authentication-box-logo"
-          />
-          <h2 class="col-xs-10 text-center bb-authentication-box-title">
+  <body class="bb-auth-page">
+    <div class="bb-auth-shell">
+      <aside class="bb-auth-brand-panel">
+        <div class="bb-auth-branding">
+          <div class="bb-auth-logo-wrap">
+            <img
+              src="{% static 'authentication/logo.svg' %}"
+              class="bb-authentication-box-logo"
+              alt="BenchBaze logo"
+            />
+          </div>
+          <h1 class="bb-authentication-box-title">
             <span class="bb-authentication-box-coloured-title">B</span>ENCH<span
               class="bb-authentication-box-coloured-title"
               >B</span
             >AZE
+          </h1>
+          <h2 class="bb-authentication-box-lab-name">
+            <span class="bb-authentication-box-coloured-title">@</span>
+            {{lab_name}}
           </h2>
         </div>
-        <h3 class="bb-authentication-box-lab-name">
-          <span class="bb-authentication-box-coloured-title">@</span>
-          {{lab_name}}
-        </h3>
-      </div>
-      {% block content %}{% endblock %}
+      </aside>
+
+      <main id="authentication-box" class="bb-authentication-box">
+        {% block content %}{% endblock %}
+      </main>
     </div>
 
-    <div class="footer">
+    <footer class="footer">
       {% if impressum_url %}<a href="{{impressum_url}}" target="_blank"
         >Impressum</a
       >{% endif %} {% if data_protection_url %}<a
@@ -54,7 +63,7 @@
         target="_blank"
         >Datenschutz</a
       >{% endif %}
-    </div>
+    </footer>
 
     {% block js %}{% endblock %}
   </body>

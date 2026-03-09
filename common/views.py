@@ -21,12 +21,19 @@ LOGOUT_REDIRECT_URL = getattr(settings, "LOGOUT_REDIRECT_URL", "")
 
 class OwnLoginView(LoginView):
     extra_context = {
+        "username_field": getattr(User, "USERNAME_FIELD"),
         "oidc_enable": OIDC_ENABLE,
         "oidc_provider_name": OIDC_PROVIDER_NAME,
         "lab_name": LAB_NAME,
         "impressum_url": IMPRESSUM_URL,
         "data_protection_url": DATA_PROTECTION_URL,
     }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        redirect_field_name = self.redirect_field_name
+        context["next"] = context.get(redirect_field_name) or ""
+        return context
 
 
 class OwnLogoutView(LogoutView):
