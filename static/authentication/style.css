@@ -90,7 +90,6 @@ body {
   padding: 16px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 16px 30px rgba(1, 20, 38, 0.22);
 }
 
 .bb-authentication-box-logo {
@@ -200,10 +199,6 @@ body {
   color: var(--bb-text);
   padding: 11px 13px;
   font-size: 0.97rem;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
 }
 
 .form-control::placeholder {
@@ -213,8 +208,6 @@ body {
 .form-control:focus {
   outline: none;
   border-color: #5aacef;
-  box-shadow: 0 0 0 3px rgba(39, 135, 219, 0.17);
-  transform: translateY(-1px);
 }
 
 .btn {
@@ -227,16 +220,6 @@ body {
   padding: 12px 14px;
   text-align: center;
   text-decoration: none;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.btn:hover,
-.btn:focus-visible {
-  transform: translateY(-1px);
 }
 
 .btn-block {
@@ -252,7 +235,6 @@ body {
   color: #ffffff;
   background-color: var(--bb-primary);
   border-color: var(--bb-primary);
-  box-shadow: 0 10px 22px rgba(12, 142, 122, 0.27);
 }
 
 .btn-primary:hover,
@@ -271,7 +253,7 @@ body {
 
 .btn-default:hover,
 .btn-default:focus-visible {
-  background: #e9f2ff;
+  background: #cdd6e2;
 }
 
 .bb-auth-sso-btn {
