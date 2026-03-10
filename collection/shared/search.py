@@ -145,13 +145,13 @@ class CollectionQLSchema(DjangoQLSchema):
                 ),
                 FieldLocationField(
                     "box",
-                    "locations__box",
+                    "box",
                     suggest_options=True,
                     model=self.current_model,
                 ),
                 FieldLocationField(
                     "coordinate",
-                    "locations__coordinate",
+                    "coordinate",
                     model=self.current_model,
                 ),
             ]
