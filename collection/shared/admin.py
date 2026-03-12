@@ -1107,12 +1107,39 @@ class LocationInlineBaseMixin(GenericStackedInline):
             field.widget.attrs["style"] = "width: 5em;"
         return field
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Include only locations linked to the parent model"""
+
+        if db_field.name == "location":
+            # Get all active locations for this model
+            kwargs["queryset"] = self.parent_model.get_model_locations().filter(
+                active=True
+            )
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 class LocationInline(LocationInlineBaseMixin, ExistingInlineMixin):
     """Inline to view item locations"""
 
     verbose_name_plural = "Existing locations"
-    readonly_fields = ["location", "box", "coordinate", "comment"]
+
+    def get_readonly_fields(self, request, obj=...):
+        self.readonly_fields = ["location", "box", "coordinate", "comment"]
+
+        # Only allow editing of locations if user is creator, elevated user,
+        # or has change permission for the object
+        if (
+            request.user == obj.created_by
+            or request.user.is_elevated_user
+            or request.user.has_perm(
+                f"{obj._meta.app_label}.change_{obj._meta.model_name}",
+                obj,
+            )
+        ):
+            self.readonly_fields = []
+
+        return super().get_readonly_fields(request, obj)
 
     def get_queryset(self, request):
         """Show inline uncollapsed only if docs exist"""
@@ -1131,17 +1158,6 @@ class AddLocationInline(LocationInlineBaseMixin, AddInlineMixin):
 
     verbose_name_plural = "New locations"
     formset = LocationCheckNumberInlineFormSet
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """Include only locations linked to the parent model"""
-
-        if db_field.name == "location":
-            # Get all active locations for this model
-            kwargs["queryset"] = self.parent_model.get_model_locations().filter(
-                active=True
-            )
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         """For a clone view, return standard queryset"""
