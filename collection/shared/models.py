@@ -427,6 +427,8 @@ class MapFileCheckPropertiesMixin:
 
 
 class CommonCollectionModelPropertiesMixin:
+    _backup = True
+
     @property
     def all_instock_plasmids(self):
         """Returns all plasmids present in the stocked organism"""

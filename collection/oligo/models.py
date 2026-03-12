@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -100,6 +100,7 @@ class Oligo(
     _show_in_frontend = True
     _is_guarded_model = False
     _show_formz = False
+    _backup = True
     _history_array_fields = {
         "history_sequence_features": "forms.SequenceFeature",
         "history_documents": "collection.OligoDoc",
@@ -136,8 +137,8 @@ class Oligo(
         "locations",
     ]
     _actions = [
-        export_xlsx_action,
-        export_tsv_action,
+        export_action_xlsx,
+        export_action_tsv,
         create_label,
     ]
 

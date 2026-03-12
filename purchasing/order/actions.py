@@ -20,9 +20,8 @@ from django.template.loader import render_to_string
 from django.utils.encoding import smart_str
 from django.utils.safestring import mark_safe
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action
 
-from .export import OrderChemicalExportResource, OrderExportResource
 from .forms import MassUpdateOrderForm
 
 SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
@@ -34,7 +33,7 @@ def change_order_status(request, queryset, origin_status, destination_status):
     Change the status of selected orders
     """
 
-    # Only Lab or Order Manager can use this action
+    # Only Lab or Order Manager can use source action
     if not (request.user.is_elevated_user or request.user.is_order_manager):
         messages.error(request, "Nice try, you are not allowed to do that.")
         return
@@ -71,7 +70,7 @@ def change_order_status_to_delivered(modeladmin, request, queryset):
     delivered
     """
 
-    # Only Lab or Order Manager can use this action
+    # Only Lab or Order Manager can use source action
     if not (request.user.is_elevated_user or request.user.is_order_manager):
         messages.error(request, "Nice try, you are not allowed to do that.")
         return
@@ -101,28 +100,30 @@ def change_order_status_to_delivered(modeladmin, request, queryset):
             order.save()
 
 
-@admin.action(description="Export orders")
-def export_orders(modeladmin, request, queryset):
-    """
-    Action to export orders
-    """
-
-    export_data = OrderExportResource().export(queryset)
-    return export_objects(request, queryset, export_data)
-
-
-@admin.action(description="Export as chemical")
-def export_chemicals(modeladmin, request, queryset):
-    """
-    Action to export an order as a chemical
-    """
-
-    export_data = OrderChemicalExportResource().export(queryset)
-    response = export_objects(request, queryset, export_data)
+def _export_action_chemical(source, queryset, file_format):
+    response = export_action(
+        source,
+        queryset,
+        file_format,
+        export_field_names="_export_chemical_field_names",
+        export_custom_fields="_export_chemical_custom_fields",
+    )
     response["Content-Disposition"] = response["Content-Disposition"].replace(
         "Order_", "Chemical_"
     )
     return response
+
+
+@admin.action(description="Export selected chemicals as XLSX")
+def export_action_chemical_xlsx(source, request, queryset):
+    """Create export resource on the fly and export as XLSX"""
+    return _export_action_chemical(source, queryset, "xlsx")
+
+
+@admin.action(description="Export selected chemicals as TSV")
+def export_action_chemical_tsv(source, request, queryset):
+    """Create export resource on the fly and export as TSV"""
+    return _export_action_chemical(source, queryset, "tsv")
 
 
 @admin.action(description="Mass update")
@@ -297,8 +298,8 @@ def mass_update(modeladmin, request, queryset):
         form, modeladmin.get_fieldsets(request), {}, [], model_admin=modeladmin
     )
     media = modeladmin.media + adminForm.media
-    dthandler = (
-        lambda obj: obj.isoformat() if isinstance(obj, datetime.date) else str(obj)
+    dthandler = lambda obj: (
+        obj.isoformat() if isinstance(obj, datetime.date) else str(obj)
     )
     tpl = "adminactions/mass_update.html"
     ctx = {

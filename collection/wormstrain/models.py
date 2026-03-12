@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -161,6 +161,7 @@ class WormStrainAllele(
     # Static properties
     _model_abbreviation = "wa"
     german_name = "Allel"
+    _backup = True
     _history_array_fields = {
         "history_sequence_features": "formz.SequenceFeature",
         "history_made_with_plasmids": "collection.Plasmid",
@@ -184,7 +185,7 @@ class WormStrainAllele(
 
     _autocomplete_fields = [
         "sequence_features",
-        "made_by_method",
+        "made_by_method_custom_field",
         "reference_strain",
         "transgene_plasmids",
         "made_with_plasmids",
@@ -192,7 +193,7 @@ class WormStrainAllele(
     _export_field_names = [
         "id",
         "lab_identifier",
-        "type",
+        "type_custom_field",
         "transgene",
         "transgene_position",
         "transgene_plasmids",
@@ -200,7 +201,7 @@ class WormStrainAllele(
         "mutation_type",
         "mutation_position",
         "reference_strain",
-        "made_by_method",
+        "made_by_method_custom_field",
         "made_by_person",
         "made_with_plasmids",
         "notes",
@@ -209,15 +210,15 @@ class WormStrainAllele(
     ]
     _export_custom_fields = {
         "fields": {
-            "made_by_method": Field(column_name="Made by method"),
-            "type": Field(column_name="Type"),
+            "made_by_method_custom_field": Field(column_name="Made by method"),
+            "type_custom_field": Field(column_name="Type"),
         },
         "dehydrate_methods": {
-            "made_by_method": lambda obj: obj.made_by_method.english_name,
-            "type": lambda obj: obj.get_typ_e_display(),
+            "made_by_method_custom_field": lambda obj: obj.made_by_method.english_name,
+            "type_custom_field": lambda obj: obj.get_typ_e_display(),
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
 
     _show_formz = False
     _show_plasmids_in_model = True
@@ -231,7 +232,7 @@ class WormStrainAllele(
         "mutation_type",
         "mutation_position",
         "reference_strain",
-        "made_by_method",
+        "made_by_method_custom_field",
         "made_by_person",
         "made_with_plasmids",
         "notes",
@@ -460,22 +461,24 @@ class WormStrain(
         "location_freezer1",
         "location_freezer2",
         "location_backup",
-        "primers_for_genotyping",
+        "primers_for_genotyping_custom_field",
         "created_date_time",
         "created_by",
         "locations",
     ]
     _export_custom_fields = {
         "fields": {
-            "primers_for_genotyping": Field(column_name="Primers for genotyping"),
+            "primers_for_genotyping_custom_field": Field(
+                column_name="Primers for genotyping"
+            ),
         },
         "dehydrate_methods": {
-            "primers_for_genotyping": lambda obj: ",".join(
+            "primers_for_genotyping_custom_field": lambda obj: ",".join(
                 [str(i) for i in obj.history_genotyping_oligos]
             ),
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html]
     _list_display_frozen = _search_fields
     _list_display = [
         "chromosomal_genotype",

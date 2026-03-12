@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -189,7 +189,7 @@ class Plasmid(
         "name",
         "other_name",
         "parent_vector",
-        "additional_parent_vector_info",
+        "additional_parent_vector_info_custom_field",
         "selection",
         "us_e",
         "construction_feature",
@@ -203,13 +203,13 @@ class Plasmid(
     ]
     _export_custom_fields = {
         "fields": {
-            "additional_parent_vector_info": Field(
+            "additional_parent_vector_info_custom_field": Field(
                 column_name="Extra parent vector info", attribute="old_parent_vector"
             )
         },
         "dehydrate_methods": dict(),
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
     _obj_unmodifiable_fields = [
         "created_date_time",

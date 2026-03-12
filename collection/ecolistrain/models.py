@@ -1,6 +1,6 @@
 from django.db import models
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -113,7 +113,7 @@ class EColiStrain(
         "created_by",
         "locations",
     ]
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html]
     _obj_specific_fields = [
         "name",
         "resistance",

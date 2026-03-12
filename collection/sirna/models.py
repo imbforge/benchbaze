@@ -4,7 +4,7 @@ from django.db import models
 from django_better_admin_arrayfield.models.fields import ArrayField as BetterArrayField
 from import_export.fields import Field
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -121,6 +121,7 @@ class SiRna(
     _show_in_frontend = "siRNAs"
     _frontend_verbose_name = "siRNA"
     _frontend_verbose_plural = _show_in_frontend
+    _backup = True
     _history_array_fields = {
         "history_orders": "purchasing.Order",
         "history_documents": "collection.SiRnaDoc",
@@ -150,7 +151,7 @@ class SiRna(
         "supplier",
         "supplier_part_no",
         "supplier_si_rna_id",
-        "species_name",
+        "species_name_custom_field",
         "target_genes",
         "locus_ids",
         "description_comment",
@@ -162,13 +163,15 @@ class SiRna(
     ]
     _export_custom_fields = {
         "fields": {
-            "species_name": Field(column_name="Species"),
+            "species_name_custom_field": Field(column_name="Species"),
         },
-        "dehydrate_methods": {"species_name": lambda obj: str(obj.species)},
+        "dehydrate_methods": {
+            "species_name_custom_field": lambda obj: str(obj.species)
+        },
     }
     _actions = [
-        export_xlsx_action,
-        export_tsv_action,
+        export_action_xlsx,
+        export_action_tsv,
     ]
 
     _autocomplete_fields = ["created_by", "orders"]

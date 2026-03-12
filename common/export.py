@@ -1,61 +1,32 @@
-import csv
-
-import xlrd
 from django.http import HttpResponse
 from django.utils import timezone
 
 
-# !!! Only temporary for back compatibility with orders
-def export_objects(request, queryset, export_data):
-    file_format = request.POST.get("format", default="xlsx")
+def export_objects_file(queryset, export_data, file_format):
     now = timezone.localtime(timezone.now())
     file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
 
-    # Excel file
     if file_format == "xlsx":
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        response["Content-Disposition"] = f'attachment; filename="{file_name}.xlsx'
         response.write(export_data.xlsx)
-
-    # TSV file
     elif file_format == "tsv":
         response = HttpResponse(content_type="text/tab-separated-values")
-        response["Content-Disposition"] = f'attachment; filename="{file_name}.tsv'
-        xlsx_file = xlrd.open_workbook(file_contents=export_data.xlsx)
-        sheet = xlsx_file.sheet_by_index(0)
-        wr = csv.writer(response, delimiter="\t")
-        # Get rid of return chars
-        for rownum in range(sheet.nrows):
-            row_values = [
-                str(i).replace("\n", "").replace("\r", "").replace("\t", "")
-                for i in sheet.row_values(rownum)
-            ]
-            wr.writerow(row_values)
+        response.write(export_data.tsv)
+    else:
+        raise ValueError(f"Unsupported export format: {file_format}")
+
+    response["Content-Disposition"] = (
+        f'attachment; filename="{file_name}.{file_format}"'
+    )
 
     return response
 
 
 def export_objects_xlsx(queryset, export_data):
-    now = timezone.localtime(timezone.now())
-    file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
-
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = f'attachment; filename="{file_name}.xlsx'
-    response.write(export_data.xlsx)
-
-    return response
+    return export_objects_file(queryset, export_data, "xlsx")
 
 
 def export_objects_tsv(queryset, export_data):
-    now = timezone.localtime(timezone.now())
-    file_name = f"{queryset.model.__name__}_{now.strftime('%Y%m%d_%H%M%S')}"
-
-    response = HttpResponse(content_type="text/tab-separated-values")
-    response["Content-Disposition"] = f'attachment; filename="{file_name}.tsv'
-    response.write(export_data.tsv)
-
-    return response
+    return export_objects_file(queryset, export_data, "tsv")

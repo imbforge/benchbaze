@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -143,8 +143,8 @@ class VirusBase(
     ]
     _list_display_frozen = _search_fields
     _actions = [
-        export_xlsx_action,
-        export_tsv_action,
+        export_action_xlsx,
+        export_action_tsv,
         formz_as_html,
     ]
 

@@ -11,36 +11,6 @@ from django.apps import apps
 from django.conf import settings
 
 from common.actions import create_export_resource
-from purchasing.models import Order
-from purchasing.order.export import OrderExportResource
-
-COLLECTION_MODELS = [
-    "Antibody",
-    "CellLine",
-    "EColiStrain",
-    "Inhibitor",
-    "Oligo",
-    "Plasmid",
-    "SaCerevisiaeStrain",
-    "ScPombeStrain",
-    "SiRna",
-    "WormStrain",
-    "WormStrainAllele",
-    "VirusMammalian",
-    "VirusInsect",
-]
-
-DB_TABLES = [
-    (
-        model := apps.get_model("collection", m),
-        create_export_resource(model),
-    )
-    for m in COLLECTION_MODELS
-]
-
-DB_TABLES = DB_TABLES + [
-    (Order, OrderExportResource),
-]
 
 BASE_DIR = settings.BASE_DIR
 DB_CONFIG = settings.DATABASES.get("default", {})
@@ -138,10 +108,15 @@ def create_db_dump(current_date_time):
 
 
 def export_tables():
-    """Export all specified database tables to XLSX and TSV formats"""
-    for model, export_resource in DB_TABLES:
-        if model.objects.exists():
-            export_db_table(model, export_resource)
+    """Export all models that have _backup = True and _export_field_names defined
+    to XLSX and TSV formats"""
+
+    # Export tables only for models that have _backup = True and _export_field_names defined
+    [
+        export_db_table(m, create_export_resource(m))
+        for m in apps.get_models()
+        if getattr(m, "_backup", False) and getattr(m, "_export_field_names", False)
+    ]
 
 
 def sync_uploads():

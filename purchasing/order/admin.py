@@ -28,12 +28,17 @@ from ..models import (
     Order,
     OrderExtraDoc,
 )
+from common.actions import (
+    export_action_xlsx,
+    export_action_tsv,
+)
+
 from .actions import (
     change_order_status_to_arranged,
     change_order_status_to_delivered,
     change_order_status_to_used_up,
-    export_chemicals,
-    export_orders,
+    export_action_chemical_xlsx,
+    export_action_chemical_tsv,
     mass_update,
 )
 from .forms import MassUpdateOrderForm, OrderAdminForm
@@ -232,8 +237,10 @@ class OrderAdmin(
         change_order_status_to_arranged,
         change_order_status_to_delivered,
         change_order_status_to_used_up,
-        export_orders,
-        export_chemicals,
+        export_action_xlsx,
+        export_action_tsv,
+        export_action_chemical_xlsx,
+        export_action_chemical_tsv,
         mass_update,
     ]
     search_fields = ["id", "part_description", "supplier_part_no"]

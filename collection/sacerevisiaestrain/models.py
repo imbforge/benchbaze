@@ -6,7 +6,7 @@ from django.db import models
 from django.forms import ValidationError
 from import_export.fields import Field
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -186,13 +186,13 @@ class SaCerevisiaeStrain(
         "chromosomal_genotype",
         "parent_1",
         "parent_2",
-        "additional_parental_strain_info",
+        "additional_parental_strain_info_custom_field",
         "construction",
         "modification",
         "integrated_plasmids",
         "cassette_plasmids",
-        "episomal_plasmids_in_stock",
-        "other_plasmids",
+        "episomal_plasmids_in_stock_custom_field",
+        "other_plasmids_custom_field",
         "selection",
         "phenotype",
         "background",
@@ -206,19 +206,19 @@ class SaCerevisiaeStrain(
     ]
     _export_custom_fields = {
         "fields": {
-            "episomal_plasmids_in_stock": Field(
+            "episomal_plasmids_in_stock_custom_field": Field(
                 column_name="Episomal plasmids in stock"
             ),
-            "other_plasmids": Field(
+            "other_plasmids_custom_field": Field(
                 attribute="plasmids", column_name="Other plasmid info"
             ),
-            "additional_parental_strain_info": Field(
+            "additional_parental_strain_info_custom_field": Field(
                 attribute="parental_strain",
                 column_name="Extra parental strain info",
             ),
         },
         "dehydrate_methods": {
-            "episomal_plasmids_in_stock": lambda obj: ",".join(
+            "episomal_plasmids_in_stock_custom_field": lambda obj: ",".join(
                 [
                     str(i)
                     for i in obj.episomal_plasmids.filter(
@@ -228,7 +228,7 @@ class SaCerevisiaeStrain(
             )
         },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _show_formz = True
     _show_plasmids_in_model = True
     _autocomplete_fields = [

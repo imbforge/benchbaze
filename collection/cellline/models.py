@@ -2,12 +2,11 @@ import random
 from datetime import timedelta
 
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
 from django.db import models
 from import_export.fields import Field
 from simple_history.models import HistoricalRecords
 
-from common.actions import export_tsv_action, export_xlsx_action
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     EnhancedModelCleanMixin,
@@ -167,7 +166,7 @@ class CellLine(
         "box_name",
         "alternative_name",
         "parental_line",
-        "organism_name",
+        "organism_name_custom_field",
         "cell_type_tissue",
         "culture_type",
         "growth_condition",
@@ -180,10 +179,12 @@ class CellLine(
         "locations",
     ]
     _export_custom_fields = {
-        "fields": {"organism_name": Field(column_name="Organism name")},
-        "dehydrate_methods": {"organism_name": lambda obj: str(obj.organism)},
+        "fields": {"organism_name_custom_field": Field(column_name="Organism name")},
+        "dehydrate_methods": {
+            "organism_name_custom_field": lambda obj: str(obj.organism)
+        },
     }
-    _actions = [export_xlsx_action, export_tsv_action, formz_as_html, create_label]
+    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _show_plasmids_in_model = True
     _autocomplete_fields = [
         "parental_line",

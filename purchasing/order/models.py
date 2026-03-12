@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.forms import ValidationError
+from import_export.fields import Field
 
 from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
 
@@ -35,19 +36,8 @@ HAZARD_LEVEL_PREGNANCY_CHOICES = (
 
 
 class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
-    _model_abbreviation = "order"
-    _history_view_ignore_fields = [
-        "created_approval_by_pi",
-        "approval",
-        "created_date_time",
-        "last_changed_date_time",
-    ]
-    _history_array_fields = {
-        "history_ghs_symbols": "purchasing.GhsSymbol",
-        "history_signal_words": "purchasing.SignalWord",
-        "history_hazard_statements": "purchasing.HazardStatement",
-    }
-    _show_in_frontend = True
+    class Meta:
+        verbose_name = "order"
 
     supplier = models.CharField(
         "supplier", max_length=255, blank=False, validators=[validate_absence_airquotes]
@@ -171,8 +161,102 @@ class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
     created_approval_by_pi = models.BooleanField(default=False, null=True)
     approval = GenericRelation("approval.Approval")
 
-    class Meta:
-        verbose_name = "order"
+    # Static properties
+    _model_abbreviation = "order"
+    _history_view_ignore_fields = [
+        "created_approval_by_pi",
+        "approval",
+        "created_date_time",
+        "last_changed_date_time",
+    ]
+    _history_array_fields = {
+        "history_ghs_symbols": "purchasing.GhsSymbol",
+        "history_signal_words": "purchasing.SignalWord",
+        "history_hazard_statements": "purchasing.HazardStatement",
+    }
+    _show_in_frontend = True
+    _backup = True
+
+    # Export for orders
+    _export_field_names = (
+        "id",
+        "internal_order_no",
+        "supplier",
+        "supplier_part_no",
+        "part_description",
+        "quantity",
+        "price",
+        "cost_unit_custom_field",
+        "status",
+        "location_custom_field",
+        "comment",
+        "url",
+        "delivered_date",
+        "cas_number",
+        "ghs_symbols_custom_field",
+        "signal_words_custom_field",
+        "hazard_level_pregnancy",
+        "created_date_time",
+        "order_manager_created_date_time",
+        "last_changed_date_time",
+        "created_by",
+    )
+    _export_custom_fields = {
+        "fields": {
+            "ghs_symbols_custom_field": Field(column_name="GHS symbols"),
+            "signal_words_custom_field": Field(column_name="Signal words"),
+            "cost_unit_custom_field": Field(
+                column_name="Cost unit", attribute="cost_unit__name"
+            ),
+            "location_custom_field": Field(
+                column_name="Location", attribute="location__name"
+            ),
+        },
+        "dehydrate_methods": {
+            "ghs_symbols_custom_field": lambda obj: ", ".join(
+                obj.ghs_symbols.all().values_list("code", flat=True)
+            ),
+            "signal_words_custom_field": lambda obj: ", ".join(
+                obj.signal_words.all().values_list("signal_word", flat=True)
+            ),
+        },
+    }
+
+    # Export for chemicals
+    _export_chemical_field_names = (
+        "id",
+        "supplier",
+        "supplier_part_no",
+        "part_description",
+        "quantity",
+        "location_custom_field",
+        "cas_number",
+        "ghs_symbols_custom_field",
+        "signal_words_custom_field",
+        "hazard_statements_custom_field",
+        "hazard_level_pregnancy",
+    )
+    _export_chemical_custom_fields = {
+        "fields": {
+            "ghs_symbols_custom_field": Field(column_name="GHS symbols"),
+            "signal_words_custom_field": Field(column_name="Signal words"),
+            "hazard_statements_custom_field": Field(column_name="Hazard statements"),
+            "location_custom_field": Field(
+                column_name="Location", attribute="location__name"
+            ),
+        },
+        "dehydrate_methods": {
+            "ghs_symbols_custom_field": lambda obj: ", ".join(
+                obj.ghs_symbols.all().values_list("code", flat=True)
+            ),
+            "signal_words_custom_field": lambda obj: ", ".join(
+                obj.signal_words.all().values_list("signal_word", flat=True)
+            ),
+            "hazard_statements_custom_field": lambda obj: ", ".join(
+                obj.hazard_statements.all().values_list("code", flat=True)
+            ),
+        },
+    }
 
     def __str__(self):
         return "{} - {}".format(self.id, self.part_description)
