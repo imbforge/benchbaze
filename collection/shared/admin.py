@@ -206,10 +206,10 @@ def get_map_features(obj, attempt_number=3, messages=[]):
             return feature_names
 
         except Exception:
-            get_map_features(obj.map.path, attempt_number - 1, messages)
+            get_map_features(obj, attempt_number - 1, messages)
 
     else:
-        mail_snapgene_error(obj.map.path, messages)
+        mail_snapgene_error(obj, messages)
         raise Exception
 
 
