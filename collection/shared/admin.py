@@ -119,9 +119,9 @@ def create_map_preview(
                     "featureDatabase": SNAPGENE_COMMON_FEATURES_PATH,
                 }
                 r = client.requestResponse(argument, 10000)
-                r_code = str(r.get("code", 1))
+                r_code = r.get("code", 1)
                 if r_code > 0:
-                    error_message = "detectFeatures - error " + r_code
+                    error_message = f"detectFeatures - error {r_code}"
                     if error_message not in messages:
                         messages.append(error_message)
                     client.close()
@@ -144,9 +144,9 @@ def create_map_preview(
                 "showORFs": False,
             }
             r = client.requestResponse(argument, 10000)
-            r_code = str(r.get("code", 1))
+            r_code = r.get("code", 1)
             if r_code > 0:
-                error_message = "generatePNGMap - error " + r_code
+                error_message = f"generatePNGMap - error {r_code}"
                 if error_message not in messages:
                     messages.append(error_message)
                 client.close()
@@ -160,9 +160,9 @@ def create_map_preview(
                 "exportFilter": "biosequence.gb",
             }
             r = client.requestResponse(argument, 10000)
-            r_code = str(r.get("code", 1))
+            r_code = r.get("code", 1)
             if r_code > 0:
-                error_message = "exportDNAFile - error " + r_code
+                error_message = f"exportDNAFile - error {r_code}"
                 if error_message not in messages:
                     messages.append(error_message)
                 client.close()
@@ -191,9 +191,9 @@ def get_map_features(obj, attempt_number=3, messages=[]):
             # Get features
             argument = {"request": "reportFeatures", "inputFile": obj.map.path}
             r = client.requestResponse(argument, 10000)
-            r_code = str(r.get("code", 1))
+            r_code = r.get("code", 1)
             if r_code > 0:
-                error_message = "reportFeatures - error " + r_code
+                error_message = f"reportFeatures - error {r_code}"
                 if error_message not in messages:
                     messages.append(error_message)
                 client.close()
@@ -228,9 +228,9 @@ def convert_map_gbk_to_dna(gbk_map_path, dna_map_path, attempt_number=3, message
                 "outputFile": dna_map_path,
             }
             r = client.requestResponse(argument, 10000)
-            r_code = str(r.get("code", 1))
+            r_code = r.get("code", 1)
             if r_code > 0:
-                error_message = "importDNAFile - error " + r_code
+                error_message = f"importDNAFile - error {r_code}"
                 if error_message not in messages:
                     messages.append(error_message)
                 client.close()
@@ -797,9 +797,9 @@ class AdminOligosInMap(admin.ModelAdmin):
                     "outputFile": dna_temp_path,
                 }
                 r = client.requestResponse(argument, 60000)
-                r_code = str(r.get("code", 1))
+                r_code = r.get("code", 1)
                 if r_code > 0:
-                    error_message = "importPrimersFromList - error " + r_code
+                    error_message = f"importPrimersFromList - error {r_code}"
                     if error_message not in messages:
                         messages.append(error_message)
                     client.close()
@@ -835,9 +835,9 @@ class AdminOligosInMap(admin.ModelAdmin):
                     "exportFilter": "biosequence.gb",
                 }
                 r = client.requestResponse(argument, 10000)
-                r_code = str(r.get("code", 1))
+                r_code = r.get("code", 1)
                 if r_code > 0:
-                    error_message = "exportDNAFile - error " + r_code
+                    error_message = f"exportDNAFile - error {r_code}"
                     if error_message not in messages:
                         messages.append(error_message)
                     client.close()
