@@ -185,7 +185,7 @@ class WormStrainAllele(
 
     _autocomplete_fields = [
         "sequence_features",
-        "made_by_method_custom_field",
+        "made_by_method",
         "reference_strain",
         "transgene_plasmids",
         "made_with_plasmids",
@@ -232,7 +232,7 @@ class WormStrainAllele(
         "mutation_type",
         "mutation_position",
         "reference_strain",
-        "made_by_method_custom_field",
+        "made_by_method",
         "made_by_person",
         "made_with_plasmids",
         "notes",
