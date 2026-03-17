@@ -146,7 +146,6 @@ class CollectionQLSchema(DjangoQLSchema):
                 FieldLocationField(
                     "box",
                     "box",
-                    suggest_options=True,
                     model=self.current_model,
                 ),
                 FieldLocationField(
