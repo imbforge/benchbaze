@@ -185,11 +185,29 @@ class Oligo(
     def __str__(self):
         return f"{self.id} - {self.name}"
 
+    def clean(self):
+        # Strip spaces from sequence and name here, not in save(),
+        # this ensures that the cleaned values are used in form validation
+        # and uniqueness checks.
+
+        if self.sequence:
+            self.sequence = "".join(self.sequence.split())
+
+        if self.name:
+            self.name = self.name.strip()
+
+        super().clean()
+
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        # Remove all white spaces from sequence and set its length
-        self.sequence = "".join(self.sequence.split())
+        # Remove all white spaces from sequence
+        # Keep this as a safety net for non-form saves
+        # Also set its length automatically based on the cleaned sequence
+        if self.sequence:
+            self.sequence = "".join(self.sequence.split())
+        if self.name:
+            self.name = self.name.strip()
         self.length = len(self.sequence)
 
         super().save(force_insert, force_update, using, update_fields)

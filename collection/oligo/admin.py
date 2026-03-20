@@ -11,7 +11,6 @@ from ..shared.admin import (
     LocationInline,
     rename_info_sheet_save_obj_update_history,
 )
-from .forms import OligoAdminForm
 from .models import Oligo, OligoDoc
 from .search import OligoDjangoQLSearchMixin, OligoQLSchema
 
@@ -33,7 +32,6 @@ class OligoAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = OligoQLSchema
-    form = OligoAdminForm
     inlines = [
         LocationInline,
         AddLocationInline,
