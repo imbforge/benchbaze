@@ -21,7 +21,7 @@ from ..shared.admin import (
     convert_map_gbk_to_dna,
     create_map_preview,
 )
-from .forms import WormStrainAdminForm, WormStrainAlleleAdminForm
+from .forms import WormStrainAlleleAdminForm
 from .models import (
     WormStrainAlleleDoc,
     WormStrainDoc,
@@ -83,7 +83,6 @@ class WormStrainAdmin(
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
-    form = WormStrainAdminForm
     djangoql_schema = WormStrainQLSchema
     inlines = [
         WormStrainGenotypingAssayInline,

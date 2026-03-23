@@ -22,7 +22,6 @@ from ..shared.admin import (
     create_map_preview,
     get_map_features,
 )
-from .forms import PlasmidAdminForm
 from .models import PlasmidDoc
 from .search import PlasmidQLSchema
 
@@ -57,7 +56,6 @@ class PlasmidAdmin(
         PlasmidDocInline,
         PlasmidAddDocInline,
     ]
-    form = PlasmidAdminForm
     change_form_template = "admin/collection/plasmid/change_form.html"
     add_form_template = "admin/collection/plasmid/change_form.html"
 

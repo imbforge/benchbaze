@@ -6,15 +6,13 @@ from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
@@ -39,17 +37,13 @@ class OligoDoc(DocFileMixin):
 
 
 class Oligo(
-    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryDocFieldMixin,
-    HistoryFieldMixin,
     LocationMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "oligo"
@@ -185,18 +179,15 @@ class Oligo(
     def __str__(self):
         return f"{self.id} - {self.name}"
 
-    def clean(self):
-        # Strip spaces from sequence and name here, not in save(),
+    def clean_field_sequence(self):
+        # Strip spaces from sequence, not in save(),
         # this ensures that the cleaned values are used in form validation
         # and uniqueness checks.
 
         if self.sequence:
             self.sequence = "".join(self.sequence.split())
 
-        if self.name:
-            self.name = self.name.strip()
-
-        super().clean()
+        return {}
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
@@ -206,8 +197,6 @@ class Oligo(
         # Also set its length automatically based on the cleaned sequence
         if self.sequence:
             self.sequence = "".join(self.sequence.split())
-        if self.name:
-            self.name = self.name.strip()
         self.length = len(self.sequence)
 
         super().save(force_insert, force_update, using, update_fields)

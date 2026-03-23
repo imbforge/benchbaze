@@ -5,16 +5,13 @@ from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
 )
 
 from ..shared.models import (
+    BaseCollectionModel,
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -35,15 +32,11 @@ class InhibitorDoc(DocFileMixin):
 
 
 class Inhibitor(
-    EnhancedModelCleanMixin,
-    SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     HistoryDocFieldMixin,
-    HistoryFieldMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "inhibitor"

@@ -12,7 +12,6 @@ from ..shared.admin import (
     LocationInline,
     SortAutocompleteResultsId,
 )
-from .forms import ScPombeStrainAdminForm
 from .models import (
     ScPombeStrainDoc,
     ScPombeStrainEpisomalPlasmid,
@@ -71,7 +70,6 @@ class ScPombeStrainAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = ScPombeStrainQLSchema
-    form = ScPombeStrainAdminForm
     inlines = [
         ScPombeStrainEpisomalPlasmidInline,
         LocationInline,

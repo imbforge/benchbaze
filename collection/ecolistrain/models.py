@@ -3,14 +3,12 @@ from django.db import models
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
 )
 from formz.actions import formz_as_html
 
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
@@ -34,16 +32,12 @@ class EColiStrainDoc(DocFileMixin):
 
 
 class EColiStrain(
-    EnhancedModelCleanMixin,
-    SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     HistoryDocFieldMixin,
     FormZFieldsMixin,
     LocationMixin,
-    HistoryFieldMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "strain - E. coli"

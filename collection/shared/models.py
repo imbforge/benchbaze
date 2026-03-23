@@ -6,11 +6,14 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.forms import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.text import capfirst
 
 from approval.models import Approval
+from common.models import HistoryFieldMixin, SaveWithoutHistoricalRecordMixin
 
 from ..storage.models import Location
 
@@ -277,7 +280,11 @@ class InfoSheetMaxSizeMixin:
     info_sheet_formatted.short_description = "Info Sheet"
 
     def clean_field_info_sheet_max_size(self):
-        errors = {}
+        errors = (
+            super().clean_field_info_sheet_max_size()
+            if hasattr(super(), "clean_field_info_sheet_max_size")
+            else {}
+        )
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
 
         if self.info_sheet:
@@ -300,11 +307,42 @@ class InfoSheetMaxSizeMixin:
         return errors
 
 
+class NameUniqueCheckMixin:
+    """Mixin for checking uniqueness of the 'name' field"""
+
+    def clean_field_name(self):
+        errors = (
+            super().clean_field_name() if hasattr(super(), "clean_field_name") else {}
+        )
+
+        # Check if an object with this name already exists.
+        # We exclude the current instance (self.pk) so we don't block updates
+        # Use this instead of a unique constraint on the name field, as done in
+        # most models, to account for initial import scenarios where duplicate
+        # names exist
+        duplicate_exists = (
+            self.__class__.objects.filter(name=self.name).exclude(pk=self.pk).exists()
+        )
+
+        if duplicate_exists:
+            errors["name"] = [
+                capfirst(
+                    f"{self._meta.verbose_name} with this {self._meta.get_field('name').verbose_name} already exists."
+                )
+            ]
+
+        return errors
+
+
 class MapFileCheckPropertiesMixin:
     """Clean method and common properties for models that have a map sheet"""
 
     def clean_field_map_file(self):
-        errors = {}
+        errors = (
+            super().clean_field_map_file()
+            if hasattr(super(), "clean_field_map_file")
+            else {}
+        )
 
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
 
@@ -338,6 +376,7 @@ class MapFileCheckPropertiesMixin:
                         "Invalid file format. Please select a valid SnapGene .dna file"
                     ]
 
+        # Check .gbk map
         if self.map_gbk:
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
             if self.map_gbk.size > file_size_limit:
@@ -354,6 +393,33 @@ class MapFileCheckPropertiesMixin:
                 errors["map_gbk"] = errors.get("map_gbk", []) + [
                     "Invalid file format. Please select a valid GenBank (.gbk or .gb) file"
                 ]
+
+        # Check if both .dna and .gbk maps are changed at the same time
+        map_dna = getattr(self, "map", None)
+        map_gbk = getattr(self, "map_gbk", None)
+        error_message = (
+            f"You cannot {'add' if not self.pk else 'change'} both a .dna and a .gbk map "
+            "at the same time. Please choose only one."
+        )
+        show_both_map_error = False
+
+        # For new records, check if both maps are provided
+        if not self.pk:
+            if map_dna and map_gbk:
+                show_both_map_error = True
+
+        # For existing records, check if both maps are changed at the same time
+        else:
+            saved_obj = self.__class__.objects.get(id=self.pk)
+            saved_dna_map = saved_obj.map.name if saved_obj.map.name else None
+            saved_gbk_map = saved_obj.map_gbk.name if saved_obj.map_gbk.name else None
+
+            if map_dna != saved_dna_map and map_gbk != saved_gbk_map:
+                show_both_map_error = True
+
+        if show_both_map_error:
+            errors["map"] = errors.get("map", []) + [error_message]
+            errors["map_gbk"] = errors.get("map_gbk", []) + [error_message]
 
         return errors
 
@@ -511,3 +577,65 @@ class LocationMixin(models.Model):
         """Returns the storage that has mandatory location for this model class"""
         content_type = ContentType.objects.get_for_model(cls)
         return getattr(content_type, "storage", None)
+
+
+class EnhancedModelCleanMixin:
+    def clean(self):
+        """Enhanced clean method to call all methods starting with 'clean_field_'"""
+
+        super().clean()
+
+        errors = [
+            func()
+            for func_name in dir(self)
+            if func_name.startswith("clean_field_")
+            and callable(func := getattr(self, func_name))
+        ]
+
+        if errors:
+            # Combine ValidationError instances
+            combined_errors = {}
+            for err in errors:
+                # If err is a dict, it contains field-specific errors
+                if isinstance(err, dict):
+                    for field, field_errors in err.items():
+                        combined_errors.setdefault(field, []).extend(field_errors)
+                # If err is a list, it contains non-field errors
+                elif isinstance(err, list):
+                    combined_errors.setdefault("__all__", []).extend(err)
+
+            raise ValidationError(combined_errors)
+
+
+class BaseCollectionModel(
+    SaveWithoutHistoricalRecordMixin,
+    HistoryFieldMixin,
+    EnhancedModelCleanMixin,
+    OwnershipFieldsMixin,
+    models.Model,
+):
+    class Meta:
+        abstract = True
+
+    """Base model for collection models, with common properties and methods"""
+
+    def clean_field_name(self):
+        """Strip spaces from name, not in save(), this ensures that the cleaned
+        value is used in form validation and uniqueness checks.
+        """
+        errors = (
+            super().clean_field_name() if hasattr(super(), "clean_field_name") else {}
+        )
+
+        if getattr(self, "name", None) is not None and self.name != "":
+            self.name = self.name.strip()
+
+        return errors
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        if getattr(self, "name", None) is not None and self.name != "":
+            self.name = self.name.strip()
+
+        super().save(force_insert, force_update, using, update_fields)

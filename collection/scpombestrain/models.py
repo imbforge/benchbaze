@@ -9,9 +9,6 @@ from import_export.fields import Field
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
@@ -19,10 +16,12 @@ from formz.actions import formz_as_html
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     LocationMixin,
+    NameUniqueCheckMixin,
     OwnershipFieldsMixin,
 )
 
@@ -42,17 +41,14 @@ class ScPombeStrainDoc(DocFileMixin):
 
 
 class ScPombeStrain(
-    EnhancedModelCleanMixin,
+    NameUniqueCheckMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
-    HistoryFieldMixin,
     LocationMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "strain - Sc. pombe"

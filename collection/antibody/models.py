@@ -5,18 +5,15 @@ from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 
 from ..shared.actions import create_label
 from ..shared.models import (
+    BaseCollectionModel,
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -39,16 +36,12 @@ class AntibodyDoc(DocFileMixin):
 
 
 class Antibody(
-    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
     HistoryDocFieldMixin,
-    HistoryFieldMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "antibody"

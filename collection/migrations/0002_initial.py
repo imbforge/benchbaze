@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "antibodies",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.InfoSheetMaxSizeMixin,
                 models.Model,
@@ -334,7 +334,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "cell lines",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 models.Model,
             ),
@@ -544,7 +544,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "strains - E. coli",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 models.Model,
             ),
@@ -2503,7 +2503,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "inhibitors",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.InfoSheetMaxSizeMixin,
                 models.Model,
@@ -2666,7 +2666,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "oligos",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.InfoSheetMaxSizeMixin,
                 models.Model,
@@ -2897,7 +2897,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "plasmids",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 collection.shared.models.MapFileCheckPropertiesMixin,
@@ -3181,7 +3181,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "strains - Sa. cerevisiae",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 models.Model,
             ),
@@ -3439,7 +3439,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "strains - Sc. pombe",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 models.Model,
             ),
@@ -3623,7 +3623,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "siRNAs",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 common.models.DownloadFileNameMixin,
                 collection.shared.models.InfoSheetMaxSizeMixin,
                 models.Model,
@@ -3904,7 +3904,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "strains - Worm",
             },
             bases=(
-                common.models.SaveWithoutHistoricalRecord,
+                common.models.SaveWithoutHistoricalRecordMixin,
                 collection.shared.models.CommonCollectionModelPropertiesMixin,
                 models.Model,
             ),

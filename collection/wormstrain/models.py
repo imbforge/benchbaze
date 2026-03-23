@@ -6,9 +6,6 @@ from import_export.fields import Field
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
@@ -19,11 +16,13 @@ from ..plasmid.models import Plasmid
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
     LocationMixin,
     MapFileCheckPropertiesMixin,
+    NameUniqueCheckMixin,
     OwnershipFieldsMixin,
 )
 
@@ -47,10 +46,8 @@ class WormStrainAlleleDoc(DocFileMixin):
 class WormStrainAllele(
     ZebraLabelFieldsMixin,
     HistoryDocFieldMixin,
-    HistoryFieldMixin,
     MapFileCheckPropertiesMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "allele - Worm"
@@ -299,17 +296,14 @@ class WormStrainDoc(DocFileMixin):
 
 
 class WormStrain(
-    EnhancedModelCleanMixin,
+    NameUniqueCheckMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
-    HistoryFieldMixin,
     HistoryDocFieldMixin,
     LocationMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "strain - Worm"

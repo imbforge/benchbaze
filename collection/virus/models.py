@@ -4,14 +4,12 @@ from django.db import models
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
 )
 from formz.actions import formz_as_html
 
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
@@ -80,16 +78,12 @@ VIRUS_BASE_UNMODIFIABLE_FIELDS = [
 
 
 class VirusBase(
-    EnhancedModelCleanMixin,
-    SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     HistoryDocFieldMixin,
     FormZFieldsMixin,
-    HistoryFieldMixin,
     LocationMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         abstract = True

@@ -17,7 +17,6 @@ from ..shared.admin import (
     LocationInline,
     SortAutocompleteResultsId,
 )
-from .forms import SaCerevisiaeStrainAdminForm
 from .search import SaCerevisiaeStrainQLSchema
 
 
@@ -73,7 +72,6 @@ class SaCerevisiaeStrainAdmin(
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = SaCerevisiaeStrainQLSchema
-    form = SaCerevisiaeStrainAdminForm
     inlines = [
         SaCerevisiaeStrainEpisomalPlasmidInline,
         LocationInline,
@@ -81,7 +79,6 @@ class SaCerevisiaeStrainAdmin(
         SaCerevisiaeStrainDocInline,
         SaCerevisiaeStrainAddDocInline,
     ]
-    form = SaCerevisiaeStrainAdminForm
 
     def save_related(self, request, form, formsets, change):
         obj, history_obj = super().save_related(

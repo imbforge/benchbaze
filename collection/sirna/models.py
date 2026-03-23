@@ -8,12 +8,10 @@ from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
 )
 
 from ..shared.models import (
+    BaseCollectionModel,
     InfoSheetMaxSizeMixin,
     LocationMixin,
     OwnershipFieldsMixin,
@@ -37,14 +35,10 @@ class SiRnaDoc(DocFileMixin):
 
 
 class SiRna(
-    EnhancedModelCleanMixin,
-    SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     InfoSheetMaxSizeMixin,
-    HistoryFieldMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "siRNA"

@@ -295,8 +295,8 @@ class LocationItem(models.Model):
                         "Coordinate must be numeric."
                     ]
 
-        if len(errors) > 0:
-            raise ValidationError(errors)
+            if len(errors) > 0:
+                raise ValidationError(errors)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None

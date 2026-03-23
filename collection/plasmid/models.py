@@ -10,9 +10,6 @@ from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
@@ -20,6 +17,7 @@ from formz.actions import formz_as_html
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     LocationMixin,
@@ -46,18 +44,14 @@ class PlasmidDoc(DocFileMixin):
 
 
 class Plasmid(
-    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     DownloadFileNameMixin,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     LocationMixin,
-    HistoryFieldMixin,
     MapFileCheckPropertiesMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "plasmid"

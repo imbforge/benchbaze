@@ -9,9 +9,6 @@ from simple_history.models import HistoricalRecords
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    EnhancedModelCleanMixin,
-    HistoryFieldMixin,
-    SaveWithoutHistoricalRecord,
     ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
@@ -20,6 +17,7 @@ from formz.models import ZkbsCellLine
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
+    BaseCollectionModel,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryDocFieldMixin,
@@ -55,18 +53,14 @@ class CellLineDoc(DocFileMixin):
 
 
 class CellLine(
-    EnhancedModelCleanMixin,
     ZebraLabelFieldsMixin,
-    SaveWithoutHistoricalRecord,
     CommonCollectionModelPropertiesMixin,
     FormZFieldsMixin,
     HistoryPlasmidsFieldsMixin,
     HistoryDocFieldMixin,
-    HistoryFieldMixin,
     LocationMixin,
     ApprovalFieldsMixin,
-    OwnershipFieldsMixin,
-    models.Model,
+    BaseCollectionModel,
 ):
     class Meta:
         verbose_name = "cell line"
