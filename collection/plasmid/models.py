@@ -6,15 +6,11 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    ZebraLabelFieldsMixin,
 )
-from formz.actions import formz_as_html
 
-from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,
@@ -22,6 +18,7 @@ from ..shared.models import (
     FormZFieldsMixin,
     LocationMixin,
     MapFileCheckPropertiesMixin,
+    ZebraLabelFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -202,7 +199,6 @@ class Plasmid(
         },
         "dehydrate_methods": dict(),
     }
-    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
     _obj_unmodifiable_fields = [
         "created_date_time",

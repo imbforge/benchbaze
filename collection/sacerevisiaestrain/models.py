@@ -6,14 +6,10 @@ from django.db import models
 from django.forms import ValidationError
 from import_export.fields import Field
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    ZebraLabelFieldsMixin,
 )
-from formz.actions import formz_as_html
 
-from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,
@@ -22,6 +18,7 @@ from ..shared.models import (
     HistoryPlasmidsFieldsMixin,
     LocationMixin,
     NameUniqueCheckMixin,
+    ZebraLabelFieldsMixin,
 )
 
 
@@ -221,7 +218,6 @@ class SaCerevisiaeStrain(
             )
         },
     }
-    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _show_formz = True
     _show_plasmids_in_model = True
     _autocomplete_fields = [

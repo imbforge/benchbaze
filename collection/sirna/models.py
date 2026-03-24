@@ -4,7 +4,6 @@ from django.db import models
 from django_better_admin_arrayfield.models.fields import ArrayField as BetterArrayField
 from import_export.fields import Field
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -162,11 +161,6 @@ class SiRna(
             "species_name_custom_field": lambda obj: str(obj.species)
         },
     }
-    _actions = [
-        export_action_xlsx,
-        export_action_tsv,
-    ]
-
     _autocomplete_fields = ["created_by", "orders"]
     _clone_ignore_fields = ["info_sheet"]
     _obj_specific_fields = [

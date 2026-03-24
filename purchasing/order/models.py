@@ -5,7 +5,11 @@ from django.db import models
 from django.forms import ValidationError
 from import_export.fields import Field
 
-from common.models import DocFileMixin, HistoryFieldMixin, SaveWithoutHistoricalRecord
+from common.models import (
+    DocFileMixin,
+    HistoryFieldMixin,
+    SaveWithoutHistoricalRecordMixin,
+)
 
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
@@ -35,7 +39,7 @@ HAZARD_LEVEL_PREGNANCY_CHOICES = (
 )
 
 
-class Order(SaveWithoutHistoricalRecord, HistoryFieldMixin):
+class Order(SaveWithoutHistoricalRecordMixin, HistoryFieldMixin):
     class Meta:
         verbose_name = "order"
 

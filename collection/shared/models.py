@@ -6,6 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models.base import ModelBase
 from django.forms import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
@@ -13,9 +14,12 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 
 from approval.models import Approval
+from common.actions import export_action_tsv, export_action_xlsx
 from common.models import HistoryFieldMixin, SaveWithoutHistoricalRecordMixin
+from formz.actions import formz_as_html
 
 from ..storage.models import Location
+from .actions import create_n0jtt_zebra_label
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
@@ -223,6 +227,7 @@ class FormZFieldsMixin(models.Model):
 
     # Static properties
     _show_formz = True
+    _actions = [formz_as_html]
 
     @property
     def formz_species(self):
@@ -581,16 +586,65 @@ class LocationMixin(models.Model):
         return getattr(content_type, "storage", None)
 
 
+class ZebraLabelFieldsMixin:
+    _actions = [create_n0jtt_zebra_label]
+
+    @property
+    def zebra_n0jtt_label_content(self):
+        return [
+            f"<b>{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.id}</b>",
+            self.name,
+            "",
+            "",
+            str(self.created_by)[:17],
+        ]
+
+
+class AggregateVariableModelMeta(ModelBase):
+    """Metaclass to aggregate variables from the class hierarchy, such as _actions.
+    Must inherit from ModelBase to ensure Django's model creation process is not disrupted"""
+
+    def __new__(mcs, name, bases, attrs):
+        # Ensure that Django's ModelBase does its work first
+        cls = super().__new__(mcs, name, bases, attrs)
+
+        # The variables to collect
+        vars_to_collect = ["_actions"]
+
+        for var_name in vars_to_collect:
+            # Collect the variable from the class and all its bases, starting from the
+            # furthest bases (e.g. BaseCollectionModel) to the closest (the actual model
+            # class), and concatenate them into a single list
+            raw_collection = [
+                item
+                for base in reversed(cls.__mro__)
+                if var_name in base.__dict__
+                for item in (
+                    base.__dict__[var_name]
+                    if isinstance(base.__dict__[var_name], (list, tuple))
+                    else [base.__dict__[var_name]]
+                )
+            ]
+
+            # Use dict.fromkeys to remove duplicates while preserving the order
+            setattr(cls, var_name, list(dict.fromkeys(raw_collection)))
+
+        return cls
+
+
 class BaseCollectionModel(
     SaveWithoutHistoricalRecordMixin,
     OwnershipFieldsMixin,
     HistoryFieldMixin,
     models.Model,
+    metaclass=AggregateVariableModelMeta,
 ):
     """Base model for collection models, with relevant common fields and methods"""
 
     class Meta:
         abstract = True
+
+    _actions = [export_action_xlsx, export_action_tsv]
 
     def clean(self):
         """Enhanced clean method to call all methods starting with 'clean_field_'"""

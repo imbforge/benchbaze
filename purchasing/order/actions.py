@@ -43,7 +43,7 @@ def change_order_status(request, queryset, origin_status, destination_status):
             order.save()
 
 
-@admin.action(description="Change STATUS to ARRANGED")
+@admin.action(description="Status to ARRANGED")
 def change_order_status_to_arranged(modeladmin, request, queryset):
     """
     Action to change the status of selected orders from open to
@@ -53,7 +53,7 @@ def change_order_status_to_arranged(modeladmin, request, queryset):
     change_order_status(request, queryset, "open", "arranged")
 
 
-@admin.action(description="Change STATUS to USED UP")
+@admin.action(description="Status to USED UP")
 def change_order_status_to_used_up(modeladmin, request, queryset):
     """
     Action to change the status of selected orders from delivered to
@@ -63,7 +63,7 @@ def change_order_status_to_used_up(modeladmin, request, queryset):
     change_order_status(request, queryset, "delivered", "used up")
 
 
-@admin.action(description="Change STATUS to DELIVERED")
+@admin.action(description="Status to DELIVERED")
 def change_order_status_to_delivered(modeladmin, request, queryset):
     """
     Action to change the status of selected orders from arranged to
@@ -114,13 +114,13 @@ def _export_action_chemical(source, queryset, file_format):
     return response
 
 
-@admin.action(description="Export selected chemicals as XLSX")
+@admin.action(description="To chemicals as XLSX")
 def export_action_chemical_xlsx(source, request, queryset):
     """Create export resource on the fly and export as XLSX"""
     return _export_action_chemical(source, queryset, "xlsx")
 
 
-@admin.action(description="Export selected chemicals as TSV")
+@admin.action(description="To chemicals as TSV")
 def export_action_chemical_tsv(source, request, queryset):
     """Create export resource on the fly and export as TSV"""
     return _export_action_chemical(source, queryset, "tsv")

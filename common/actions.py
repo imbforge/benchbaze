@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import FieldDoesNotExist
 from django.utils.encoding import force_str
@@ -157,17 +158,13 @@ def export_action(
     raise ValueError(f"Unsupported export format: {file_format}")
 
 
+@admin.action(description="To XLSX")
 def export_action_xlsx(source, request, queryset):
     """Create export resource on the fly and export as XLSX"""
     return export_action(source, queryset, "xlsx")
 
 
-export_action_xlsx.short_description = "Export selected as XLSX"
-
-
+@admin.action(description="To TSV")
 def export_action_tsv(source, request, queryset):
     """Create export resource on the fly and export as TSV"""
     return export_action(source, queryset, "tsv")
-
-
-export_action_tsv.short_description = "Export selected as TSV"

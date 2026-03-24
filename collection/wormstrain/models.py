@@ -3,17 +3,13 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    ZebraLabelFieldsMixin,
 )
-from formz.actions import formz_as_html
 from formz.models import Species
 
 from ..oligo.models import Oligo
 from ..plasmid.models import Plasmid
-from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,
@@ -23,6 +19,7 @@ from ..shared.models import (
     LocationMixin,
     MapFileCheckPropertiesMixin,
     NameUniqueCheckMixin,
+    ZebraLabelFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -43,7 +40,6 @@ class WormStrainAlleleDoc(DocFileMixin):
 
 
 class WormStrainAllele(
-    ZebraLabelFieldsMixin,
     HistoryDocFieldMixin,
     MapFileCheckPropertiesMixin,
     BaseCollectionModel,
@@ -214,8 +210,6 @@ class WormStrainAllele(
             "type_custom_field": lambda obj: obj.get_typ_e_display(),
         },
     }
-    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
-
     _show_formz = False
     _show_plasmids_in_model = True
     _obj_specific_fields = [
@@ -471,7 +465,6 @@ class WormStrain(
             ),
         },
     }
-    _actions = [export_action_xlsx, export_action_tsv, formz_as_html]
     _list_display_frozen = _search_fields
     _list_display = [
         "chromosomal_genotype",

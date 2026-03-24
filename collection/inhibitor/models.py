@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
@@ -98,10 +97,6 @@ class Inhibitor(
         "description_comment",
         "info_sheet",
         "locations",
-    ]
-    _actions = [
-        export_action_xlsx,
-        export_action_tsv,
     ]
 
     _clone_ignore_fields = ["info_sheet"]

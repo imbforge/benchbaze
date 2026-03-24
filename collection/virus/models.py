@@ -1,11 +1,9 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
 )
-from formz.actions import formz_as_html
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -135,11 +133,6 @@ class VirusBase(
         "name",
     ]
     _list_display_frozen = _search_fields
-    _actions = [
-        export_action_xlsx,
-        export_action_tsv,
-        formz_as_html,
-    ]
 
     def __str__(self):
         return f"{self.id} - {self.name}"

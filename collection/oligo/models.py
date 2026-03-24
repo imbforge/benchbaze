@@ -2,20 +2,18 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
     DownloadFileNameMixin,
-    ZebraLabelFieldsMixin,
 )
 
-from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
+    ZebraLabelFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -128,11 +126,6 @@ class Oligo(
         "created_date_time",
         "created_by",
         "locations",
-    ]
-    _actions = [
-        export_action_xlsx,
-        export_action_tsv,
-        create_label,
     ]
 
     _autocomplete_fields = ["sequence_features"]

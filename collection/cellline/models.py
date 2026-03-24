@@ -6,15 +6,11 @@ from django.db import models
 from import_export.fields import Field
 from simple_history.models import HistoricalRecords
 
-from common.actions import export_action_tsv, export_action_xlsx
 from common.models import (
     DocFileMixin,
-    ZebraLabelFieldsMixin,
 )
-from formz.actions import formz_as_html
 from formz.models import ZkbsCellLine
 
-from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,
@@ -24,6 +20,7 @@ from ..shared.models import (
     HistoryPlasmidsFieldsMixin,
     LocationMixin,
     OwnershipFieldsMixin,
+    ZebraLabelFieldsMixin,
 )
 
 CELL_LINE_DOC_TYPE_CHOICES = (
@@ -178,7 +175,6 @@ class CellLine(
             "organism_name_custom_field": lambda obj: str(obj.organism)
         },
     }
-    _actions = [export_action_xlsx, export_action_tsv, formz_as_html, create_label]
     _show_plasmids_in_model = True
     _autocomplete_fields = [
         "parental_line",
