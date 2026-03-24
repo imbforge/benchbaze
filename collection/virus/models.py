@@ -14,7 +14,6 @@ from ..shared.models import (
     FormZFieldsMixin,
     HistoryDocFieldMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
 )
 
 # Static properties
@@ -127,7 +126,7 @@ class VirusBase(
     # Static properties
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
     )
     _representation_field = "name"
     _list_display_links = ["id"]

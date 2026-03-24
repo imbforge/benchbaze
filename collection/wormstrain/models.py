@@ -23,7 +23,6 @@ from ..shared.models import (
     LocationMixin,
     MapFileCheckPropertiesMixin,
     NameUniqueCheckMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -165,7 +164,7 @@ class WormStrainAllele(
         "history_transgene_plasmids": "collection.Plasmid",
         "history_documents": "collection.WormStrainAlleleDoc",
     }
-    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields + [
+    _history_view_ignore_fields = BaseCollectionModel._history_view_ignore_fields + [
         "map_png",
         "map_gbk",
     ]
@@ -424,7 +423,7 @@ class WormStrain(
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
     )
     _m2m_save_ignore_fields = ["history_genotyping_oligos"]
     _representation_field = "name"

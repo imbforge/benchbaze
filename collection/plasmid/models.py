@@ -22,7 +22,6 @@ from ..shared.models import (
     FormZFieldsMixin,
     LocationMixin,
     MapFileCheckPropertiesMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -150,7 +149,7 @@ class Plasmid(
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
         + ["map_png", "map_gbk"]
     )
     _unified_map_field = True

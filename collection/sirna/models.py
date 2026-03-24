@@ -14,7 +14,6 @@ from ..shared.models import (
     BaseCollectionModel,
     InfoSheetMaxSizeMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -121,7 +120,7 @@ class SiRna(
         "history_documents": "collection.SiRnaDoc",
         "history_locations": "collection.LocationItem",
     }
-    _history_view_ignore_fields = OwnershipFieldsMixin._history_view_ignore_fields
+    _history_view_ignore_fields = BaseCollectionModel._history_view_ignore_fields
     _representation_field = "name"
     _list_display_links = ["id"]
     _search_fields = [

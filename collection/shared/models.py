@@ -74,7 +74,7 @@ class OwnershipFieldsMixin(models.Model):
     class Meta:
         abstract = True
 
-    # Fields
+    # Ownership Fields
     created_date_time = models.DateTimeField("created", auto_now_add=True)
     last_changed_date_time = models.DateTimeField("last changed", auto_now=True)
     created_by = models.ForeignKey(
@@ -90,6 +90,8 @@ class OwnershipFieldsMixin(models.Model):
     ]
 
     def readonly_fields(self, request):
+        """Returns readonly fields based on which user is requesting the object"""
+
         can_change = False
 
         if request.user == self.created_by or request.user.is_elevated_user:
@@ -579,7 +581,17 @@ class LocationMixin(models.Model):
         return getattr(content_type, "storage", None)
 
 
-class EnhancedModelCleanMixin:
+class BaseCollectionModel(
+    SaveWithoutHistoricalRecordMixin,
+    OwnershipFieldsMixin,
+    HistoryFieldMixin,
+    models.Model,
+):
+    """Base model for collection models, with relevant common fields and methods"""
+
+    class Meta:
+        abstract = True
+
     def clean(self):
         """Enhanced clean method to call all methods starting with 'clean_field_'"""
 
@@ -605,19 +617,6 @@ class EnhancedModelCleanMixin:
                     combined_errors.setdefault("__all__", []).extend(err)
 
             raise ValidationError(combined_errors)
-
-
-class BaseCollectionModel(
-    SaveWithoutHistoricalRecordMixin,
-    HistoryFieldMixin,
-    EnhancedModelCleanMixin,
-    OwnershipFieldsMixin,
-    models.Model,
-):
-    class Meta:
-        abstract = True
-
-    """Base model for collection models, with common properties and methods"""
 
     def clean_field_name(self):
         """Strip spaces from name, not in save(), this ensures that the cleaned

@@ -16,7 +16,6 @@ from ..shared.models import (
     HistoryDocFieldMixin,
     InfoSheetMaxSizeMixin,
     LocationMixin,
-    OwnershipFieldsMixin,
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
@@ -102,7 +101,7 @@ class Oligo(
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
     )
     _representation_field = "name"
     _list_display_links = ["id"]

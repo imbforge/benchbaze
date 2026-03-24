@@ -25,7 +25,6 @@ from ..shared.models import (
     HistoryPlasmidsFieldsMixin,
     LocationMixin,
     NameUniqueCheckMixin,
-    OwnershipFieldsMixin,
 )
 
 
@@ -158,7 +157,7 @@ class SaCerevisiaeStrain(
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
     )
     _m2m_save_ignore_fields = ["history_all_plasmids_in_stocked_strain"]
     _representation_field = "name"

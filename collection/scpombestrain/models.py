@@ -22,7 +22,6 @@ from ..shared.models import (
     HistoryPlasmidsFieldsMixin,
     LocationMixin,
     NameUniqueCheckMixin,
-    OwnershipFieldsMixin,
 )
 
 
@@ -113,7 +112,7 @@ class ScPombeStrain(
     _frontend_verbose_plural = _show_in_frontend
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
-        + OwnershipFieldsMixin._history_view_ignore_fields
+        + BaseCollectionModel._history_view_ignore_fields
     )
     _history_array_fields = {
         "history_integrated_plasmids": "collection.Plasmid",
