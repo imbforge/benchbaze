@@ -12,10 +12,7 @@ from common.models import (
     ZebraLabelFieldsMixin,
 )
 from formz.actions import formz_as_html
-from formz.models import GenTechMethod, SequenceFeature
-from formz.models import Project as FormZProject
 
-from ..plasmid.models import Plasmid
 from ..shared.actions import create_label
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -146,14 +143,15 @@ class SaCerevisiaeStrain(
     _frontend_verbose_name = "Strain - <em>Sa. cerevisiae</em>"
     _frontend_verbose_plural = _show_in_frontend
     _history_array_fields = {
-        "history_integrated_plasmids": Plasmid,
-        "history_cassette_plasmids": Plasmid,
-        "history_episomal_plasmids": Plasmid,
-        "history_all_plasmids_in_stocked_strain": Plasmid,
-        "history_formz_projects": FormZProject,
-        "history_formz_gentech_methods": GenTechMethod,
-        "history_sequence_features": SequenceFeature,
-        "history_documents": SaCerevisiaeStrainDoc,
+        "history_integrated_plasmids": "collection.Plasmid",
+        "history_cassette_plasmids": "collection.Plasmid",
+        "history_episomal_plasmids": "collection.Plasmid",
+        "history_all_plasmids_in_stocked_strain": "collection.Plasmid",
+        "history_formz_projects": "formz.Project",
+        "history_formz_gentech_methods": "formz.GenTechMethod",
+        "history_sequence_features": "formz.SequenceFeature",
+        "history_documents": "collection.SaCerevisiaeStrainDoc",
+        "history_locations": "collection.LocationItem",
     }
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
