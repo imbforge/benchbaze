@@ -4,10 +4,7 @@ from django.db import models
 from django_better_admin_arrayfield.models.fields import ArrayField as BetterArrayField
 from import_export.fields import Field
 
-from common.models import (
-    DocFileMixin,
-    DownloadFileNameMixin,
-)
+from common.models import DocFileMixin, DownloadFileNameMixin
 
 from ..shared.models import (
     BaseCollectionModel,

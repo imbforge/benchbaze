@@ -6,10 +6,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.models import (
-    DocFileMixin,
-    DownloadFileNameMixin,
-)
+from common.models import DocFileMixin, DownloadFileNameMixin
 
 from ..shared.models import (
     ApprovalFieldsMixin,

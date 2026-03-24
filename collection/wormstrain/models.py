@@ -3,9 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from import_export.fields import Field
 
-from common.models import (
-    DocFileMixin,
-)
+from common.models import DocFileMixin
 from formz.models import Species
 
 from ..oligo.models import Oligo

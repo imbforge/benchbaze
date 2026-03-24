@@ -6,9 +6,7 @@ from django.db import models
 from django.forms import ValidationError
 from import_export.fields import Field
 
-from common.models import (
-    DocFileMixin,
-)
+from common.models import DocFileMixin
 
 from ..shared.models import (
     ApprovalFieldsMixin,

@@ -1,9 +1,6 @@
 from django.db import models
 
-from common.models import (
-    DocFileMixin,
-)
-
+from common.models import DocFileMixin
 from ..shared.models import (
     ApprovalFieldsMixin,
     BaseCollectionModel,

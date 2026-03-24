@@ -1,10 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from common.models import (
-    DocFileMixin,
-    DownloadFileNameMixin,
-)
+from common.models import DocFileMixin, DownloadFileNameMixin
 
 from ..shared.models import (
     BaseCollectionModel,

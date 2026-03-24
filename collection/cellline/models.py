@@ -6,9 +6,7 @@ from django.db import models
 from import_export.fields import Field
 from simple_history.models import HistoricalRecords
 
-from common.models import (
-    DocFileMixin,
-)
+from common.models import DocFileMixin
 from formz.models import ZkbsCellLine
 
 from ..shared.models import (
