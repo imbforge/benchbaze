@@ -26,3 +26,4 @@ backports-zoneinfo==0.2.1;python_version<"3.9"
 django-modelclone @git+https://github.com/al-beton/django-modelclone/
 djangorestframework
 reportlab
+biopython

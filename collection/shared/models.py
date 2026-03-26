@@ -1,6 +1,8 @@
 import base64
+from io import BytesIO
 from urllib.parse import urlencode
 
+from Bio import SeqIO
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -353,15 +355,19 @@ class MapFileCheckPropertiesMixin:
 
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
 
+        saved_obj = None
+        if self.pk is not None:
+            saved_obj = self.__class__.objects.get(id=self.pk)
+
         # Check .dna map
-        if self.map:
+        if self.map and self.map != getattr(saved_obj.map, "map", None):
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
             if self.map.size > file_size_limit:
                 errors["map"] = errors.get("map", []) + [
                     f"The map is too large. Size cannot exceed {FILE_SIZE_LIMIT_MB} MB."
                 ]
 
-            # Check if file's extension is '.dna'
+            # Check if file's extension is dna
             try:
                 map_ext = self.map.name.split(".")[-1].lower()
             except Exception:
@@ -371,27 +377,24 @@ class MapFileCheckPropertiesMixin:
                     "Invalid file format. Please select a valid SnapGene .dna file"
                 ]
             else:
-                # Check if .dna file is a real SnapGene file
-
-                dna_map_handle = self.map.open("rb")
-
-                first_byte = dna_map_handle.read(1)
-                dna_map_handle.read(4)
-                title = dna_map_handle.read(8).decode("ascii")
-                if first_byte != b"\t" and title != "SnapGene":
+                try:
+                    # Check if .dna file is a real SnapGene file
+                    self.map.open("rb")  # Ensure file handle is open
+                    SeqIO.read(BytesIO(self.map.read()), "snapgene")
+                except Exception as e:
                     errors["map"] = errors.get("map", []) + [
-                        "Invalid file format. Please select a valid SnapGene .dna file"
+                        f"Invalid file format. Please select a valid SnapGene .dna file. Error: {e}"
                     ]
 
         # Check .gbk map
-        if self.map_gbk:
+        if self.map_gbk and self.map_gbk != getattr(saved_obj.map_gbk, "map_gbk", None):
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
             if self.map_gbk.size > file_size_limit:
                 errors["map_gbk"] = errors.get("map_gbk", []) + [
                     f"The map is too large. Size cannot exceed {FILE_SIZE_LIMIT_MB} MB."
                 ]
 
-            # Check if file's extension is '.gbk'
+            # Check if file's extension is gbk or gb
             try:
                 map_ext = self.map_gbk.name.split(".")[-1].lower()
             except Exception:
@@ -400,6 +403,14 @@ class MapFileCheckPropertiesMixin:
                 errors["map_gbk"] = errors.get("map_gbk", []) + [
                     "Invalid file format. Please select a valid GenBank (.gbk or .gb) file"
                 ]
+            else:
+                # Check if .gbk file is a real GenBank
+                try:
+                    SeqIO.read(self.map_gbk.open("r"), "genbank")
+                except Exception as e:
+                    errors["map_gbk"] = errors.get("map_gbk", []) + [
+                        f"Invalid file format. Please select a valid GenBank (.gbk or .gb) file. Error: {e}"
+                    ]
 
         # Check if both .dna and .gbk maps are changed at the same time
         map_dna = getattr(self, "map", None)
@@ -417,7 +428,6 @@ class MapFileCheckPropertiesMixin:
 
         # For existing records, check if both maps are changed at the same time
         else:
-            saved_obj = self.__class__.objects.get(id=self.pk)
             saved_dna_map = saved_obj.map.name if saved_obj.map.name else None
             saved_gbk_map = saved_obj.map_gbk.name if saved_obj.map_gbk.name else None
 
