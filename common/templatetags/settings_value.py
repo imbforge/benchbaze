@@ -14,4 +14,6 @@ def settings_value(name):
         return getattr(settings, name, "")
     elif name == "DOCS_URL":
         return getattr(settings, name, "")
+    elif name == "SUPPORT_TICKET_URL":
+        return getattr(settings, name, "")
     return ""

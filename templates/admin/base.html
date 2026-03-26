@@ -51,6 +51,10 @@
                 {% if DOCS_URL %}
                 <a href="{{ DOCS_URL }}" target="_blank">{% translate 'Docs' %}</a> /
                 {% endif %}
+                {% settings_value "SUPPORT_TICKET_URL" as SUPPORT_TICKET_URL %}
+                {% if SUPPORT_TICKET_URL %}
+                <a href="{{ SUPPORT_TICKET_URL }}" title="Submit a support ticket" target="_blank">🪳</a> /
+                {% endif %}
                 {% if user.is_active and user.is_staff %}
                     {% url 'django-admindocs-docroot' as docsroot %}
                     {% if docsroot %}
