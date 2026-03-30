@@ -1,5 +1,5 @@
 import base64
-from io import BytesIO
+from io import BytesIO, StringIO
 from urllib.parse import urlencode
 
 from Bio import SeqIO
@@ -410,7 +410,8 @@ class MapFileCheckPropertiesMixin:
             else:
                 # Check if .gbk file is a real GenBank
                 try:
-                    SeqIO.read(self.map_gbk.open("r"), "genbank")
+                    self.map_gbk.open("rb")
+                    SeqIO.read(StringIO(self.map_gbk.read().decode("utf-8")), "genbank")
                 except Exception as e:
                     errors["map_gbk"] = errors.get("map_gbk", []) + [
                         f"Invalid file format. Please select a valid GenBank (.gbk or .gb) file. Error: {e}"
