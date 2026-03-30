@@ -360,7 +360,9 @@ class MapFileCheckPropertiesMixin:
             saved_obj = self.__class__.objects.get(id=self.pk)
 
         # Check .dna map
-        if self.map and self.map != getattr(saved_obj.map, "map", None):
+        if self.map and self.map.name != getattr(
+            getattr(saved_obj, "map", None), "name", None
+        ):
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
             if self.map.size > file_size_limit:
                 errors["map"] = errors.get("map", []) + [
@@ -387,7 +389,9 @@ class MapFileCheckPropertiesMixin:
                     ]
 
         # Check .gbk map
-        if self.map_gbk and self.map_gbk != getattr(saved_obj.map_gbk, "map_gbk", None):
+        if self.map_gbk and self.map_gbk.name != getattr(
+            getattr(saved_obj, "map_gbk", None), "name", None
+        ):
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
             if self.map_gbk.size > file_size_limit:
                 errors["map_gbk"] = errors.get("map_gbk", []) + [
