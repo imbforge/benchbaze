@@ -418,8 +418,8 @@ class MapFileCheckPropertiesMixin:
                     ]
 
         # Check if both .dna and .gbk maps are changed at the same time
-        map_dna = getattr(self, "map", None)
-        map_gbk = getattr(self, "map_gbk", None)
+        map_dna = getattr(getattr(self, "map", None), "name", "")
+        map_gbk = getattr(getattr(self, "map_gbk", None), "name", "")
         error_message = (
             f"You cannot {'add' if not self.pk else 'change'} both a .dna and a .gbk map "
             "at the same time. Please choose only one."
@@ -433,8 +433,8 @@ class MapFileCheckPropertiesMixin:
 
         # For existing records, check if both maps are changed at the same time
         else:
-            saved_dna_map = saved_obj.map.name if saved_obj.map.name else None
-            saved_gbk_map = saved_obj.map_gbk.name if saved_obj.map_gbk.name else None
+            saved_dna_map = getattr(getattr(saved_obj, "map", None), "name", "")
+            saved_gbk_map = getattr(getattr(saved_obj, "map_gbk", None), "name", "")
 
             if map_dna != saved_dna_map and map_gbk != saved_gbk_map:
                 show_both_map_error = True
