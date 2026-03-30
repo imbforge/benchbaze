@@ -27,3 +27,4 @@ django-modelclone @git+https://github.com/al-beton/django-modelclone/
 djangorestframework
 reportlab
 biopython
+sgffp
