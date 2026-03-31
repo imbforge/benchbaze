@@ -17,23 +17,24 @@ class ContentTypeFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         """Show only models for which records to be approved exist"""
 
-        list_of_models = []
-        for content_type_id in (
+        # Get content types for which approvals exist, and show them in order of model name
+        approval_ct_ids = (
             Approval.objects.all()
             .values_list("content_type__id", "content_type__model")
             .distinct()
             .order_by("content_type__model")
             .values_list("content_type__id", flat=True)
-        ):
-            content_type_obj = ContentType.objects.get(id=content_type_id)
-            list_of_models.append(
-                (
-                    str(content_type_id),
-                    capfirst(content_type_obj.model_class()._meta.verbose_name),
-                )
+        )
+        # Get the content type names for the content type ids, and return as choices for the filter
+        return tuple(
+            (
+                str(ct_id),
+                capfirst(
+                    ContentType.objects.get(id=ct_id).model_class()._meta.verbose_name
+                ),
             )
-
-        return tuple(list_of_models)
+            for ct_id in approval_ct_ids
+        )
 
     def queryset(self, request, queryset):
         """
