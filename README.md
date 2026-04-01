@@ -17,18 +17,28 @@ The server listens on port `3000` by default (override with the `PORT` environme
 
 Send a GET request with the following query parameters:
 
-| Parameter | Description |
-|---|---|
-| `plasmidFilePath` | Path to the GenBank (`.gbk`) file to render |
-| `plasmidTitle` | Name used for the plasmid and the downloaded filename |
+| Parameter | Required | Description |
+|---|---|---|
+| `mapDnaPath` | Yes | Path to the DNA map file to render (`.gbk`, `.gb`, or `.dna`) |
+| `plasmidTitle` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
 
-**Example:**
+**Supported file formats:** GenBank (`.gb`, `.gbk`) and SnapGene (`.dna`).
+
+**Example**
 
 ```bash
-curl http://localhost:3000/?plasmidFilePath=src/pHU6066.gbk&plasmidTitle=pHU6066
+curl http://localhost:3000/?mapDnaPath=src/pHU6066.gbk&plasmidTitle=pHU6066
 ```
 
 The response is an SVG file downloaded as `<plasmidTitle>.html`.
+
+### Error responses
+
+| Status | Cause |
+|---|---|
+| 400 | `mapDnaPath` parameter missing or file extension not supported |
+| 404 | File not found at the given path |
+| 500 | Parse failure or render error (response body contains the specific error message) |
 
 ## Running as a service
 
