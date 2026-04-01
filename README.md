@@ -7,9 +7,9 @@ An Express server renders the `CircularView` React component to an HTML string v
 ## Setup
 
 1. `cd` into this directory
-2. Run `npm install`
-3. Run `npm run build`
-4. Run `npm start`
+2. Run `yarn install`
+3. Run `yarn build`
+4. Run `yarn start`
 
 The server listens on port `3000` by default (override with the `PORT` environment variable).
 
@@ -24,8 +24,8 @@ Send a GET request with the following query parameters:
 
 **Example:**
 
-```
-http://localhost:3000/?plasmidFilePath=src/pHU6066.gbk&plasmidTitle=pHU6066
+```bash
+curl http://localhost:3000/?plasmidFilePath=src/pHU6066.gbk&plasmidTitle=pHU6066
 ```
 
 The response is an SVG file downloaded as `<plasmidTitle>.html`.
@@ -40,12 +40,6 @@ The server can be run as a systemd service directly or via PM2 (which may offer 
 node ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
 ```
 
-**PM2**
-
-```bash
-npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
-```
-
 **systemd unit file**
 
 ```ini
@@ -55,13 +49,18 @@ After=syslog.target network-online.target
 
 [Service]
 ExecStart=${NODE_BIN}/node ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
-#ExecStart=${NODE_BIN}/npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
 Type=exec
 User=www-data
 Group=www-data
 
 [Install]
 WantedBy=multi-user.target
+```
+
+**PM2**
+
+```bash
+npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
 ```
 
 ## Notes
