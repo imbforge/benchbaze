@@ -7,9 +7,9 @@ An Express server renders the `CircularView` React component to an HTML string v
 ## Setup
 
 1. `cd` into this directory
-2. Run `npm install`
-3. Run `npm run build`
-4. Run `npm start`
+2. Run `yarn install`
+3. Run `yarn build`
+4. Run `yarn start`
 
 The server listens on port `3000` by default (override with the `PORT` environment variable).
 
@@ -17,18 +17,28 @@ The server listens on port `3000` by default (override with the `PORT` environme
 
 Send a GET request with the following query parameters:
 
-| Parameter | Description |
+| Parameter | Required | Description |
+|---|---|---|
+| `path` | Yes | Path to the DNA map file to render (`.gbk`, `.gb`, or `.dna`) |
+| `title` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
+
+**Supported file formats:** GenBank (`.gb`, `.gbk`) and SnapGene (`.dna`).
+
+**Example**
+
+```bash
+curl http://localhost:3000/?path=src/pHU6066.gbk&title=pHU6066
+```
+
+The response is an SVG file downloaded as `<title>.html`.
+
+### Error responses
+
+| Status | Cause |
 |---|---|
-| `plasmidFilePath` | Path to the GenBank (`.gbk`) file to render |
-| `plasmidTitle` | Name used for the plasmid and the downloaded filename |
-
-**Example:**
-
-```
-http://localhost:3000/?plasmidFilePath=src/pHU6066.gbk&plasmidTitle=pHU6066
-```
-
-The response is an SVG file downloaded as `<plasmidTitle>.html`.
+| 400 | `path` parameter missing or file extension not supported |
+| 404 | File not found at the given path |
+| 500 | Parse failure or render error (response body contains the specific error message) |
 
 ## Running as a service
 
@@ -40,12 +50,6 @@ The server can be run as a systemd service directly or via PM2 (which may offer 
 node ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
 ```
 
-**PM2**
-
-```bash
-npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
-```
-
 **systemd unit file**
 
 ```ini
@@ -55,7 +59,6 @@ After=syslog.target network-online.target
 
 [Service]
 ExecStart=${NODE_BIN}/node ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
-#ExecStart=${NODE_BIN}/npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
 Type=exec
 User=www-data
 Group=www-data
@@ -63,6 +66,21 @@ Group=www-data
 [Install]
 WantedBy=multi-user.target
 ```
+
+**PM2**
+
+```bash
+npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js --name "map-dna-svg-converter"
+```
+
+To make PM2 restore the process automatically after a server reboot:
+
+```bash
+pm2 save       # snapshot the current process list
+pm2 startup    # install a systemd unit to restore the snapshot on boot
+```
+
+`pm2 startup` prints a `sudo` command — copy and run it to complete the setup. If you later change which processes should autostart, run `pm2 save` again.
 
 ## Notes
 
