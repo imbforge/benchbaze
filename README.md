@@ -19,24 +19,24 @@ Send a GET request with the following query parameters:
 
 | Parameter | Required | Description |
 |---|---|---|
-| `mapDnaPath` | Yes | Path to the DNA map file to render (`.gbk`, `.gb`, or `.dna`) |
-| `mapDnaTitle` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
+| `path` | Yes | Path to the DNA map file to render (`.gbk`, `.gb`, or `.dna`) |
+| `title` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
 
 **Supported file formats:** GenBank (`.gb`, `.gbk`) and SnapGene (`.dna`).
 
 **Example**
 
 ```bash
-curl http://localhost:3000/?mapDnaPath=src/pHU6066.gbk&mapDnaTitle=pHU6066
+curl http://localhost:3000/?path=src/pHU6066.gbk&title=pHU6066
 ```
 
-The response is an SVG file downloaded as `<mapDnaTitle>.html`.
+The response is an SVG file downloaded as `<title>.html`.
 
 ### Error responses
 
 | Status | Cause |
 |---|---|
-| 400 | `mapDnaPath` parameter missing or file extension not supported |
+| 400 | `path` parameter missing or file extension not supported |
 | 404 | File not found at the given path |
 | 500 | Parse failure or render error (response body contains the specific error message) |
 

@@ -15,13 +15,13 @@ const SUPPORTED_EXTENSIONS = ["gb", "gbk", "dna"];
 
 app.get("/", async (req, res) => {
   try {
-    const mapDnaPath = req.query.mapDnaPath;
+    const mapDnaPath = req.query.path;
 
     // Validate required parameter
     if (!mapDnaPath) {
       return res
         .status(400)
-        .send("Missing required query parameter: mapDnaPath");
+        .send("Missing required query parameter: path");
     }
 
     // Validate file extension
@@ -68,8 +68,8 @@ app.get("/", async (req, res) => {
     const mapDnaJson = tidyUpSequenceData(parsedResults[0]["parsedSequence"]);
 
     // Set plasmid name
-    mapDnaJson.name = req.query.mapDnaTitle
-      ? req.query.mapDnaTitle
+    mapDnaJson.name = req.query.title
+      ? req.query.title
       : mapDnaJson.name || "Untitled Plasmid";
 
     // Remove features that do not need to be shown, ever!
@@ -106,7 +106,7 @@ app.get("/", async (req, res) => {
 
     // Download file rather than displaying it
     res.attachment(
-      `${req.query.mapDnaTitle ? req.query.mapDnaTitle : "plasmid"}.html`,
+      `${req.query.title ? req.query.title : "plasmid"}.html`,
     );
     res.type("html");
 
