@@ -11,5 +11,5 @@ This directory is maintained as a Git subtree in the main BenchBaze repository.
 Run from repository root:
 
 ```bash
-git subtree pull --prefix=collection/shared/map_dna/viewer https://github.com/imbforge/benchbaze-map-dna-svg-converter.git main
+git subtree pull --prefix=collection/shared/map_dna/svg_converter https://github.com/imbforge/benchbaze-map-dna-svg-converter.git main
 ```
