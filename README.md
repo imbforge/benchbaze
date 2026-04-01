@@ -20,17 +20,17 @@ Send a GET request with the following query parameters:
 | Parameter | Required | Description |
 |---|---|---|
 | `mapDnaPath` | Yes | Path to the DNA map file to render (`.gbk`, `.gb`, or `.dna`) |
-| `plasmidTitle` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
+| `mapDnaTitle` | No | Name used for the plasmid and the downloaded filename (defaults to `plasmid`) |
 
 **Supported file formats:** GenBank (`.gb`, `.gbk`) and SnapGene (`.dna`).
 
 **Example**
 
 ```bash
-curl http://localhost:3000/?mapDnaPath=src/pHU6066.gbk&plasmidTitle=pHU6066
+curl http://localhost:3000/?mapDnaPath=src/pHU6066.gbk&mapDnaTitle=pHU6066
 ```
 
-The response is an SVG file downloaded as `<plasmidTitle>.html`.
+The response is an SVG file downloaded as `<mapDnaTitle>.html`.
 
 ### Error responses
 

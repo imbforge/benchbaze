@@ -68,8 +68,8 @@ app.get("/", async (req, res) => {
     const mapDnaJson = tidyUpSequenceData(parsedResults[0]["parsedSequence"]);
 
     // Set plasmid name
-    mapDnaJson.name = req.query.plasmidTitle
-      ? req.query.plasmidTitle
+    mapDnaJson.name = req.query.mapDnaTitle
+      ? req.query.mapDnaTitle
       : mapDnaJson.name || "Untitled Plasmid";
 
     // Remove features that do not need to be shown, ever!
@@ -106,7 +106,7 @@ app.get("/", async (req, res) => {
 
     // Download file rather than displaying it
     res.attachment(
-      `${req.query.plasmidTitle ? req.query.plasmidTitle : "plasmid"}.html`,
+      `${req.query.mapDnaTitle ? req.query.mapDnaTitle : "plasmid"}.html`,
     );
     res.type("html");
 
