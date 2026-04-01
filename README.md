@@ -70,8 +70,17 @@ WantedBy=multi-user.target
 **PM2**
 
 ```bash
-npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js
+npx pm2 start ${BENCHBAZE_HOME}/collection/shared/map_dna/svg_converter/build/server.js --name "map-dna-svg-converter"
 ```
+
+To make PM2 restore the process automatically after a server reboot:
+
+```bash
+pm2 save       # snapshot the current process list
+pm2 startup    # install a systemd unit to restore the snapshot on boot
+```
+
+`pm2 startup` prints a `sudo` command — copy and run it to complete the setup. If you later change which processes should autostart, run `pm2 save` again.
 
 ## Notes
 
