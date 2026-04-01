@@ -6,6 +6,7 @@ import fs from "fs";
 import { anyToJson } from "@teselagen/bio-parsers";
 import { tidyUpSequenceData } from "ve-sequence-utils";
 
+
 import App from "../src/App";
 
 const PORT = process.env.PORT || 3000;
@@ -42,14 +43,9 @@ app.get("/", async (req, res) => {
 
     let mapDnaData = fs.readFileSync(resolvedPath);
 
-    // For GenBank files, the parser expects a string input, so convert the buffer to string
-    if (["gb", "gbk"].includes(fileType)) {
-      mapDnaData = mapDnaData.toString();
-    }
-
     // Parse the input file to extract sequence data
-    // anyToJson must be used here because it is an async function
-    const parsedResults = await anyToJson(mapDnaData, { mapDnaPath });
+    // anyToJson handles all formats and is async
+    let parsedResults = await anyToJson({ buffer: mapDnaData }, { fileName: resolvedPath });
 
     if (!parsedResults || parsedResults.length === 0) {
       return res
