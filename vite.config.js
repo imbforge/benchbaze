@@ -1,8 +1,12 @@
+import { defineConfig } from "vite"; // Add this import
 import react from "@vitejs/plugin-react";
-import path from "path";
 
-export default {
+export default defineConfig({ // Wrap with defineConfig
+  base: "./",
   plugins: [react()],
+  build: {
+    outDir: "dist"
+  },
   optimizeDeps: {
     esbuildOptions: {
       loader: {
@@ -15,4 +19,4 @@ export default {
     // necessary for segment analytics lib to work
     // global: {},
   },
-};
+});
