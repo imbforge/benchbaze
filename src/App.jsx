@@ -1,5 +1,4 @@
 import React from "react";
-import { Editor, updateEditor } from "@teselagen/ove";
 import store from "./store";
 import {
   DownloadDropdownWithSvg,
@@ -7,6 +6,11 @@ import {
 } from "./BenchBazeMapViewerUtils";
 
 import "./App.css";
+
+const oveModulePromise = import("@teselagen/ove");
+const Editor = React.lazy(() =>
+  oveModulePromise.then((module) => ({ default: module.Editor })),
+);
 
 function App() {
   // Get GET parameters from url and store them in a variable
@@ -20,11 +24,24 @@ function App() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    let isMounted = true;
+
+    // Start downloading the heavy editor module as soon as the view mounts.
+    // This keeps lazy loading benefits while reducing wait time before first render.
+    void oveModulePromise;
+
     //useEffect doesn't like top level async functions so we define one inline and immediately invoke it
     (async () => {
-      // Get plasmid as OVE JSON
-      const seqData = await convertPlasmiMapToOveJson(fileName, fileFormat);
-      setLoading(false);
+      // Get plasmid data and editor module in parallel to reduce startup latency.
+      const [seqData, oveModule] = await Promise.all([
+        convertPlasmiMapToOveJson(fileName, fileFormat),
+        oveModulePromise,
+      ]);
+      if (!isMounted || !seqData) {
+        return;
+      }
+
+      const { updateEditor } = oveModule;
       seqData.name = title;
       const plasmidLength = seqData.size;
 
@@ -52,7 +69,13 @@ function App() {
           translations: !showOligos,
         },
       });
+
+      setLoading(false);
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [title, fileName]);
 
   const editorProps = {
@@ -98,7 +121,9 @@ function App() {
 
   return !loading ? (
     <div>
-      <Editor {...editorProps} />
+      <React.Suspense fallback={<div></div>}>
+        <Editor {...editorProps} />
+      </React.Suspense>
     </div>
   ) : (
     <div></div>

@@ -1,6 +1,5 @@
 import React from "react";
 import { Menu, MenuItem } from "@blueprintjs/core";
-import { anyToJson } from "@teselagen/bio-parsers";
 import { svgStylePropsToExport } from "./styleProperties";
 
 function sanitizeFileName(name) {
@@ -293,6 +292,7 @@ export function DownloadDropdownWithSvg(props) {
 }
 
 export async function convertPlasmiMapToOveJson(fileName, fileFormat) {
+  const { anyToJson } = await import("@teselagen/bio-parsers");
   let data = await fetch(
     new Request(fileName, {
       //probably don't need this header.. fetch should just work
