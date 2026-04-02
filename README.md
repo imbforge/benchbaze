@@ -1,18 +1,11 @@
 
 # BenchBaze - DNA Map Viewer
 
-This is a DNA map viewer based on [Teselagen's Open Vector Editor (OVE)](https://github.com/TeselaGen/tg-oss/tree/master/packages/ove), adapted for BenchBaze.
+This is a DNA map viewer based on [Teselagen's Open Vector Editor (OVE)](https://github.com/TeselaGen/tg-oss/tree/master/packages/ove), adapted for, and integrated in, [BenchBaze](https://github.com/imbforge/benchbaze).
 
 It loads a DNA map file from a URL supplied by BenchBaze, parses it and renders it.
 
-## What It Does
-
-- Loads DNA map data from a URL provided via query parameters
-- Parses sequence content via `@teselagen/bio-parsers`
-- Renders maps with `@teselagen/ove`
-- Provides a custom download menu with an option to download the original map file or export the current view as SVG/HTML
-
-## Getting Started
+## Setup
 
 1. Install dependencies:
 
@@ -32,9 +25,11 @@ yarn build
 yarn start
 ```
 
-## URL Parameters
+The server listens on port `5173` by default.
 
-The app is configured via query parameters:
+## Usage
+
+Send a GET request with the following query parameters:
 
 | Parameter     | Required | Description                                                    |
 |---------------|----------|----------------------------------------------------------------|
