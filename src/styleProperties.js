@@ -53,5 +53,5 @@ export const svgStylePropsToExport = [
   "width",
   "word-break",
   "-webkit-box-orient",
-  "-webkit-line-clamp",
+  "-webkit-line-clamp"
 ];

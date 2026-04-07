@@ -1,4 +1,3 @@
-
 //optionally connect to the redux store
 import { createStore, combineReducers, applyMiddleware, compose } from "redux";
 import { tg_modalState } from "@teselagen/ui";
