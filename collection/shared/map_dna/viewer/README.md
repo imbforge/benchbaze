@@ -1,71 +1,51 @@
 
-# Plasmid viewer for the lab database of the Ulrich lab @ IMB Mainz
+# BenchBaze - DNA Map Viewer
 
-This project is forked from <https://github.com/tnrich/ove-react-demo-repo> to implement changes that meet the needs of the lab database of the Ulrich lab @ IMB Mainz (<https://github.com/helle-ulrich-lab/organisation-intranet>).
+This is a DNA map viewer based on [Teselagen's Open Vector Editor (OVE)](https://github.com/TeselaGen/tg-oss/tree/master/packages/ove), adapted for, and integrated in, [BenchBaze](https://github.com/imbforge/benchbaze).
 
-# Available Scripts
+It loads a DNA map file from a URL supplied by BenchBaze, parses it and renders it.
 
-In the project directory, you can run:
+## Setup
 
-### `yarn start`
+1. Install dependencies:
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+yarn install
+```
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+2. Build the app
 
-### `yarn test`
+```bash
+yarn build
+```
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. Optionally, start the development server for testing:
 
-### `yarn build`
+```bash
+yarn start
+```
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The server listens on port `5173` by default.
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+## Usage
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Send a GET request with the following query parameters:
 
-### `yarn eject`
+| Parameter     | Required | Description                                                    |
+|---------------|----------|----------------------------------------------------------------|
+| `file_name`   | Yes      | URL/path to the sequence file to fetch                         |
+| `file_format` | Yes      | Parser hint used in the app (`gbk` or `dna`)                   |
+| `title`       | No       | Display name shown in the editor and used for export filenames |
+| `show_oligos` | No       | If present, primers are shown and translations are hidden      |
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Example:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```text
+http://localhost:5173/?file_name=https://example.org/plasmids/pABC123.gbk&file_format=gbk&title=pABC123
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Notes
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `yarn build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+- At the moment, the viewer is read-only (`readOnly: true` in editor config).
+- The toolbar includes tools for cut sites, features, oligos, ORFs, visibility, and find.
+- Full-length generic annotations with these names are filtered out before rendering: `synthetic dna construct`, `recombinant plasmid`, `source`.

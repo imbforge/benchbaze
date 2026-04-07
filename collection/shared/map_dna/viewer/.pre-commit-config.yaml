@@ -1,0 +1,43 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+default_language_version:
+  python: python3.11
+repos:
+  - repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        types:
+          - python
+      - id: end-of-file-fixer
+        types:
+          - python
+      - id: check-yaml
+        types:
+          - yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+        types:
+          - python
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.2
+    hooks:
+      - id: ruff-format
+        args: [--target-version, py311]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.0
+    hooks:
+      - id: pyupgrade
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.15.0
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "4.2"]
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v4.0.0-alpha.8"
+    hooks:
+      - id: prettier
+        args: [--trailing-comma, none, --no-error-on-unmatched-pattern]
+        types_or: [json, css, javascript, vue]
+        language_version: 20.11.0

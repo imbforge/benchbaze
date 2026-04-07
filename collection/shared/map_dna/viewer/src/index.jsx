@@ -2,9 +2,6 @@ import "./shimGlobal"
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import {
-  Loading
-} from "@teselagen/ui";
 
 import store from "./store";
 import "./index.css";
@@ -15,7 +12,6 @@ import * as serviceWorker from "./serviceWorker";
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <Loading />
       <App />
     </Provider>
   </React.StrictMode>,
