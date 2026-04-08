@@ -4,7 +4,8 @@ logs/
 temp/
 db_backup/
 private_settings*.py
-others/
+.local
+.local/
 .vscode/
 .vscode
 others
