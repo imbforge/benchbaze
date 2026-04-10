@@ -28,3 +28,4 @@ djangorestframework
 reportlab
 biopython
 sgffp
+numpy==1.26.4
