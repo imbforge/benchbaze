@@ -1,9 +1,6 @@
-import os
-
 from django.conf import settings
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from django.utils.html import format_html
 
 from common.admin import (
@@ -18,7 +15,6 @@ from ..shared.admin import (
     CustomGuardedModelAdmin,
     LocationInline,
     SortAutocompleteResultsId,
-    convert_map_gbk_to_dna,
     create_map_preview,
 )
 from .forms import WormStrainAlleleAdminForm
@@ -241,134 +237,8 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
     def has_module_permission(self, request):
         return False
 
-    def save_model(self, request, obj, form, change):
-        rename_and_preview = False
-        self.rename_and_preview = False
-        new_obj = False
-        self.new_obj = False
-        self.clear_sequence_features = False
-        convert_map_to_dna = False
-
-        if obj.pk is None:
-            obj.id = (
-                self.model.objects.order_by("-id").first().id + 1
-                if self.model.objects.exists()
-                else 1
-            )
-            obj.created_by = request.user
-            obj.save()
-            new_obj = True
-            self.new_obj = True
-
-            # If an object is 'Saved as new', clear all form Z elements
-            if "_saveasnew" in request.POST and (obj.map or obj.map_gbk):
-                self.clear_sequence_features = True
-
-            # Check if a map is present and if so trigger functions to create a
-            # map preview and delete the resulting duplicate history record
-            if obj.map:
-                rename_and_preview = True
-                self.rename_and_preview = True
-            elif obj.map_gbk:
-                rename_and_preview = True
-                self.rename_and_preview = True
-                convert_map_to_dna = True
-
-        else:
-            # Check if the request's user can change the object, if not raise PermissionDenied
-
-            saved_obj = self.model.objects.get(pk=obj.pk)
-
-            if obj.map != saved_obj.map or obj.map_gbk != saved_obj.map_gbk:
-                if (obj.map and obj.map_gbk) or (
-                    not saved_obj.map and not saved_obj.map_gbk
-                ):
-                    rename_and_preview = True
-                    self.rename_and_preview = True
-                    obj.save_without_historical_record()
-
-                    if obj.map_gbk != saved_obj.map_gbk:
-                        convert_map_to_dna = True
-
-                else:
-                    obj.map.name = ""
-                    obj.map_png.name = ""
-                    obj.map_gbk.name = ""
-                    self.clear_sequence_features = True
-                    obj.save()
-
-            else:
-                obj.save()
-
-        # Rename map
-        if rename_and_preview:
-            timestamp = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
-            new_file_name = f"{self.model._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{obj.id}_{timestamp}"
-
-            new_dna_file_name = os.path.join(
-                self.model._model_upload_to, "dna/", new_file_name + ".dna"
-            )
-            new_gbk_file_name = os.path.join(
-                self.model._model_upload_to, "gbk/", new_file_name + ".gbk"
-            )
-            new_png_file_name = os.path.join(
-                self.model._model_upload_to, "png/", new_file_name + ".png"
-            )
-
-            new_dna_file_path = os.path.join(MEDIA_ROOT, new_dna_file_name)
-            new_gbk_file_path = os.path.join(MEDIA_ROOT, new_gbk_file_name)
-
-            if convert_map_to_dna:
-                old_gbk_file_path = obj.map_gbk.path
-                os.rename(old_gbk_file_path, new_gbk_file_path)
-                try:
-                    convert_map_gbk_to_dna(new_gbk_file_path, new_dna_file_path)
-                except Exception:
-                    messages.error(
-                        request, "There was an error with converting the map to .gbk."
-                    )
-            else:
-                old_dna_file_path = obj.map.path
-                os.rename(old_dna_file_path, new_dna_file_path)
-
-            obj.map.name = new_dna_file_name
-            obj.map_png.name = new_png_file_name
-            obj.map_gbk.name = new_gbk_file_name
-            obj.save()
-
-            # For new records, delete first history record, which contains the unformatted
-            # map name, and change the newer history record's history_type from changed (~)
-            # to created (+). This gets rid of a duplicate history record created when
-            # automatically generating a map name
-            if new_obj:
-                obj.history.last().delete()
-                history_obj = obj.history.first()
-                history_obj.history_type = "+"
-                history_obj.save()
-
-            # For map, detect common features and save as png
-            try:
-                detect_common_features_map_dna = request.POST.get(
-                    "detect_common_features_map", False
-                )
-                detect_common_features_map_gbk = request.POST.get(
-                    "detect_common_features_map_gbk", False
-                )
-                detect_common_features = (
-                    True
-                    if (
-                        detect_common_features_map_dna or detect_common_features_map_gbk
-                    )
-                    else False
-                )
-                create_map_preview(
-                    obj, detect_common_features, prefix=obj.lab_identifier
-                )
-            except Exception:
-                messages.error(
-                    request,
-                    "There was an error detecting common features and/or saving the map preview",
-                )
+    def _save_model_approval(self, request, obj, new_obj):
+        return None
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

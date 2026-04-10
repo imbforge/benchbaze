@@ -2,13 +2,13 @@ import os
 
 from django.conf import settings
 from django.contrib import admin, messages
+from django.core.mail import mail_admins
+from django.shortcuts import render
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
-from common.admin import (
-    AddDocFileInlineMixin,
-    DocFileInlineMixin,
-)
+from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 from formz.models import SequenceFeature
 
 from ..shared.admin import (
@@ -18,9 +18,6 @@ from ..shared.admin import (
     CustomGuardedModelAdmin,
     LocationInline,
     SortAutocompleteResultsId,
-    convert_map_gbk_to_dna,
-    create_map_preview,
-    get_map_features,
 )
 from .models import PlasmidDoc
 from .search import PlasmidQLSchema
@@ -29,6 +26,20 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 DEFAULT_ECOLI_STRAIN_IDS = getattr(settings, "DEFAULT_ECOLI_STRAIN_IDS", [])
 PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
+
+
+def mail_map_dna_processing_error(
+    map_path, function_name="", error_message="", request=None
+):
+    mail_admins(
+        "DNA map processing error",
+        "There was an error with creating the preview"
+        f"for {map_path} with snapgene server.\n\n"
+        f"Function: {function_name}\n"
+        f"Errors: {error_message}.\n"
+        f"Request info:\n{request.META if request else 'None'}",
+        fail_silently=True,
+    )
 
 
 class PlasmidDocInline(DocFileInlineMixin):
@@ -49,49 +60,8 @@ class PlasmidAdmin(
     CollectionUserProtectionAdmin,
     AdminOligosInMap,
 ):
-    djangoql_schema = PlasmidQLSchema
-    inlines = [
-        LocationInline,
-        AddLocationInline,
-        PlasmidDocInline,
-        PlasmidAddDocInline,
-    ]
-    change_form_template = "admin/collection/plasmid/change_form.html"
-    add_form_template = "admin/collection/plasmid/change_form.html"
-
-    def save_model(self, request, obj, form, change):
-        rename_and_preview = False
-        self.rename_and_preview = False
-        new_obj = False
-        self.new_obj = False
-        self.clear_sequence_features = False
-        convert_map_to_dna = False
-
-        if obj.pk is None:
-            obj.id = (
-                self.model.objects.order_by("-id").first().id + 1
-                if self.model.objects.exists()
-                else 1
-            )
-            obj.created_by = request.user
-            obj.save()
-            new_obj = True
-            self.new_obj = True
-
-            # If a plasmid is 'Saved as new', clear all form Z elements
-            if "_saveasnew" in request.POST and (obj.map or obj.map_gbk):
-                self.clear_sequence_features = True
-
-            # Check if a map is present and if so trigger functions to create a plasmid
-            # map preview and delete the resulting duplicate history record
-            if obj.map:
-                rename_and_preview = True
-                self.rename_and_preview = True
-            elif obj.map_gbk:
-                rename_and_preview = True
-                self.rename_and_preview = True
-                convert_map_to_dna = True
-
+    def _save_model_approval(self, request, obj, new_obj):
+        if new_obj:
             # If the request's user is the principal investigator, approve the record
             # right away. If not, create an approval record
             if (
@@ -109,7 +79,6 @@ class PlasmidAdmin(
                 )
             else:
                 obj.approval.create(activity_type="created", activity_user=request.user)
-
         else:
             # Check if the disapprove button was clicked. If so, and no approval
             # record for the object exists, create one
@@ -125,10 +94,11 @@ class PlasmidAdmin(
                     self.model.objects.filter(id=obj.pk).update(
                         last_changed_date_time=original_last_changed_date_time
                     )
-                return
-
-            # Approve right away if the request's user is the principal investigator. If not,
-            # create an approval record
+                return "disapproved"
+            # Approve right away if the request's user is the principal investigator or is
+            # a project leader for one of the FormZ projects associated with the object.
+            # If not, create an approval record if one does not already exist, or update
+            # the existing approval record's edited field if a message was sent
             if (
                 request.user.is_pi
                 and request.user.id
@@ -142,11 +112,9 @@ class PlasmidAdmin(
                 if obj.approval.all().exists():
                     approval_records = obj.approval.all()
                     approval_records.delete()
-
             else:
                 obj.last_changed_approval_by_pi = False
                 obj.approval_user = None
-
                 # If an approval record for this object does not exist, create one
                 if not obj.approval.all().exists():
                     obj.approval.create(
@@ -161,100 +129,120 @@ class PlasmidAdmin(
                             approval_obj.edited = True
                             approval_obj.save()
 
+        return None
+
+    def _save_model_map_preview(self, request, obj, prefix=""):
+        detect_common_features = request.POST.get(
+            "detect_common_features"
+        ) or request.POST.get("detect_common_features")
+        detect_common_features = bool(detect_common_features)
+        # create_map_preview(obj, detect_common_features, prefix=prefix)
+
+    def _save_model(self, request, obj, form, change):
+        rename_and_preview = False
+        self.rename_and_preview = False
+        new_obj = False
+        self.new_obj = False
+        self.clear_sequence_features = False
+
+        # New objects
+        if obj.pk is None:
+            obj.id = (
+                self.model.objects.order_by("-id").first().id + 1
+                if self.model.objects.exists()
+                else 1
+            )
+            obj.created_by = request.user
+            obj.save()
+            new_obj = True
+            self.new_obj = True
+
+            # If object is 'Saved as new', clear all form Z elements
+            if "_saveasnew" in request.POST and obj.map_dna:
+                self.clear_sequence_features = True
+
+            # If a map is present, enable renaming and previewing after initial save
+            if obj.map_dna:
+                rename_and_preview = True
+                self.rename_and_preview = True
+
+            # Approval logic for new objects
+            self._save_model_approval(request, obj, new_obj=True)
+
+        # Existing objects
+        else:
+            # Approval logic for existing objects
+            approval = self._save_model_approval(request, obj, new_obj=False)
+
+            if approval == "disapproved":
+                return
+
             saved_obj = self.model.objects.get(pk=obj.pk)
 
-            if obj.map != saved_obj.map or obj.map_gbk != saved_obj.map_gbk:
-                if (obj.map and obj.map_gbk) or (
-                    not saved_obj.map and not saved_obj.map_gbk
-                ):
+            # If the map has changed to...
+            if obj.map_dna.name != saved_obj.map_dna.name:
+                # A new map: enable renaming and previewing after save
+                if obj.map_dna:
                     rename_and_preview = True
                     self.rename_and_preview = True
                     obj.save_without_historical_record()
-
-                    if obj.map_gbk != saved_obj.map_gbk:
-                        convert_map_to_dna = True
-
+                # No map: clear sequence features
                 else:
-                    obj.map.name = ""
-                    obj.map_png.name = ""
-                    obj.map_gbk.name = ""
                     self.clear_sequence_features = True
                     obj.save()
-
             else:
                 obj.save()
 
         # Rename map
-        if rename_and_preview:
-            now = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
-            new_file_name = (
-                f"{obj._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{obj.id}_{now}"
-            )
-
+        if rename_and_preview and getattr(obj, "map_dna", None):
+            old_dna_file_path = obj.map_dna.path
+            map_ext = os.path.splitext(old_dna_file_path)[1].lower()
+            timestamp = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
             new_dna_file_name = os.path.join(
-                obj._model_upload_to + "dna/", new_file_name + ".dna"
+                self.model._model_upload_to + "map_dna/",
+                f"{self.model._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{obj.id}_{timestamp}{map_ext}",
             )
-            new_gbk_file_name = os.path.join(
-                obj._model_upload_to + "gbk/", new_file_name + ".gbk"
-            )
-            new_png_file_name = os.path.join(
-                obj._model_upload_to + "png/", new_file_name + ".png"
-            )
-
             new_dna_file_path = os.path.join(MEDIA_ROOT, new_dna_file_name)
-            new_gbk_file_path = os.path.join(MEDIA_ROOT, new_gbk_file_name)
-
-            if convert_map_to_dna:
-                old_gbk_file_path = obj.map_gbk.path
-                os.rename(old_gbk_file_path, new_gbk_file_path)
-                try:
-                    convert_map_gbk_to_dna(new_gbk_file_path, new_dna_file_path)
-                except Exception:
-                    messages.error(
-                        request,
-                        "There was an error with converting the map to .gbk.",
-                    )
-            else:
-                old_dna_file_path = obj.map.path
-                os.rename(old_dna_file_path, new_dna_file_path)
-
-            obj.map.name = new_dna_file_name
-            obj.map_png.name = new_png_file_name
-            obj.map_gbk.name = new_gbk_file_name
+            os.rename(old_dna_file_path, new_dna_file_path)
+            obj.map_dna.name = new_dna_file_name
             obj.save()
 
-            # For new records, delete first history record, which contains the unformatted
-            # map name, and change the newer history record's history_type from changed (~)
-            # to created (+). This gets rid of a duplicate history record created when
-            # automatically generating a map name
+            # For new records
+            # 1) delete first history record, which contains the unformatted map name
+            # 2) change the newest history record's history_type from changed (~) to created (+)
+            # This removes the duplicate history record created when automatically generating a map name
             if new_obj:
                 obj.history.last().delete()
                 history_obj = obj.history.first()
                 history_obj.history_type = "+"
                 history_obj.save()
 
-            # For map, detect common features and save as png
+            # Map preview
             try:
-                detect_common_features_map_dna = request.POST.get(
-                    "detect_common_features_map", False
-                )
-                detect_common_features_map_gbk = request.POST.get(
-                    "detect_common_features_map_gbk", False
-                )
-                detect_common_features = (
-                    True
-                    if (
-                        detect_common_features_map_dna or detect_common_features_map_gbk
-                    )
-                    else False
-                )
-                create_map_preview(obj, detect_common_features)
+                self._save_model_map_preview(request, obj)
             except Exception:
                 messages.error(
                     request,
-                    "There was an error with detection of common features and/or saving of "
-                    "the map preview",
+                    "There was an error detecting common features and/or saving the map preview",
                 )
+
+    djangoql_schema = PlasmidQLSchema
+    inlines = [
+        LocationInline,
+        AddLocationInline,
+        PlasmidDocInline,
+        PlasmidAddDocInline,
+    ]
+    change_form_template = "admin/collection/plasmid/change_form.html"
+    add_form_template = "admin/collection/plasmid/change_form.html"
+
+    def save_model(self, request, obj, form, change):
+        self._save_model(
+            request,
+            obj,
+            form,
+            change,
+        )
 
     def save_related(self, request, form, formsets, change):
         self.redirect_to_obj_page = False
@@ -263,18 +251,24 @@ class PlasmidAdmin(
 
         obj = self.model.objects.get(pk=form.instance.id)
 
-        # If a map is provided, automatically add those features
-        # for which a corresponding sequence feature is present
-        # in the database
+        # If needed, clear sequence features
         if self.clear_sequence_features:
             obj.sequence_features.clear()
 
+        # If needed, add map features to sequence features, and display a warning message
+        # if any map features could not be added
         if self.rename_and_preview or "_redetect_sequence_features" in request.POST:
             unknown_feat_name_list = []
             try:
-                feature_names = get_map_features(obj)
-            except Exception:
+                feature_names = obj.get_map_dna_feature_names()
+            except Exception as e:
                 messages.error(request, "There was an error getting your map features")
+                mail_map_dna_processing_error(
+                    getattr(self.map_dna, "path", "unknown"),
+                    "get_map_dna_feature_names",
+                    str(e),
+                    request=request,
+                )
                 feature_names = []
 
             if not self.new_obj:
@@ -334,7 +328,7 @@ class PlasmidAdmin(
         # as these will likely not be relevant for the new object
         if (
             getattr(obj, "cloned", False)
-            and (obj.map or obj.map_gbk)
+            and obj.map_dna
             and obj.sequence_features.exists()
         ):
             obj.sequence_features.clear()
@@ -379,3 +373,23 @@ class PlasmidAdmin(
             if "storage_type" in form.base_fields and PLASMID_STORAGE_TYPE:
                 form.base_fields["storage_type"].initial = PLASMID_STORAGE_TYPE
         return form
+
+    def get_urls(self):
+        return [
+            path(
+                "<path:object_id>/map_dna_static_preview/",
+                self.admin_site.admin_view(self.map_dna_static_preview),
+                name=f"map_dna_static_preview_{self.model._meta.model_name}",
+            )
+        ] + super().get_urls()
+
+    def map_dna_static_preview(self, request, *args, **kwargs):
+        # Render with admin context for styling
+
+        obj = self.model.objects.get(pk=kwargs["object_id"])
+
+        return render(
+            request,
+            "admin/collection/shared/map_dna_svg_preview.html",
+            context={"object": obj},
+        )

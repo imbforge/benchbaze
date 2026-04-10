@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Map Preview</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .svg-wrap {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .svg-wrap svg {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+    }
+
+    .print-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      border: 1px solid #c7c7c7;
+      border-radius: 4px;
+      background: #fff;
+      color: #222;
+      padding: 8px 12px;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      font-weight: bolder;
+      font-size: 1.5rem;
+    }
+
+    .print-btn:hover {
+      background: #f3f3f3;
+    }
+
+    @media print {
+      @page {
+        margin: 0;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      .svg-wrap,
+      .svg-wrap * {
+        visibility: visible;
+      }
+
+      .svg-wrap {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="print-btn" type="button" onclick="downloadHtml()" title="Download SVG preview">⭳</button>
+  <div class='svg-wrap'>{{ object.convert_map_dna_to_svg|safe }}</div>
+
+  <script>
+    function downloadHtml() {
+      const clonedDoc = document.documentElement.cloneNode(true);
+      const button = clonedDoc.querySelector(".print-btn");
+      if (button) {
+        button.remove();
+      }
+
+      const html = "<!DOCTYPE html>\n" + clonedDoc.outerHTML;
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "{{object.full_title}} (map preview).html";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+
+</html>

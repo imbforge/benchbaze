@@ -1,37 +1,89 @@
 .find-oligo {
-    background: var(--object-tools-bg);
-    color: var(--object-tools-fg);
-    font-weight: 400;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-radius: 15px;
-    padding: 3px 5px 3px 12px;
+  background: var(--object-tools-bg);
+  color: var(--object-tools-fg);
+  font-weight: 400;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 15px;
+  padding: 3px 5px 3px 12px;
 }
 
 @media (max-width: 767px) {
-
-    .find-oligo {
-        margin-left: 15px
-    }
-
+  .find-oligo {
+    margin-left: 15px;
+  }
 }
 
 .find-oligo * {
-    display: inline-block;
+  display: inline-block;
 }
-
 
 .find-oligo a {
-    float: right !important;
-    padding: 0px 4px !important;
-    margin: 0px 2px;
+  float: right !important;
+  padding: 0px 4px !important;
+  margin: 0px 2px;
 }
 
-.find-oligo a:focus, a:hover, a:visited {
-    color: var(--object-tools-fg);
+.find-oligo a:focus,
+.find-oligo a:hover,
+.find-oligo a:visited {
+  color: var(--object-tools-fg);
 }
 
 .find-oligo a:hover {
-    cursor: pointer;
+  cursor: pointer;
+}
+
+body.bb-admin-modal-open {
+  overflow: hidden;
+}
+
+.bb-admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 16px;
+}
+
+.bb-admin-modal {
+  width: min(460px, 100%);
+  background: var(--body-bg);
+  color: var(--body-fg);
+  border: 1px solid var(--hairline-color);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  padding: 20px;
+}
+
+.bb-admin-modal-title {
+  margin: 0;
+  color: var(--header-link-color);
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.bb-admin-modal-text {
+  margin: 10px 0 0;
+}
+
+.bb-admin-modal-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .bb-admin-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .bb-admin-modal-actions .button {
+    width: 100%;
+  }
 }

@@ -84,19 +84,10 @@ class Plasmid(
         max_length=20,
         blank=False,
     )
-    map = models.FileField(
-        "Map (.dna)",
-        help_text=f"only SnapGene .dna files, max. {FILE_SIZE_LIMIT_MB} MB",
-        upload_to=_model_upload_to + "dna/",
-        blank=True,
-    )
-    map_png = models.ImageField(
-        "Map image", upload_to=_model_upload_to + "png/", blank=True
-    )
-    map_gbk = models.FileField(
-        "Map (.gbk)",
-        upload_to=_model_upload_to + "gbk/",
-        help_text=f"only .gbk or .gb files, max. {FILE_SIZE_LIMIT_MB} MB",
+    map_dna = models.FileField(
+        "Map",
+        help_text=f"Only GenBank (.gb, .gbk) or SnapGene (.dna) files, max. {FILE_SIZE_LIMIT_MB} MB",
+        upload_to=_model_upload_to + "map_dna/",
         blank=True,
     )
     vector_zkbs = models.ForeignKey(
@@ -144,9 +135,7 @@ class Plasmid(
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
         + BaseCollectionModel._history_view_ignore_fields
-        + ["map_png", "map_gbk"]
     )
-    _unified_map_field = True
     _show_formz = True
     german_name = "Plasmid"
     _representation_field = "name"
@@ -183,7 +172,7 @@ class Plasmid(
         "received_from",
         "note",
         "reference",
-        "map",
+        "map_dna",
         "created_date_time",
         "created_by",
         "locations",
@@ -196,7 +185,7 @@ class Plasmid(
         },
         "dehydrate_methods": dict(),
     }
-    _clone_ignore_fields = ["map", "map_gbk", "map_png", "destroyed_date"]
+    _clone_ignore_fields = ["map_dna", "destroyed_date"]
     _obj_unmodifiable_fields = [
         "created_date_time",
         "created_approval_by_pi",
@@ -215,9 +204,7 @@ class Plasmid(
         "note",
         "reference",
         "storage_type",
-        "map",
-        "map_png",
-        "map_gbk",
+        "map_dna",
         "formz_projects",
         "formz_risk_group",
         "vector_zkbs",
@@ -226,32 +213,33 @@ class Plasmid(
         "formz_ecoli_strains",
         "destroyed_date",
     ]
-    _set_readonly_fields = [
-        "map_png",
-    ]
+    formz_projects_idx = _obj_specific_fields.index("formz_projects")
     _add_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:11] + _obj_specific_fields[12:13]},
+            {"fields": _obj_specific_fields[:formz_projects_idx]},
         ],
         [
             "FormZ",
             {
                 "classes": tuple(),
-                "fields": _obj_specific_fields[13:],
+                "fields": _obj_specific_fields[formz_projects_idx:],
             },
         ],
     ]
     _change_view_fieldsets = [
         [
             None,
-            {"fields": _obj_specific_fields[:13] + _obj_unmodifiable_fields},
+            {
+                "fields": _obj_specific_fields[:formz_projects_idx]
+                + _obj_unmodifiable_fields
+            },
         ],
         [
             "FormZ",
             {
                 "classes": (("collapse",)),
-                "fields": _obj_specific_fields[13:],
+                "fields": _obj_specific_fields[formz_projects_idx:],
             },
         ],
     ]
@@ -274,7 +262,7 @@ class Plasmid(
 
     @property
     def all_plasmids_with_maps(self):
-        if self.map:
+        if self.map_dna:
             return [self]
         else:
             return []

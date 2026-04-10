@@ -103,19 +103,10 @@ class WormStrainAllele(
         blank=True,
     )
     notes = models.TextField("notes", blank=True)
-    map = models.FileField(
-        "map (.dna)",
-        help_text=f"only SnapGene .dna files, max. {FILE_SIZE_LIMIT_MB} MB",
-        upload_to=_model_upload_to + "dna/",
-        blank=True,
-    )
-    map_png = models.ImageField(
-        "map (.png)", upload_to=_model_upload_to + "png/", blank=True
-    )
-    map_gbk = models.FileField(
-        "Map (.gbk)",
-        upload_to=_model_upload_to + "gbk/",
-        help_text=f"only .gbk or .gb files, max. {FILE_SIZE_LIMIT_MB} MB",
+    map_dna = models.FileField(
+        "Map",
+        help_text=f"Only GenBank (.gb, .gbk) or SnapGene (.dna) files, max. {FILE_SIZE_LIMIT_MB} MB",
+        upload_to=_model_upload_to + "map_dna/",
         blank=True,
     )
     sequence_features = models.ManyToManyField(
@@ -158,10 +149,7 @@ class WormStrainAllele(
         "history_transgene_plasmids": "collection.Plasmid",
         "history_documents": "collection.WormStrainAlleleDoc",
     }
-    _history_view_ignore_fields = BaseCollectionModel._history_view_ignore_fields + [
-        "map_png",
-        "map_gbk",
-    ]
+    _history_view_ignore_fields = BaseCollectionModel._history_view_ignore_fields
     _list_display_links = ["id"]
     _representation_field = "name"
     _search_fields = ["id", "mutation", "transgene"]
@@ -224,18 +212,13 @@ class WormStrainAllele(
         "made_by_person",
         "made_with_plasmids",
         "notes",
-        "map",
-        "map_png",
-        "map_gbk",
+        "map_dna",
         "sequence_features",
     ]
     _obj_unmodifiable_fields = [
         "created_date_time",
         "last_changed_date_time",
         "created_by",
-    ]
-    _set_readonly_fields = [
-        "map_png",
     ]
 
     # Methods
@@ -616,9 +599,12 @@ class WormStrain(
         """Returns all plasmids and alleles with a map"""
 
         return list(
-            self.alleles.all().distinct().exclude(map="").order_by("id")
+            self.alleles.all().distinct().exclude(map_dna="").order_by("id")
         ) + list(
-            self.integrated_dna_plasmids.all().distinct().exclude(map="").order_by("id")
+            self.integrated_dna_plasmids.all()
+            .distinct()
+            .exclude(map_dna="")
+            .order_by("id")
         )
 
     @property

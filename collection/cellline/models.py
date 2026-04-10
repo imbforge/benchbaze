@@ -271,7 +271,7 @@ class CellLine(
         return (
             (self.integrated_plasmids.all() | self.episomal_plasmids.all())
             .distinct()
-            .exclude(map="")
+            .exclude(map_dna="")
             .order_by("id")
         )
 

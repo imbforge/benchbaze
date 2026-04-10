@@ -50,11 +50,11 @@
             {% block userlinks %}
                 {% settings_value "DOCS_URL" as DOCS_URL %}
                 {% if DOCS_URL %}
-                <a href="{{ DOCS_URL }}" target="_blank" title="Documentation"><img class='icon-svg' src="{% static 'admin/icons/book-svgrepo-com.svg' %}" alt="{% translate 'Documentation' %}"></a> /
+                <a href="{{ DOCS_URL }}" target="_blank" title="Documentation"><img class='bb-icon-svg' src="{% static 'admin/icons/book-svgrepo-com.svg' %}" alt="{% translate 'Documentation' %}"></a> /
                 {% endif %}
                 {% settings_value "SUPPORT_TICKET_URL" as SUPPORT_TICKET_URL %}
                 {% if SUPPORT_TICKET_URL %}
-                <a href="{{ SUPPORT_TICKET_URL }}" title="{% translate 'Submit a support ticket' %}" target="_blank"><img class='icon-svg' src="{% static 'admin/icons/bug-svgrepo-com.svg' %}" alt="{% translate 'Support Ticket' %}"></a> /
+                <a href="{{ SUPPORT_TICKET_URL }}" title="{% translate 'Submit a support ticket' %}" target="_blank"><img class='bb-icon-svg' src="{% static 'admin/icons/bug-svgrepo-com.svg' %}" alt="{% translate 'Support Ticket' %}"></a> /
                 {% endif %}
                 {% if user.is_active and user.is_staff %}
                     {% url 'django-admindocs-docroot' as docsroot %}
@@ -67,7 +67,7 @@
                 {% endif %}
                 <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
                     {% csrf_token %}
-                    <button type="submit" title="{% translate 'Log out' %}"><img class='icon-svg' src="{% static 'admin/icons/logout-svgrepo-com.svg' %}" alt="{% translate 'Log out' %}"></button>
+                    <button type="submit" title="{% translate 'Log out' %}"><img class='bb-icon-svg' src="{% static 'admin/icons/logout-svgrepo-com.svg' %}" alt="{% translate 'Log out' %}"></button>
                 </form>
                 {% include "admin/color_theme_toggle.html" %}
             {% endblock %}

@@ -266,8 +266,6 @@ class DownloadFileNameMixin:
 class HistoryFieldMixin(models.Model):
     """Common history field"""
 
-    _unified_map_field = False
-
     class Meta:
         abstract = True
 
@@ -396,8 +394,7 @@ class HistoryFieldMixin(models.Model):
                     field = self._meta.get_field(change.field)
 
                     # Prettify DNA map field name
-                    if self._unified_map_field and field.name.startswith("map"):
-                        field.verbose_name = field.verbose_name.replace(" (.dna)", "")
+                    if field.name == "map_dna":
                         field.prettify_map_path = True
 
                     field_change = FieldChange(

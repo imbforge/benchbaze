@@ -1,5 +1,9 @@
-.icon-svg {
+.bb-icon-svg {
   height: 0.8rem;
   width: auto;
   vertical-align: -0.15rem;
+}
+
+.bb-nowrap {
+  white-space: nowrap;
 }

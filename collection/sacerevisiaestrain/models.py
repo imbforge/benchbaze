@@ -328,7 +328,7 @@ class SaCerevisiaeStrain(
                 | self.cassette_plasmids.all()
             )
             .distinct()
-            .exclude(map="")
+            .exclude(map_dna="")
             .order_by("id")
         )
 

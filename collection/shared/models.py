@@ -1,4 +1,5 @@
 import base64
+import os
 from io import BytesIO, StringIO
 from urllib.parse import urlencode
 
@@ -14,6 +15,8 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
+import requests
+
 
 from approval.models import Approval
 from common.actions import export_action_tsv, export_action_xlsx
@@ -305,7 +308,7 @@ class InfoSheetMaxSizeMixin:
 
             # Check if file's extension is '.pdf'
             try:
-                info_sheet_ext = self.info_sheet.name.split(".")[-1].lower()
+                info_sheet_ext = os.path.splitext(self.info_sheet.name)[1].lower()
             except Exception:
                 info_sheet_ext = None
             if info_sheet_ext is None or info_sheet_ext != "pdf":
@@ -354,94 +357,51 @@ class MapFileCheckPropertiesMixin:
         )
 
         file_size_limit = FILE_SIZE_LIMIT_MB * 1024 * 1024
+        valid_extensions = [".dna", ".gbk", ".gb"]
 
+        # Get the saved object from the database to compare file fields and only validate
+        # if the file has changed, avoiding unnecessary validation
         saved_obj = None
         if self.pk is not None:
             saved_obj = self.__class__.objects.get(id=self.pk)
 
-        # Check .dna map
-        if self.map and self.map.name != getattr(
-            getattr(saved_obj, "map", None), "name", None
+        # Check if map_dna file is changed, if so, validate the new file.
+        if self.map_dna and self.map_dna.name != getattr(
+            getattr(saved_obj, "map_dna", None), "name", None
         ):
             # Check if file is bigger than FILE_SIZE_LIMIT_MB
-            if self.map.size > file_size_limit:
-                errors["map"] = errors.get("map", []) + [
+            if self.map_dna.size > file_size_limit:
+                errors["map_dna"] = errors.get("map_dna", []) + [
                     f"The map is too large. Size cannot exceed {FILE_SIZE_LIMIT_MB} MB."
                 ]
 
-            # Check if file's extension is dna
+            # Check file extension is valid
             try:
-                map_ext = self.map.name.split(".")[-1].lower()
+                map_ext = os.path.splitext(self.map_dna.name)[1].lower()
             except Exception:
                 map_ext = None
-            if map_ext is None or map_ext != "dna":
-                errors["map"] = errors.get("map", []) + [
-                    "Invalid file format. Please select a valid SnapGene .dna file"
+            if map_ext is None or map_ext not in valid_extensions:
+                errors["map_dna"] = errors.get("map_dna", []) + [
+                    f"Invalid file format. Allowed extensions are: {', '.join(valid_extensions)}"
                 ]
             else:
                 try:
-                    # Check if .dna file is a real SnapGene file
-                    self.map.open("rb")  # Ensure file handle is open
-                    SeqIO.read(BytesIO(self.map.read()), "snapgene")
+                    self.map_dna.open("rb")  # Ensure file handle is open
+                    # If the file extension is .dna, check if it's a valid SnapGene file
+                    if map_ext == ".dna":
+                        # Check if .dna file is a real SnapGene file
+                        SeqIO.read(BytesIO(self.map_dna.read()), "snapgene")
+                    # If it is .gbk, check if it's a valid GenBank file.
+                    elif map_ext in [".gbk", ".gb"]:
+                        SeqIO.read(
+                            StringIO(self.map_dna.read().decode("utf-8")), "genbank"
+                        )
+                    else:
+                        raise ValidationError("Unsupported file extension.")
                 except Exception as e:
-                    errors["map"] = errors.get("map", []) + [
-                        f"Invalid file format. Please select a valid SnapGene .dna file. Error: {e}"
+                    errors["map_dna"] = errors.get("map_dna", []) + [
+                        f"Invalid file format. Please select a valid {map_ext} file. Error: {e}"
                     ]
-
-        # Check .gbk map
-        if self.map_gbk and self.map_gbk.name != getattr(
-            getattr(saved_obj, "map_gbk", None), "name", None
-        ):
-            # Check if file is bigger than FILE_SIZE_LIMIT_MB
-            if self.map_gbk.size > file_size_limit:
-                errors["map_gbk"] = errors.get("map_gbk", []) + [
-                    f"The map is too large. Size cannot exceed {FILE_SIZE_LIMIT_MB} MB."
-                ]
-
-            # Check if file's extension is gbk or gb
-            try:
-                map_ext = self.map_gbk.name.split(".")[-1].lower()
-            except Exception:
-                map_ext = None
-            if map_ext is None or map_ext not in ["gbk", "gb"]:
-                errors["map_gbk"] = errors.get("map_gbk", []) + [
-                    "Invalid file format. Please select a valid GenBank (.gbk or .gb) file"
-                ]
-            else:
-                # Check if .gbk file is a real GenBank
-                try:
-                    self.map_gbk.open("rb")
-                    SeqIO.read(StringIO(self.map_gbk.read().decode("utf-8")), "genbank")
-                except Exception as e:
-                    errors["map_gbk"] = errors.get("map_gbk", []) + [
-                        f"Invalid file format. Please select a valid GenBank (.gbk or .gb) file. Error: {e}"
-                    ]
-
-        # Check if both .dna and .gbk maps are changed at the same time
-        map_dna = getattr(getattr(self, "map", None), "name", "")
-        map_gbk = getattr(getattr(self, "map_gbk", None), "name", "")
-        error_message = (
-            f"You cannot {'add' if not self.pk else 'change'} both a .dna and a .gbk map "
-            "at the same time. Please choose only one."
-        )
-        show_both_map_error = False
-
-        # For new records, check if both maps are provided
-        if not self.pk:
-            if map_dna and map_gbk:
-                show_both_map_error = True
-
-        # For existing records, check if both maps are changed at the same time
-        else:
-            saved_dna_map = getattr(getattr(saved_obj, "map", None), "name", "")
-            saved_gbk_map = getattr(getattr(saved_obj, "map_gbk", None), "name", "")
-
-            if map_dna != saved_dna_map and map_gbk != saved_gbk_map:
-                show_both_map_error = True
-
-        if show_both_map_error:
-            errors["map"] = errors.get("map", []) + [error_message]
-            errors["map_gbk"] = errors.get("map_gbk", []) + [error_message]
 
         return errors
 
@@ -465,21 +425,9 @@ class MapFileCheckPropertiesMixin:
         """Returns the url to view the a SnapGene file in OVE"""
 
         params = {
-            "file_name": self.map.url,
-            "title": f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.__str__()}",
+            "file_name": self.map_dna.url,
+            "title": self.full_title,
             "file_format": "dna",
-        }
-
-        return f"{OVE_URL}?{urlencode(params)}"
-
-    @property
-    def map_ove_url_gbk(self):
-        """Returns the url to view the a gbk file in OVE"""
-
-        params = {
-            "file_name": self.map_gbk.url,
-            "title": f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.__str__()}",
-            "file_format": "gbk",
         }
 
         return f"{OVE_URL}?{urlencode(params)}"
@@ -491,27 +439,171 @@ class MapFileCheckPropertiesMixin:
 
         params = {
             "file_name": f"/{self._meta.app_label}/{self._meta.model_name}/{self.pk}/find_oligos/",
-            "title": f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.__str__()} (imported oligos)",
+            "title": f"{self.full_title} (imported oligos)",
             "file_format": "gbk",
             "show_oligos": "true",
         }
 
         return f"{OVE_URL}?{urlencode(params)}"
 
+    @property
+    def full_title(self):
+        """Returns the full title for the map, used in OVE and as alt text for the image"""
+
+        return f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.__str__()}"
+
     def map_formatted(self):
-        if self.map:
-            ove_dna_preview = self.map_ove_url
-            ove_gbk_preview = self.map_ove_url_gbk
+        if self.map_dna:
             return mark_safe(
-                f'<a class="magnific-popup-img-map" href="{self.map_png.url}">png</a> | '
-                + f'<a href="{self.map.url}">dna</a> <a class="magnific-popup-iframe-map-dna" href="{ove_dna_preview}">⊙</a> | '
-                + f'<a href="{self.map_gbk.url}">gbk</a> <a class="magnific-popup-iframe-map-gbk" href="{ove_gbk_preview}">⊙</a>'
+                f'<a class="magnific-popup-iframe-map-dna" title="Map viewer" href="{self.map_ove_url}">⦾</a>'
             )
         else:
             return ""
 
     map_formatted.short_description = "Map"
     map_formatted.field_type = "FileField"
+
+    # Get features from dna_map
+
+    def _feature_label(self, feature):
+        """Prefer label-like qualifiers when available, then fall back to feature type."""
+
+        # Check common label-like qualifiers in order of preference, returning the first one found
+        for key in ("label", "gene", "locus_tag", "note"):
+            value = feature.qualifiers.get(key)
+            if value:
+                return str(value[0]).strip()
+        return feature.type
+
+    def _extract_location_bounds(self, location):
+        """Return (start, end, strand_symbol) for a location, merging parts if needed."""
+
+        if location is None:
+            return None
+
+        # If the location has multiple parts (e.g. from a join), take the min start and max
+        # end across all parts
+        parts = getattr(location, "parts", None)
+        if parts and len(parts) > 1:
+            start = min(int(part.start) for part in parts)
+            end = max(int(part.end) for part in parts)
+            strand = location.strand
+            if strand is None:
+                for part in parts:
+                    if part.strand is not None:
+                        strand = part.strand
+                        break
+        # If the location has no parts, just take its start and end
+        else:
+            start = int(location.start)
+            end = int(location.end)
+            strand = location.strand
+        # Convert strand to symbol to be descriptive
+        strand_symbol = {1: "+", -1: "-"}.get(strand, "?")
+        return (start, end, strand_symbol)
+
+    def _feature_bounds(self, feature):
+        """Return (start, end, strand_symbol) for a feature's location, merging parts if needed."""
+        return self._extract_location_bounds(feature.location)
+
+    def _is_ignored_feature(self, feature):
+        label = self._feature_label(feature).strip().lower()
+        ftype = feature.type.strip().lower()
+        return label == "source" or ftype == "source" or ftype == "primer_bind"
+
+    def get_map_dna_record(self):
+        """Returns a SeqRecord object for the map_dna file, or None if not available or invalid"""
+        if not self.map_dna:
+            return None
+        try:
+            name = self.map_dna.name.lower()
+            if name.endswith(".dna"):
+                return SeqIO.read(self.map_dna.path, "snapgene")
+            elif name.endswith((".gbk", ".gb")):
+                return SeqIO.read(self.map_dna.path, "genbank")
+        except Exception:
+            return None
+
+    def get_map_dna_simple_features(self):
+        """Returns a list of features in the map_dna file, with each feature represented
+        as a tuple of
+
+        (label, type, (start, end, strand_symbol))
+
+        The start and end positions are merged across all parts of the feature if it has
+        multiple parts (e.g. from a join). Strand is represented as '+' for forward, '-'
+        for reverse, and '?' for unknown or mixed."""
+
+        record = self.get_map_dna_record()
+
+        if record is None:
+            return []
+
+        return [
+            (self._feature_label(f), f.type, self._extract_location_bounds(f.location))
+            for f in record.features
+            if not self._is_ignored_feature(f)
+        ]
+
+    def get_map_dna_feature_names(self):
+        """Return the names of the features in the map_dna file"""
+
+        features = self.get_map_dna_simple_features()
+        feature_names = [feature[0].strip() for feature in features]
+        return feature_names
+
+    def _covert_map_dna_to_dict(self):
+        """Convert the map_dna file to a dictionary format that can be used in the frontend"""
+
+        record = self.get_map_dna_record()
+        if record is None:
+            return {}
+
+        return {
+            "id": record.id,
+            "name": record.name,
+            "description": record.description,
+            "sequence": str(record.seq),
+            "features": [
+                {
+                    "type": f.type,
+                    "location": [
+                        (int(p.start), int(p.end), p.strand) for p in f.location.parts
+                    ]
+                    if hasattr(f.location, "parts")
+                    else (
+                        int(f.location.start),
+                        int(f.location.end),
+                        f.location.strand,
+                    ),
+                    "qualifiers": f.qualifiers,
+                }
+                for f in record.features
+            ],
+            "annotations": record.annotations,
+        }
+
+    def convert_map_dna_to_svg(self):
+        """Convert the map_dna file to svg format for display in the frontend"""
+
+        if not self.map_dna:
+            raise Exception("No map file available to convert")
+
+        # Get the map_dna file as an SVG string from the conversion service
+        response = requests.get(
+            "http://localhost:3000",
+            params={
+                "path": self.map_dna.path,
+                "title": self.full_title,
+            },
+        )
+
+        if response.status_code == 200:
+            return response.text
+        else:
+            raise Exception(
+                f"Failed to convert the map to SVG. Response: {response.text}"
+            )
 
 
 class CommonCollectionModelPropertiesMixin:

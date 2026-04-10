@@ -1,0 +1,49 @@
+{% extends "admin/collection/change_form.html" %}
+{% load i18n static admin_urls %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/vendor/magnific-popup.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/custom_style_magnific-popup.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/spinner_loader.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/collection_plasmid_change_form.css" %}">
+{% block map_dna_extrastyle %}{% endblock %}
+{% endblock %}
+
+
+{% block extra-object-tools-items %}
+{{ block.super }}
+
+{% block map_dna_extra_object_tools_before %}{% endblock %}
+
+  {% if original.map_dna %}
+    <li>
+      <div class="find-oligo">
+        <div>{% trans "Find Oligos" %}</div>
+        <a title='Download result as .dna file' style="pointer-events: all;"
+          onclick="downloadMapWithImportedOligos(event)" download_url="{% url "admin:app_list" app_label %}{{opts.model_name}}/{{object_id}}/find_oligos/?file_format=dna">🠇</a>
+        <a title='View result in OVE' style='margin-left:5px' class="magnific-popup-iframe-findoligos"
+          href="{{original.find_oligos_map_gbk_ove_url}}">⊙</a>
+      </div>
+    </li>
+  {% endif %}
+
+{% block map_dna_extra_object_tools_after %}{% endblock %}
+{% endblock %}
+
+
+{% block admin_change_form_document_ready %}
+  {{ block.super }}
+  {% block map_dna_document_ready_pre_scripts %}{% endblock %}
+  <script type="text/javascript" src="{% static 'admin/js/admin/ShowLoading.js' %}"></script>
+  <script type="text/javascript" src="{% static 'admin/js/admin/map_dna_change_form.js' %}"></script>
+  {% block map_dna_change_form_script %}{% endblock %}
+  <script type="text/javascript" src="{% static 'admin/js/vendor/jquery.magnific-popup.min.js' %}"></script>
+  <script type="text/javascript">
+    const MagnificiFrameClassIds = ['magnific-popup-iframe-map-dna', "magnific-popup-iframe-findoligos"];
+    {% if original.map_dna %} const oveUrls = {map_dna: "{{original.map_ove_url}}"}; {% else %} const oveUrls = {}; {% endif %}
+    {% block map_dna_document_ready_inline %}{% endblock %}
+  </script>
+  <script type="text/javascript" src="{% static 'admin/js/admin/MagnificPopUpiFrame.js' %}"></script>
+  {% block map_dna_document_ready_post_scripts %}{% endblock %}
+{% endblock %}
