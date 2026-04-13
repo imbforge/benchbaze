@@ -1,0 +1,15 @@
+name: plannotate
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - pandas=1.5.3
+  - biopython
+  - pyyaml  
+  - curl
+  - ripgrep
+  - blast=2.16.0
+  - diamond=2.1.10
+  - trnascan-se=2.0.12

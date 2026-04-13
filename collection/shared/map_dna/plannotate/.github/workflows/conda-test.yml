@@ -1,0 +1,55 @@
+name: Conda test
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: setup miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-update-conda: true
+        channels: conda-forge
+        channel-priority: strict
+        environment-file: environment.yml
+        activate-environment: plannotate
+        use-only-tar-bz2: true # Needed for osx-64 compatibility
+        miniforge-variant: Miniforge3
+        conda-solver: libmamba
+        architecture: x86_64  # Force x86_64 architecture instead of arm64
+
+    - name: get conda info
+      shell: bash -l {0}
+      run: |
+          conda info
+          conda list
+
+    - name: get plannotate dbs
+      shell: bash -l {0}
+      run: |
+        python -c "from plannotate.resources import download_databases; download_databases()"
+
+    - name: Install pytest
+      shell: bash -l {0}
+      run: |
+        conda install pytest
+
+    - name: pytest
+      shell: bash -l {0}    
+      run: |
+        pytest --version
+        pytest
