@@ -82,7 +82,7 @@ def BLAST(seq, db):
 
         return inDf
 
-    with open(tmp.name, "r") as file_handle:  # opens BLAST file
+    with open(tmp.name) as file_handle:  # opens BLAST file
         align = file_handle.readlines()
 
     tmp.close()
@@ -254,9 +254,9 @@ def get_details(inDf, yaml_file_loc):
     # loop through databases
     databases = rsc.get_yaml(yaml_file_loc)
 
-    assert len(set(inDf["db"].to_list())) == 1, (
-        "All hits must be from the same database"
-    )
+    assert (
+        len(set(inDf["db"].to_list())) == 1
+    ), "All hits must be from the same database"
     database_name = inDf["db"].to_list()[0]
 
     database = databases[database_name]

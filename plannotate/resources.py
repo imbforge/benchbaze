@@ -300,7 +300,7 @@ def get_clean_csv_df(recordDf):
 
 def get_yaml(yaml_file_loc):
     # file_name = get_resource("data", "databases.yml")
-    with open(yaml_file_loc, "r") as f:
+    with open(yaml_file_loc) as f:
         dbs = yaml.load(f, Loader=yaml.SafeLoader)
 
     # collapes list

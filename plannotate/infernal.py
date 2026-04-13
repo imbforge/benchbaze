@@ -3,7 +3,6 @@ import pandas as pd
 
 
 def parse_infernal(file_loc):
-
     with open(file_loc) as file_handle:
         lines = file_handle.readlines()
 

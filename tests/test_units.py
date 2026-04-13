@@ -46,7 +46,7 @@ def test_get_template():
 
 def test_get_fasta():
     # TODO: this is a hack -- fix it
-    current_dir = Path((os.path.abspath(__file__))).parent.parent
+    current_dir = Path(os.path.abspath(__file__)).parent.parent
 
     fasta_loc = str(current_dir / "plannotate" / "data" / "fastas")
     assert resources.get_example_fastas() == fasta_loc
@@ -66,9 +66,15 @@ def test_get_yaml():
     assert len(yaml) > 0
 
     first_key = list(yaml.keys())[0]
-    expected_fields = set(
-        ("version", "method", "location", "priority", "parameters", "details", "db_loc")
-    )
+    expected_fields = {
+        "version",
+        "method",
+        "location",
+        "priority",
+        "parameters",
+        "details",
+        "db_loc",
+    }
     assert set(yaml[first_key].keys()) == expected_fields
 
 
@@ -161,7 +167,7 @@ def test_validate_file_all_fasta_extensions(ext):
 def test_validate_file_bad_extension():
     input_file = "tests/test_data/pAdDeltaF6.txt"
     name, ext = resources.get_name_ext(input_file)
-    with pytest.raises(ValueError, match = "must be a FASTA or GenBank file"):
+    with pytest.raises(ValueError, match="must be a FASTA or GenBank file"):
         _ = resources.validate_file(input_file, ext)
 
 
