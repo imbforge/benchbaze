@@ -70,10 +70,6 @@ pure-eval==0.2.3
     # via stack-data
 pygments==2.19.1
     # via ipython
-python-dateutil==2.9.0.post0
-    # via jupyter-client
-pyyaml==6.0.2
-    # via pre-commit
 stack-data==0.6.3
     # via ipython
 tornado==6.4.2
