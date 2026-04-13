@@ -9,8 +9,8 @@ except ImportError:
 import click
 import yaml
 
-from plannotate import resources as rsc
-from plannotate.annotate import annotate
+from . import resources as rsc
+from .annotate import annotate
 
 
 # possible file structure for better containment
@@ -193,7 +193,7 @@ def main_batch(**kwargs):
             handle.write(gbk)
 
     if kwargs["html"] or kwargs["htmlfull"]:
-        from plannotate.bokeh_plot import get_bokeh
+        from .bokeh_plot import get_bokeh
         from bokeh.embed import file_html
         from bokeh.resources import CDN, INLINE
 
@@ -220,7 +220,7 @@ def main_batch(**kwargs):
 
 
 def streamlit_run():
-    from plannotate.streamlit_app import run_streamlit
+    from .streamlit_app import run_streamlit
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--yaml_file")

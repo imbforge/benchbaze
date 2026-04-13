@@ -3,10 +3,10 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from typing import Literal
 import io
 from pydantic import BaseModel
-from plannotate.annotate import annotate
+from .annotate import annotate
 from Bio.SeqIO import read
-from plannotate import resources as rsc
-from plannotate import __version__ as version
+from . import resources as rsc
+from . import __version__ as version
 import os
 
 MAX_SEQUENCE_LENGTH = (

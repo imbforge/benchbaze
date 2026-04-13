@@ -10,7 +10,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from plannotate import __version__ as plannotate_version
+from . import __version__ as plannotate_version
 
 from . import resources as rsc
 from .annotate import annotate
