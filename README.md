@@ -1,181 +1,64 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![Python 3](https://img.shields.io/badge/Language-Python_3-steelblue.svg)
-[![DOI](https://zenodo.org/badge/DOI/10.1093/nar/gkab374.svg)](https://doi.org/10.1093/nar/gkab374)
-[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/plannotate/README.html)
+# BenchBaze - DNA Annotation Module
 
+This DNA map annotation tool based on [pLannotate](https://github.com/mmcguffi/pLannotate), adapted for, and integrated in, [BenchBaze](https://github.com/imbforge/benchbaze).
 
-<img width="400" alt="pLannotate_logo" src="plannotate/data/images/pLannotate.png">
+It provides functions to annotate DNA sequences and export the results in BenchBaze.
 
-Online Annotation
-=================
+## Setup
 
-pLannotate is web server for automatically annotating engineered plasmids.
-
-Please visit http://plannotate.barricklab.org/
-
-
-Local Installation
-==================
-To use pLannotate as a local server or a command line tool, please follow the installation instructions below.
-### Quick install
-
-The easiest way to install is via [conda](https://docs.conda.io/en/latest/), or for faster installation, [mamba](https://github.com/mamba-org/mamba):
+1. Create and activate an environment.
 
 ```bash
-conda create -n plannotate -c conda-forge -c bioconda plannotate
-```
-or
-```bash
-mamba create -n plannotate -c conda-forge -c bioconda plannotate
-```
-
-Then activate the `plannotate` conda environment (`conda activate plannotate`) and proceed with using pLannotate (see **Using pLannotate locally** below).
-
-
-### Installing from source
-Installing from source also requires conda (or mamba), therefore the above method is recommended. If you still wish to install from source, download the compressed source code from the [releases](https://github.com/barricklab/pLannotate/releases) page. Uncompress the source code and move the directory to a location of your choice.
-
-On the command line, navigate into the `pLannotate` folder.
-
-Enter the following commands:
-```
 conda env create -f environment.yml
 conda activate plannotate
+```
+
+2. Install the package.
+
+```bash
 python setup.py install
 ```
 
-After installation, run the following command to download the database files:
-```
-plannotate setupdb
-```
+3. Download the annotation databases (required).
 
-Using pLannotate locally
-=====
-### Local server (GUI)
-
-After installation, launch pLannotate as a local web server with:
-```
-plannotate streamlit
+```bash
+python -c "from plannotate import resources; resources.download_databases()"
 ```
 
-pLannotate should launch in your default web browser, or you may simply navigate to http://localhost:8501 in your web browser.
+## Usage
 
-### Command Line Interface (batch mode)
-
-To annotate FASTA or GenBank files and generate the interactive plasmid maps on the command line,
-follow the above instructions to install pLannotate.
-
-We can check the options using the following command:
-
-`plannotate batch --help`
-
-```
-Usage: plannotate batch [OPTIONS]
-
-  Annotates engineered DNA sequences, primarily plasmids. Accepts a FASTA file
-  and outputs a gbk file with annotations, as well as an optional interactive
-  plasmid map as an HTLM file.
-
-Options:
-  -i, --input TEXT      location of a FASTA or GBK file
-  -o, --output TEXT     location of output folder. DEFAULT: current dir
-  -f, --file_name TEXT  name of output file (do not add extension). DEFAULT:
-                        input file name
-
-  -s, --suffix TEXT     suffix appended to output files. Use '' for no suffix.
-                        DEFAULT: '_pLann'
-
-  -y, --yaml_file TEXT  path to YAML file for custom databases. DEFAULT:
-                        builtin
-
-  -l, --linear          enables linear DNA annotation
-  -h, --html            creates an html plasmid map in specified path
-  -c, --csv             creates a cvs file in specified path
-  -d, --detailed        uses modified algorithm for a more-detailed search
-                        with more false positives
-
-  -x, --no_gbk          supresses GenBank output file
-  --help                Show this message and exit.
-  ```
-
-Example usage:
-```
-plannotate batch -i ./plannotate/data/fastas/pUC19.fa --html --output ~/Desktop/ --file_name pLasmid
-```
-
-Custom databases can be added by supplying pLannotate a custom YAML file. To create the default YAML file, enter the following command:
-```
-plannotate yaml > plannotate_default.yaml
-```
-
-This configuration file can be edited to point to other external databases that you wish to use. When launching pLannotate, you can specify the path to your custom YAML file using the `--yaml_file` option. 
-
-### Using within Python
-
-You can also directly import pLannotate as a Python module:
+Use the module directly from Python:
 
 ```python
 from plannotate.annotate import annotate
-from plannotate.bokeh_plot import get_bokeh
-from plannotate.resources import get_seq_record
-from bokeh.io import show
+from plannotate import resources
 
-# for inline plotting in jupyter
-from bokeh.resources import INLINE
-import bokeh.io
-bokeh.io.output_notebook(INLINE)
+seq = "ATGCGT..."  # input DNA sequence
 
-seq = "tgaccaggcatcaaataaaacgaaaggctcagtcgaaagactgggcctttcgttttatctgttgtttgtcggtgaacgctctctactagagtcacactggctcaccttcgggtgggcctttctgcgtttataggtctcaatccacgggtacgggtatggagaaacagtagagagttgcgataaaaagcgtcaggtagtatccgctaatcttatggataaaaatgctatggcatagcaaagtgtgacgccgtgcaaataatcaatgtggacttttctgccgtgattatagacacttttgttacgcgtttttgtcatggctttggtcccgctttgttacagaatgcttttaataagcggggttaccggtttggttagcgagaagagccagtaaaagacgcagtgacggcaatgtctgatgcaatatggacaattggtttcttgtaatcgttaatccgcaaataacgtaaaaacccgcttcggcgggtttttttatggggggagtttagggaaagagcatttgtcatttgtttatttttctaaatacattcaaatatgtatccgctcatgagacaataaccctgataaatgcttcaataatattgaaaaaggaagagtatgagtattcaacatttccgtgtcgcccttattcccttttttgcgg"
+# Detailed annotation dataframe
+hits = annotate(seq, is_detailed=True, linear=False)
 
-# get pandas df of annotations
-hits = annotate(seq, is_detailed = True, linear= True)
+# Export GenBank text
+gbk_text = resources.get_gbk(hits, seq)
 
-# get biopython SeqRecord object
-seq_record = get_seq_record(hits, seq)
+# Export Biopython SeqRecord
+seq_record = resources.get_seq_record(hits, seq)
 
-# show plot
-show(get_bokeh(hits, linear=True))
+# Export cleaned report dataframe
+csv_df = resources.get_clean_csv_df(hits)
 ```
 
-This syntax will likely change in the future to be more user-friendly.
+## BenchBaze Integration
 
-About
-=====
-pLannotate was developed and is maintained by [Matt McGuffie](https://twitter.com/matt_mcguffie) at the [Barrick lab](https://barricklab.org/twiki/bin/view/Lab), University of Texas at Austin, Austin, Texas.
+- accept uploaded sequence/plasmid data in BenchBaze
+- call `annotate(...)` in your service layer
+- store or return `get_clean_csv_df(...)` output for UI/reporting
+- optionally generate GenBank output with `get_gbk(...)`
 
-## Non-python dependencies
+## Notes
 
-You will have to add them to the PATH.
+- External binaries must be available on `PATH`: `blastn`, `diamond`, `cmscan`, `rg`.
 
-```
-# adding the bin folder to the PATH
-export PATH="$PATH:$PWD/bin"
-```
+## Credits
 
-* [blast]:
-  * mac: `brew install blast`
-  * linux: `sudo apt-get install ncbi-blast+`
-* [cmscan](https://github.com/EddyRivasLab/infernal):
-  * mac: `brew tap brewsci/bio && brew install infernal`
-  * linux: `sudo apt-get install infernal`
-* [diamond](https://github.com/bbuchfink/diamond):
-  * mac: `brew install diamond`
-  * linux: https://github.com/bbuchfink/diamond/releases/download/v2.1.10/diamond-linux64.tar.gz
-* [ripgrep](https://github.com/BurntSushi/ripgrep): this is the `rg` binary
-  * mac: `brew install ripgrep`
-  * linux: `sudo apt-get install ripgrep`
-
-
-## Development
-
-### Adding optional dependencies with poetry:
-
-If you want to add optional dependencies to a group:
-
-```bash
-# Install a package as optional
-poetry add <package> --optional
-```
-
-Edit the `pyproject.toml` file to add the package to the `extras` section of the group, see
-the `api` example, for instance.
+pLannotate was originally developed by Matthew J McGuffie in the Barrick Lab at The University of Texas at Austin, <https://doi.org/10.1093/nar/gkab374>.
