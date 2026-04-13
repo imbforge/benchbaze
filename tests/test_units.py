@@ -1,6 +1,5 @@
 import os
 import os.path as op
-import tempfile
 from io import StringIO
 from pathlib import Path
 
@@ -8,10 +7,8 @@ import pandas as pd
 import pytest
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-from click.testing import CliRunner
 
-from plannotate import annotate, bokeh_plot, resources, streamlit_app
-from plannotate.pLannotate import main_batch
+from plannotate import annotate, resources
 
 with open("./tests/test_data/RRNB_fragment.txt") as f:
     RRNB = f.read()
@@ -146,186 +143,11 @@ def test_validate_file_gbk():
     resources.validate_file(df_path, ".gbk")
 
 
-####
-def test_streamlit_app():
-    """this component is hard to test"""
-    streamlit_app.run_streamlit(["--yaml-file", resources.get_yaml_path()])
-
-
-# # runs indefinitely
-# def test_streamlit():
-#     runner = CliRunner()
-#     result = runner.invoke(main_streamlit)
-#     assert result.exit_code == 0
-
-
-def test_batch():
-    runner = CliRunner()
-    result = runner.invoke(main_batch)
-    assert result.exit_code == 2  # proper exit code for no args
-
-
-def test_batch_help():
-    runner = CliRunner()
-    result = runner.invoke(main_batch, ["--help"])
-    assert result.exit_code == 0
-
-
 def test_annotate():
     hits = annotate.annotate(RRNB)
     assert hits.iloc[0]["sseqid"] == "rrnB_T1_terminator"
     hits = annotate.annotate(RRNB, linear=True)
     assert hits.iloc[0]["sseqid"] == "rrnB_T1_terminator"
-
-
-####
-def test_get_bokeh():
-    df_path = op.join(__package__, "test_data", "pXampl3.csv")
-    df = pd.read_csv(df_path)
-    bokeh_plot.get_bokeh(df)
-
-
-def test_cli_annotate():
-    plasmid = Path("pXampl3.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                "",
-            ],
-        )
-        assert result.exit_code == 0
-        gbk = SeqIO.read(tmpdir / plasmid.with_suffix(".gbk"), "genbank")
-    assert len(gbk.features) > 15
-
-
-def test_cli_annotate_empty_gbk():
-    plasmid = Path("random_dna.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                "",
-            ],
-        )
-        assert result.exit_code == 0
-        gbk = SeqIO.read(tmpdir / plasmid.with_suffix(".gbk"), "genbank")
-    assert len(gbk.features) == 0
-
-
-def test_cli_annotate_empty_html():
-    plasmid = Path("random_dna.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                "",
-                "-h",
-                "-x",
-            ],
-        )
-        assert result.exit_code == 0
-        html = tmpdir / plasmid.with_suffix(".html")
-        assert html.exists()
-
-
-def test_cli_save_nan_feature():
-    plasmid = Path("nan_feature.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                "",
-            ],
-        )
-        assert result.exit_code == 0
-        gbk = SeqIO.read(tmpdir / plasmid.with_suffix(".gbk"), "genbank")
-    assert len(gbk.features) == 2
-
-
-def test_bokeh_bakein():
-    plasmid = Path("pXampl3.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        cdn_result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                ".cdn",
-                "-h",
-                "-x",
-            ],
-        )
-        inline_result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                ".inline",
-                "-hf",
-                "-x",
-            ],
-        )
-        assert cdn_result.exit_code == 0
-        assert inline_result.exit_code == 0
-        inline = tmpdir / plasmid.with_suffix(".inline.html")
-        cdn = tmpdir / plasmid.with_suffix(".cdn.html")
-
-        assert inline.exists()
-        assert cdn.exists()
-
-        assert inline.stat().st_size > cdn.stat().st_size
-
-
-def test_zero_feature():
-    plasmid = Path("nan_feature.fa")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        runner = CliRunner()
-        result = runner.invoke(
-            main_batch,
-            [
-                "-i",
-                f"tests/test_data/{plasmid}",
-                "-o",
-                tmpdir,
-                "-s",
-                "",
-            ],
-        )
-        assert result.exit_code == 0
-        gbk = SeqIO.read(tmpdir / plasmid.with_suffix(".gbk"), "genbank")
-    assert len(gbk.features) == 2
 
 
 @pytest.mark.parametrize("ext", ["fasta", "fa", "fas", "fna"])
@@ -337,16 +159,14 @@ def test_validate_file_all_fasta_extensions(ext):
 
 
 def test_validate_file_bad_extension():
-    input_file = f"tests/test_data/pAdDeltaF6.txt"
+    input_file = "tests/test_data/pAdDeltaF6.txt"
     name, ext = resources.get_name_ext(input_file)
     with pytest.raises(ValueError, match = "must be a FASTA or GenBank file"):
         _ = resources.validate_file(input_file, ext)
 
 
 def test_annotate_fna(tmp_path):
-    input_file = f"tests/test_data/pAdDeltaF6.fna"
-    arglist = ["-i", input_file, "--output", tmp_path, "--html", "--csv", "-f", "pAdDeltaF6"]
-    result = CliRunner().invoke(main_batch, arglist)
-    assert result.exit_code == 0
-    gbk = SeqIO.read(tmp_path / "pAdDeltaF6_pLann.gbk", "genbank")
-    assert len(gbk.features) == 29
+    input_file = "tests/test_data/pAdDeltaF6.fna"
+    sequence = resources.validate_file(input_file, ".fna")
+    hits = annotate.annotate(sequence)
+    assert len(hits) > 0

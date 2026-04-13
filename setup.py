@@ -1,16 +1,12 @@
-from glob import glob
 import os
 import re
 from setuptools import setup, find_packages
-from setuptools import Distribution
-from setuptools.command.install import install
-import shutil
 import sys
 
 __pkg_name__ = 'plannotate'
 __author__ = 'Matt McGuffie'
 __author_email__ = 'mmcguffi@gmail.com'
-__description__ = 'Webserver and command line tool for annotating engineered plasmids'
+__description__ = 'Python module for annotating engineered plasmids'
 
 # Use readme as long description and say its github-flavour markdown
 from os import path
@@ -45,7 +41,6 @@ with open(os.path.join(dir_path, 'requirements.txt')) as fh:
         if req.startswith('git+https'):
             req = req.split('/')[-1].split('@')[0]
         install_requires.append(req)
-print(install_requires)
 
 setup(
     name=__pkg_name__,
@@ -61,9 +56,4 @@ setup(
     package_data={__pkg_name__:["data/**/*"]},
     zip_safe=False,
     test_suite='discover_tests',
-    entry_points={
-        'console_scripts': [
-            'plannotate = {}.pLannotate:main'.format(__pkg_name__),
-        ] # leave this here
-    },
 )

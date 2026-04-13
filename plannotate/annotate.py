@@ -5,11 +5,6 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 import pandas as pd
 
-try:
-    import streamlit as st
-except ImportError:
-    st = None
-
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -334,14 +329,7 @@ def get_details(inDf, yaml_file_loc):
 
 def cache(*args, **kwargs):
     def decorator(func):
-        if st is None:
-            return func
-        try:
-            __IPYTHON__  # type: ignore
-            # We are in a Jupyter environment, so don't apply st.cache
-            return func
-        except NameError:
-            return st.cache(func, *args, **kwargs)
+        return func
 
     return decorator
 
@@ -353,11 +341,7 @@ def cache(*args, **kwargs):
     show_spinner=False,
 )
 def get_raw_hits(query, linear, yaml_file_loc):
-
-    if st:
-        progressBar = st.progress(0)
-        progress_amt = 5
-        progressBar.progress(progress_amt)
+    progress_amt = 5
 
     databases = rsc.get_yaml(yaml_file_loc)
     increment = int(90 / len(databases))
@@ -396,9 +380,7 @@ def get_raw_hits(query, linear, yaml_file_loc):
 
         raw_hits.append(hits)
 
-        if st:
-            progress_amt += increment
-            progressBar.progress(progress_amt)
+        progress_amt += increment
 
     if len(raw_hits) == 0:
         return pd.DataFrame()
@@ -408,9 +390,6 @@ def get_raw_hits(query, linear, yaml_file_loc):
     blastDf = blastDf.sort_values(
         by=["score", "length", "percmatch"], ascending=[False, False, False]
     )
-    if st:
-        progressBar.empty()
-
     return blastDf
 
 
@@ -433,8 +412,7 @@ def annotate(inSeq, yaml_file=rsc.get_yaml_path(), linear=False, is_detailed=Fal
     elif linear is True:
         query = str(record.seq)
     else:
-        st.error("error")
-        return pd.DataFrame()
+        raise ValueError("linear must be a boolean")
 
     blastDf = get_raw_hits(query, linear, yaml_file)
 
@@ -468,7 +446,7 @@ def annotate(inSeq, yaml_file=rsc.get_yaml_path(), linear=False, is_detailed=Fal
             else:
                 return False
         else:
-            st.error("Fragment error.")
+            raise ValueError("Fragment error.")
 
     blastDf["fragment"] = blastDf.apply(is_fragment, axis=1)
 
