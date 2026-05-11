@@ -550,10 +550,10 @@
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"
   integrity sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==
 
-"@teselagen/bio-parsers@0.4.36":
-  version "0.4.36"
-  resolved "https://registry.yarnpkg.com/@teselagen/bio-parsers/-/bio-parsers-0.4.36.tgz#2e3e2625067b9ac58eafa45523baf607db678941"
-  integrity sha512-rMn7umOMn9OrEqWb+veuYGcbSPZUfyzF1+JbEnxNUg0Q8WnY9n4iKvY/9y5nhMTRjbmeR/UOF3T7GIApLrnoJg==
+"@teselagen/bio-parsers@0.4.37":
+  version "0.4.37"
+  resolved "https://registry.yarnpkg.com/@teselagen/bio-parsers/-/bio-parsers-0.4.37.tgz#b6f44f6646a13916bd4bb7f872595a2e11ee1a45"
+  integrity sha512-B9f0LT1bxCcCdDIVMujsBZP021TUbQV5GXRv7C+ts1qQm/u03uMBkO3nNQz6FIo+vBnM0cJkl51fw8kWgKD3aQ==
   dependencies:
     "@gmod/gff" "^1.2.1"
     "@teselagen/range-utils" "0.3.20"
@@ -575,15 +575,15 @@
     lodash-es "^4.17.21"
     papaparse "5.3.2"
 
-"@teselagen/ove@0.8.40":
-  version "0.8.40"
-  resolved "https://registry.yarnpkg.com/@teselagen/ove/-/ove-0.8.40.tgz#bdf53cf984b51fedc5298d499882b2f72b8c42f1"
-  integrity sha512-ivvgqZRXR/Q/XRnNXn/Xf57ZECfXTWSF0jeAeGoHTXCSAwAlvkG2RfS7oMQGwW/OJdh4bQZTGRaCKQymDzf8dQ==
+"@teselagen/ove@0.8.42":
+  version "0.8.42"
+  resolved "https://registry.yarnpkg.com/@teselagen/ove/-/ove-0.8.42.tgz#ca846d8f23330b6b3016fe38a39fe25e2a37c8bc"
+  integrity sha512-1OHLi0b+W2eZ+Nd2sLvpX6M3/EZpaze6brqoaUAkkAdsczANCfJYV8fYPPeruDdEb0Lbwa67/Na0HRouUt9ijQ==
   dependencies:
     "@blueprintjs/core" "3.54.0"
     "@hello-pangea/dnd" "16.2.0"
     "@risingstack/react-easy-state" "^6.3.0"
-    "@teselagen/bio-parsers" "0.4.36"
+    "@teselagen/bio-parsers" "0.4.37"
     "@teselagen/file-utils" "0.3.23"
     "@teselagen/range-utils" "0.3.20"
     "@teselagen/react-list" "0.8.18"
