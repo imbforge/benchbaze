@@ -545,7 +545,7 @@ class WormStrain(
     def __str__(self):
         return f"{self.id} - {self.name}"
 
-    def stocked_formatted(self):
+    def stocked(self):
         if any(
             len(s.strip()) > 0
             for s in [
@@ -557,8 +557,8 @@ class WormStrain(
             return True
         return False
 
-    stocked_formatted.use_api = True
-    stocked_formatted.field_type = models.BooleanField
+    stocked.use_api = True
+    stocked.field_type = models.BooleanField
 
     @property
     def all_sequence_features(self):

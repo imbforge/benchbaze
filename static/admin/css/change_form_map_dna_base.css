@@ -35,11 +35,11 @@
   cursor: pointer;
 }
 
-body.bb-admin-modal-open {
+body.bb-admin-map-dna-detect-features-modal-open {
   overflow: hidden;
 }
 
-.bb-admin-modal-overlay {
+.bb-admin-map-dna-detect-features-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -50,7 +50,7 @@ body.bb-admin-modal-open {
   padding: 16px;
 }
 
-.bb-admin-modal {
+.bb-admin-map-dna-detect-features-modal {
   width: min(460px, 100%);
   background: var(--body-bg);
   color: var(--body-fg);
@@ -60,18 +60,18 @@ body.bb-admin-modal-open {
   padding: 20px;
 }
 
-.bb-admin-modal-title {
+.bb-admin-map-dna-detect-features-modal-title {
   margin: 0;
   color: var(--header-link-color);
   font-size: 18px;
   line-height: 1.3;
 }
 
-.bb-admin-modal-text {
+.bb-admin-map-dna-detect-features-modal-text {
   margin: 10px 0 0;
 }
 
-.bb-admin-modal-actions {
+.bb-admin-map-dna-detect-features-modal-actions {
   margin-top: 18px;
   display: flex;
   gap: 8px;
@@ -79,11 +79,38 @@ body.bb-admin-modal-open {
 }
 
 @media (max-width: 480px) {
-  .bb-admin-modal-actions {
+  .bb-admin-map-dna-detect-features-modal-actions {
     flex-direction: column-reverse;
   }
 
-  .bb-admin-modal-actions .button {
+  .bb-admin-map-dna-detect-features-modal-actions .button {
     width: 100%;
   }
+}
+
+.bb-admin-map-dna-detect-features-modal-note {
+  margin-top: 10px;
+}
+
+.bb-admin-map-dna-reedit-link {
+  margin-right: 0.75em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  background: transparent;
+  padding: 0.25em 0.45em;
+  min-width: 1.6em;
+  min-height: 1.6em;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.bb-admin-map-dna-reedit-link:hover,
+.bb-admin-map-dna-reedit-link:focus {
+  text-decoration: none;
+  opacity: 0.85;
 }

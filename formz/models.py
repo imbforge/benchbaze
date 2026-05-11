@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
+from django.urls import reverse
 from django.utils.html import format_html, mark_safe
+from import_export.fields import Field as ImportExportField
 
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
@@ -289,7 +291,7 @@ class Species(models.Model):
         return self.latin_name if self.latin_name else self.common_name
 
     @property
-    def name_format_html(self):
+    def name_formatted(self):
         return (
             format_html("<i>{}</i>", self.latin_name)
             if self.latin_name
@@ -383,6 +385,74 @@ class SequenceFeature(models.Model):
         blank=False,
     )
 
+    _search_fields = [
+        "id",
+        "name",
+    ]
+    _api_list_fields = [
+        "id",
+        "name",
+        "donor_species_names_formatted",
+        "donor_species_risk_groups",
+        "nuc_acid_risk_formatted",
+    ]
+
+    _api_item_fields = [
+        "id",
+        "name",
+        "donor_organism",
+        "nuc_acid_purity",
+        "nuc_acid_risk",
+        "zkbs_oncogene",
+        "description",
+        "common_feature",
+        "donor_species_names_formatted",
+        "donor_species_risk_groups",
+        "donor_species_max_risk_group",
+        "nuc_acid_risk_formatted",
+        "nuc_acid_purity_formatted",
+        "zkbs_oncogene_formatted",
+    ]
+
+    _export_field_names = (
+        "id",
+        "name",
+        "donor_species_custom_field",
+        "nuc_acid_purity_custom_field",
+        "nuc_acid_risk_custom_field",
+        "zkbs_oncogene_custom_field",
+        "description",
+        "common_feature_custom_field",
+    )
+    _export_custom_fields = {
+        "fields": {
+            "donor_species_custom_field": ImportExportField(
+                column_name="Donor species"
+            ),
+            "nuc_acid_purity_custom_field": ImportExportField(
+                column_name="Nucleic acid purity",
+                attribute="nuc_acid_purity__english_name",
+            ),
+            "nuc_acid_risk_custom_field": ImportExportField(
+                column_name="Nucleic acid risk", attribute="nuc_acid_risk__english_name"
+            ),
+            "zkbs_oncogene_custom_field": ImportExportField(
+                column_name="ZKBS Oncogene", attribute="zkbs_oncogene__name"
+            ),
+            "common_feature_custom_field": ImportExportField(
+                column_name="Common feature"
+            ),
+        },
+        "dehydrate_methods": {
+            "donor_species_custom_field": lambda obj: ", ".join(
+                [s.display_name for s in obj.donor_organism.all()]
+            ),
+            "common_feature_custom_field": lambda obj: (
+                "True" if obj.common_feature else "False"
+            ),
+        },
+    }
+
     def __str__(self):
         return (
             str(self.name)
@@ -396,15 +466,18 @@ class SequenceFeature(models.Model):
         self.name = self.name.strip()
         super().save(force_insert, force_update, using, update_fields)
 
-    def donor_species_names_format_html(self):
-        species_names = [s.name_format_html for s in self.donor_organism.all()]
+    def donor_species_names_formatted(self):
+        species_names = [s.name_formatted for s in self.donor_organism.all()]
         try:
             species_names.remove("none")
         except Exception:
             pass
         return mark_safe(", ".join(species_names))
 
-    def get_donor_species_risk_groups(self):
+    donor_species_names_formatted.use_api = True
+    donor_species_names_formatted.field_type = models.CharField
+
+    def donor_species_risk_groups(self):
         species_risk_groups = []
         for species in self.donor_organism.all():
             if species.risk_group:
@@ -412,13 +485,40 @@ class SequenceFeature(models.Model):
 
         return ", ".join([str(i) for i in species_risk_groups])
 
-    def get_donor_species_max_risk_group(self):
+    donor_species_risk_groups.use_api = True
+    donor_species_risk_groups.field_type = models.CharField
+
+    def donor_species_max_risk_group(self):
         species_risk_groups = [0]
         for species in self.donor_organism.all():
             if species.risk_group:
                 species_risk_groups.append(species.risk_group)
 
         return max(species_risk_groups)
+
+    donor_species_max_risk_group.use_api = True
+    donor_species_max_risk_group.field_type = models.IntegerField
+
+    def get_admin_change_url(self):
+        return reverse("admin:formz_sequencefeature_change", args=[self.id])
+
+    def nuc_acid_risk_formatted(self):
+        return self.nuc_acid_risk.english_name if self.nuc_acid_risk else ""
+
+    nuc_acid_risk_formatted.use_api = True
+    nuc_acid_risk_formatted.field_type = models.CharField
+
+    def zkbs_oncogene_formatted(self):
+        return self.zkbs_oncogene.name if self.zkbs_oncogene else ""
+
+    zkbs_oncogene_formatted.use_api = True
+    zkbs_oncogene_formatted.field_type = models.CharField
+
+    def nuc_acid_purity_formatted(self):
+        return self.nuc_acid_purity.english_name if self.nuc_acid_purity else ""
+
+    nuc_acid_purity_formatted.use_api = True
+    nuc_acid_purity_formatted.field_type = models.CharField
 
 
 class SequenceFeatureAlias(models.Model):

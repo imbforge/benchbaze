@@ -231,7 +231,7 @@ FILE_UPLOAD_PERMISSIONS = 0o660
 LOGIN_URL = "/login/"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 X_FRAME_OPTIONS = "SAMEORIGIN"
-OVE_URL = "/ove/"
+OVE_URL = "/ove/" if not DEBUG else "/ove_dev/"
 MAX_UPLOAD_FILE_SIZE_MB = 2
 ALLOWED_DOC_FILE_EXTS = [
     "pdf",

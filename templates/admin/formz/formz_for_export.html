@@ -269,11 +269,11 @@
               {% for feat in object.all_uncommon_sequence_features %}
                 <tr class="row">
                   <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                  <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                  <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                   <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                   <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                  <td class="field-nuc_acid_description">{% if feat.get_donor_species_risk_groups > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
+                  <td class="field-nuc_acid_description">{% if feat.donor_species_risk_groups > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
                 </tr>
               {% endfor %}
             {% else %}
@@ -292,11 +292,11 @@
               {% for feat in object.all_common_sequence_features %}
               <tr class="row">
                 <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                 <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                 <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
+                <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 %}{{feat.description}}{% endif %}</td>
               </tr>
               {% endfor %}
             {% else %}
@@ -386,11 +386,11 @@
                   {% for feat in plasmid.plasmid.all_uncommon_sequence_features %}
                     <tr class="row">
                       <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                      <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                      <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                       <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                       <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
+                      <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
@@ -409,11 +409,11 @@
                   {% for feat in plasmid.plasmid.all_common_sequence_features %}
                   <tr class="row">
                     <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
+                    <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 %}{{feat.description}}{% endif %}</td>
                   </tr>
                   {% endfor %}
                 {% else %}
@@ -496,11 +496,11 @@
                   {% for feat in plasmid.plasmid.all_uncommon_sequence_features %}
                     <tr class="row">
                       <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                      <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                      <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                       <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                       <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
+                      <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
@@ -519,11 +519,11 @@
                   {% for feat in plasmid.plasmid.all_common_sequence_features %}
                   <tr class="row">
                     <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
+                    <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 %}{{feat.description}}{% endif %}</td>
                   </tr>
                   {% endfor %}
                 {% else %}
@@ -595,11 +595,11 @@
                   {% for feat in virus.virus.all_uncommon_sequence_features %}
                     <tr class="row">
                       <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                      <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                      <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                      <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                       <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                       <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                      <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
+                      <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 or feat.nuc_acid_purity.english_name == 'synthetic fragment' %}{{feat.description}}{% endif %}</td>
                     </tr>
                   {% endfor %}
                 {% else %}
@@ -618,11 +618,11 @@
                   {% for feat in virus.virus.all_common_sequence_features %}
                   <tr class="row">
                     <td class="field-name formztableverticalborder">{{feat.name}}</td>
-                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
-                    <td class="field-nuc_acid_description">{% if feat.get_donor_species_max_risk_group > 1 %}{{feat.description}}{% endif %}</td>
+                    <td class="field-nuc_acid_description">{% if feat.donor_species_max_risk_group_formatted > 1 %}{{feat.description}}{% endif %}</td>
                   </tr>
                   {% endfor %}
                 {% else %}

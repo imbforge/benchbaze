@@ -659,6 +659,7 @@ class ModelViewSet(viewsets.ModelViewSet):
                 else f.replace("_formatted", "")
                 for f in getattr(self.model, "_list_display_frozen", [])
                 + getattr(self.model, "_list_display", [])
+                + getattr(self.model, "_api_list_fields", [])
             ]
             serializer_class = self.serializer_list_class
         elif self.action == "retrieve":
@@ -666,6 +667,7 @@ class ModelViewSet(viewsets.ModelViewSet):
                 ["id"]
                 + getattr(self.model, "_obj_specific_fields", [])
                 + getattr(self.model, "_obj_unmodifiable_fields", [])
+                + getattr(self.model, "_api_item_fields", [])
             )
             serializer_class = self.serializer_item_class
         elif self.action == "autocomplete":

@@ -15,10 +15,14 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-import requests
-
 
 from approval.models import Approval
+from collection.shared.map_dna.utils import (
+    convert_map_dna_to_svg,
+    get_map_dna_feature_names,
+    get_map_dna_features_simple,
+    get_map_dna_seqrecord,
+)
 from common.actions import export_action_tsv, export_action_xlsx
 from common.models import HistoryFieldMixin, SaveWithoutHistoricalRecordMixin
 from formz.actions import formz_as_html
@@ -421,13 +425,12 @@ class MapFileCheckPropertiesMixin:
         return self.map_gbk.read().decode()
 
     @property
-    def map_ove_url(self):
+    def map_dna_preview_url(self):
         """Returns the url to view the a SnapGene file in OVE"""
 
         params = {
             "file_name": self.map_dna.url,
             "title": self.full_title,
-            "file_format": "dna",
         }
 
         return f"{OVE_URL}?{urlencode(params)}"
@@ -440,7 +443,6 @@ class MapFileCheckPropertiesMixin:
         params = {
             "file_name": f"/{self._meta.app_label}/{self._meta.model_name}/{self.pk}/find_oligos/",
             "title": f"{self.full_title} (imported oligos)",
-            "file_format": "gbk",
             "show_oligos": "true",
         }
 
@@ -455,7 +457,7 @@ class MapFileCheckPropertiesMixin:
     def map_formatted(self):
         if self.map_dna:
             return mark_safe(
-                f'<a class="magnific-popup-iframe-map-dna" title="Map viewer" href="{self.map_ove_url}">⦾</a>'
+                f'<a class="magnific-popup-iframe-map-dna viewlink" title="Map viewer" href="{self.map_dna_preview_url}"></a>'
             )
         else:
             return ""
@@ -463,125 +465,27 @@ class MapFileCheckPropertiesMixin:
     map_formatted.short_description = "Map"
     map_formatted.field_type = "FileField"
 
-    # Get features from dna_map
-
-    def _feature_label(self, feature):
-        """Prefer label-like qualifiers when available, then fall back to feature type."""
-
-        # Check common label-like qualifiers in order of preference, returning the first one found
-        for key in ("label", "gene", "locus_tag", "note"):
-            value = feature.qualifiers.get(key)
-            if value:
-                return str(value[0]).strip()
-        return feature.type
-
-    def _extract_location_bounds(self, location):
-        """Return (start, end, strand_symbol) for a location, merging parts if needed."""
-
-        if location is None:
-            return None
-
-        # If the location has multiple parts (e.g. from a join), take the min start and max
-        # end across all parts
-        parts = getattr(location, "parts", None)
-        if parts and len(parts) > 1:
-            start = min(int(part.start) for part in parts)
-            end = max(int(part.end) for part in parts)
-            strand = location.strand
-            if strand is None:
-                for part in parts:
-                    if part.strand is not None:
-                        strand = part.strand
-                        break
-        # If the location has no parts, just take its start and end
-        else:
-            start = int(location.start)
-            end = int(location.end)
-            strand = location.strand
-        # Convert strand to symbol to be descriptive
-        strand_symbol = {1: "+", -1: "-"}.get(strand, "?")
-        return (start, end, strand_symbol)
-
-    def _feature_bounds(self, feature):
-        """Return (start, end, strand_symbol) for a feature's location, merging parts if needed."""
-        return self._extract_location_bounds(feature.location)
-
-    def _is_ignored_feature(self, feature):
-        label = self._feature_label(feature).strip().lower()
-        ftype = feature.type.strip().lower()
-        return label == "source" or ftype == "source" or ftype == "primer_bind"
-
-    def get_map_dna_record(self):
+    # Map-related properties and methods
+    def get_map_dna_seqrecord(self):
         """Returns a SeqRecord object for the map_dna file, or None if not available or invalid"""
         if not self.map_dna:
             return None
         try:
-            name = self.map_dna.name.lower()
-            if name.endswith(".dna"):
-                return SeqIO.read(self.map_dna.path, "snapgene")
-            elif name.endswith((".gbk", ".gb")):
-                return SeqIO.read(self.map_dna.path, "genbank")
+            return get_map_dna_seqrecord(self.map_dna.path)
         except Exception:
             return None
 
-    def get_map_dna_simple_features(self):
-        """Returns a list of features in the map_dna file, with each feature represented
-        as a tuple of
+    def get_map_dna_features_simple(self):
+        """Returns a list of features in the map_dna file, or an empty list if not available or invalid"""
 
-        (label, type, (start, end, strand_symbol))
-
-        The start and end positions are merged across all parts of the feature if it has
-        multiple parts (e.g. from a join). Strand is represented as '+' for forward, '-'
-        for reverse, and '?' for unknown or mixed."""
-
-        record = self.get_map_dna_record()
-
-        if record is None:
-            return []
-
-        return [
-            (self._feature_label(f), f.type, self._extract_location_bounds(f.location))
-            for f in record.features
-            if not self._is_ignored_feature(f)
-        ]
+        record = self.get_map_dna_seqrecord()
+        return get_map_dna_features_simple(record)
 
     def get_map_dna_feature_names(self):
         """Return the names of the features in the map_dna file"""
 
-        features = self.get_map_dna_simple_features()
-        feature_names = [feature[0].strip() for feature in features]
-        return feature_names
-
-    def _covert_map_dna_to_dict(self):
-        """Convert the map_dna file to a dictionary format that can be used in the frontend"""
-
-        record = self.get_map_dna_record()
-        if record is None:
-            return {}
-
-        return {
-            "id": record.id,
-            "name": record.name,
-            "description": record.description,
-            "sequence": str(record.seq),
-            "features": [
-                {
-                    "type": f.type,
-                    "location": [
-                        (int(p.start), int(p.end), p.strand) for p in f.location.parts
-                    ]
-                    if hasattr(f.location, "parts")
-                    else (
-                        int(f.location.start),
-                        int(f.location.end),
-                        f.location.strand,
-                    ),
-                    "qualifiers": f.qualifiers,
-                }
-                for f in record.features
-            ],
-            "annotations": record.annotations,
-        }
+        record = self.get_map_dna_seqrecord()
+        return get_map_dna_feature_names(record)
 
     def convert_map_dna_to_svg(self):
         """Convert the map_dna file to svg format for display in the frontend"""
@@ -589,21 +493,7 @@ class MapFileCheckPropertiesMixin:
         if not self.map_dna:
             raise Exception("No map file available to convert")
 
-        # Get the map_dna file as an SVG string from the conversion service
-        response = requests.get(
-            "http://localhost:3000",
-            params={
-                "path": self.map_dna.path,
-                "title": self.full_title,
-            },
-        )
-
-        if response.status_code == 200:
-            return response.text
-        else:
-            raise Exception(
-                f"Failed to convert the map to SVG. Response: {response.text}"
-            )
+        return convert_map_dna_to_svg(self.map_dna.path, self.full_title)
 
 
 class CommonCollectionModelPropertiesMixin:

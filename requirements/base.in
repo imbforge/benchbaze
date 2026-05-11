@@ -28,6 +28,7 @@ djangorestframework
 reportlab
 biopython
 sgffp
+seguid
 numpy==1.26.4
 pandas==1.5.3
 PyYAML==6.0.3

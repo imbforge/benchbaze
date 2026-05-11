@@ -1,0 +1,170 @@
+{% if success %}
+  <div class="features-result-container">
+    <div class="result-header">
+      <h3>✓ Features Detected Successfully</h3>
+    </div>
+    <div class="result-details">
+      <p><strong>File:</strong> {{ filename }}</p>
+      <p><strong>Sequence Length:</strong> {{ sequence_length }} bp</p>
+      <p><strong>Features Found:</strong> {{ feature_count }}</p>
+    </div>
+    
+    {% if features %}
+      <div class="features-list">
+        <h4>Detected Features:</h4>
+        <table class="features-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for feature in features %}
+              <tr>
+                <td>{{ feature.name }}</td>
+                <td><span class="feature-type-badge">{{ feature.type }}</span></td>
+                <td>{{ feature.location }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="no-features-message">
+        <p>No features detected in the sequence.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <style>
+    .features-result-container {
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #333;
+    }
+    
+    .result-header {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .result-header h3 {
+      margin: 0;
+      color: #28a745;
+      font-size: 18px;
+    }
+    
+    .result-details {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .result-details p {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    
+    .features-list {
+      margin-top: 20px;
+    }
+    
+    .features-list h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .features-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    .features-table thead {
+      background-color: #f0f0f0;
+    }
+    
+    .features-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+    }
+    
+    .features-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .features-table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+    
+    .feature-type-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: #e7f3ff;
+      color: #0066cc;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .no-features-message {
+      padding: 20px;
+      text-align: center;
+      background-color: #fffbea;
+      border-left: 4px solid #ffc107;
+      color: #856404;
+    }
+  </style>
+
+{% else %}
+  <div class="features-error-container">
+    <div class="error-header">
+      <h3>✗ Error Processing File</h3>
+    </div>
+    <div class="error-message">
+      <p>{{ error }}</p>
+    </div>
+  </div>
+
+  <style>
+    .features-error-container {
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    
+    .error-header {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f5c6cb;
+    }
+    
+    .error-header h3 {
+      margin: 0;
+      color: #721c24;
+      font-size: 18px;
+    }
+    
+    .error-message {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    
+    .error-message p {
+      margin: 0;
+      font-size: 14px;
+      word-break: break-word;
+    }
+  </style>
+{% endif %}

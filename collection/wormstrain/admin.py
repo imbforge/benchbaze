@@ -3,10 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.html import format_html
 
-from common.admin import (
-    AddDocFileInlineMixin,
-    DocFileInlineMixin,
-)
+from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
 from ..plasmid.admin import PlasmidAdmin
 from ..shared.admin import (
@@ -15,14 +12,9 @@ from ..shared.admin import (
     CustomGuardedModelAdmin,
     LocationInline,
     SortAutocompleteResultsId,
-    create_map_preview,
 )
 from .forms import WormStrainAlleleAdminForm
-from .models import (
-    WormStrainAlleleDoc,
-    WormStrainDoc,
-    WormStrainGenotypingAssay,
-)
+from .models import WormStrainAlleleDoc, WormStrainDoc, WormStrainGenotypingAssay
 from .search import WormStrainAlleleQLSchema, WormStrainQLSchema
 
 User = get_user_model()
@@ -92,7 +84,7 @@ class WormStrainAdmin(
 
     @admin.display(description="Stocked", boolean=True)
     def stocked_formatted(self, instance):
-        return instance.stocked_formatted()
+        return instance.stocked()
 
     def save_related(self, request, form, formsets, change):
         obj, history_obj = super().save_related(request, form, formsets, change)

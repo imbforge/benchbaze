@@ -52,6 +52,11 @@ urlpatterns = [
     ),
     path("api/", include(router.urls), name="api"),
     path("api/settings/", SettingsApiView.as_view(), name="api_settings"),
+    path(
+        "utils/map_dna/",
+        include("collection.shared.map_dna.urls"),
+        name="utils_map_dna",
+    ),
     path("", admin_site.urls),
 ]
 

@@ -22,7 +22,7 @@
     .magnific-popup-iframe-plasmid-map,
     .magnific-popup-iframe-transient-episomal-plasmid-map,
     .magnific-popup-iframe-s2-plasmid-map {
-      padding-left: 5px;
+      margin-left: 5px;
     }
 
     .formztableheader th {
@@ -209,9 +209,8 @@
           {% for plasmid in object.all_instock_plasmids %}
             <li>
               <a class="magnific-popup-iframe-plasmid" href="{% url 'admin:collection_plasmid_change' plasmid.id %}?_to_field=id&_popup=1" target="_blank">Plasmid #{{plasmid}}</a>
-              {% if plasmid.map %}
-                (<a href="{{plasmid.map_gbk.url}}">.gbk<a class="magnific-popup-iframe-plasmid-map" href={{plasmid.map_ove_url_gbk}}>⊙</a>,
-                <a class="magnific-popup-img-plasmid-map" href="{{plasmid.map_png.url}}">.png</a>)
+              {% if plasmid.map_dna %}
+                <a class="magnific-popup-iframe-plasmid-map viewlink" href={{plasmid.map_dna_preview_url}}></a>
               {% endif %}
               {% if plasmid.vector_zkbs %}
                 {% if plasmid.vector_zkbs.name != 'none' %}
@@ -281,8 +280,8 @@
             {% for feat in object.all_uncommon_sequence_features %}
               <tr class="row">
                 <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-sequencefeature-uncommon' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                 <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                 <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
               </tr>
@@ -303,8 +302,8 @@
             {% for feat in object.all_common_sequence_features %}
             <tr class="row">
               <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-sequencefeature-common' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-              <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-              <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+              <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+              <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
               <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
               <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
             </tr>
@@ -345,9 +344,8 @@
           <div>
             <!-- Transient episomal plasmid details -->
             <a class="magnific-popup-iframe-transient-episomal-plasmid" href="{% url 'admin:collection_plasmid_change' plasmid.plasmid.id %}?_to_field=id&_popup=1" target="_blank"><span class="formztextbold">Plasmid #{{plasmid.plasmid.id}}</span> - {{plasmid.plasmid.name}}</a>
-            {% if plasmid.plasmid.map %}
-              (<a href="{{plasmid.plasmid.map_gbk.url}}">.gbk</a><a class="magnific-popup-iframe-transient-episomal-plasmid-map" href={{plasmid.plasmid.map_ove_url_gbk}}>⊙</a>,
-              <a class="magnific-popup-img-transient-episomal-plasmid-map" href="{{plasmid.plasmid.map_png.url}}">.png</a>)
+            {% if plasmid.plasmid.map_dna %}
+              <a class="magnific-popup-iframe-transient-episomal-plasmid-map viewlink" href={{plasmid.plasmid.map_dna_preview_url}}></a>
             {% endif %}
           </div>
 
@@ -399,8 +397,8 @@
                 {% for feat in plasmid.plasmid.all_uncommon_sequence_features %}
                   <tr class="row">
                     <td class="field-name formztableverticalborder"><a class="magnific-popup-iframe-transient-episomal-plasmid-sequencefeature-uncommon" href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
                   </tr>
@@ -421,8 +419,8 @@
                 {% for feat in plasmid.plasmid.all_common_sequence_features %}
                 <tr class="row">
                   <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-transient-episomal-plasmid-sequencefeature-common' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                  <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                  <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                   <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                   <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
                 </tr>
@@ -458,9 +456,8 @@
             <a class="magnific-popup-iframe-s2-plasmid" href="{% url 'admin:collection_plasmid_change' plasmid.plasmid.id %}?_to_field=id&_popup=1" target="_blank"><span class="formztextbold">Plasmid #{{plasmid.plasmid.id}}</span> - {{plasmid.plasmid.name}}</a>
               
               <!-- S2 plasmid map -->
-              {% if plasmid.plasmid.map %}
-              (<a href="{{plasmid.plasmid.map_gbk.url}}">.gbk</a><a class="magnific-popup-iframe-s2-plasmid-map" href={{plasmid.plasmid.map_ove_url_gbk}}>⊙</a>,
-                <a class="magnific-popup-iframe-s2-plasmid-map" href="{{plasmid.plasmid.map_png.url}}">.png</a>);
+              {% if plasmid.plasmid.map_dna %}
+                <a class="magnific-popup-iframe-s2-plasmid-map viewlink" href={{plasmid.plasmid.map_dna_preview_url}}></a>
               {% endif %}
           </div>
 
@@ -512,8 +509,8 @@
                 {% for feat in plasmid.plasmid.all_uncommon_sequence_features %}
                   <tr class="row">
                     <td class="field-name formztableverticalborder"><a class="magnific-popup-iframe-s2-plasmid-sequencefeature-uncommon" href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                    <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                    <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                    <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                     <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                     <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
                   </tr>
@@ -534,8 +531,8 @@
                 {% for feat in plasmid.plasmid.all_common_sequence_features %}
                 <tr class="row">
                   <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-s2-plasmid-sequencefeature-common' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                  <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                  <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                   <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                   <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
                 </tr>
@@ -609,8 +606,8 @@
               {% for feat in virus.virus.all_uncommon_sequence_features %}
                 <tr class="row">
                   <td class="field-name formztableverticalborder"><a class="magnific-popup-iframe-virus-sequencefeature-uncommon" href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                  <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                  <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                  <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                   <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                   <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
                 </tr>
@@ -631,8 +628,8 @@
               {% for feat in virus.virus.all_common_sequence_features %}
               <tr class="row">
                 <td class="field-name formztableverticalborder"><a class='magnific-popup-iframe-virus-sequencefeature-common' href="{% url 'admin:formz_sequencefeature_change' feat.id %}?_to_field=id&_popup=1" target="_blank">{{feat.name}}</a></td>
-                <td class="field-donor_organism">{% if feat.donor_species_names_format_html %}{{feat.donor_species_names_format_html}}{% else %}Artifiziell{% endif %}</td>
-                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.get_donor_species_risk_groups %}{{feat.get_donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
+                <td class="field-donor_organism">{% if feat.donor_species_names_formatted %}{{feat.donor_species_names_formatted}}{% else %}Artifiziell{% endif %}</td>
+                <td class="field-donor_organism_risk formztableverticalborder">{% if feat.donor_species_risk_groups %}{{feat.donor_species_risk_groups}}{% else %}Keine{% endif %}</td>
                 <td class="field-nuc_acid_purity">{{feat.nuc_acid_purity.german_name}}</td>
                 <td class="field-nuc_acid_risk">{{feat.nuc_acid_risk.german_name}}</td>
               </tr>
@@ -688,10 +685,6 @@
         'instock-virus'
     ];
       const MagnificiFrameClassIds = iFrameClassIds.map(e => 'magnific-popup-iframe-' + e);
-      const MagnificImgClassIds = ['magnific-popup-img-plasmid-map',
-        'magnific-popup-img-s2-plasmid-map',
-        'magnific-popup-img-transient-episomal-plasmid-map'];
   </script>
   <script type="text/javascript" src="{% static 'admin/js/admin/MagnificPopUpiFrame.js' %}"></script>
-  <script type="text/javascript" src="{% static 'admin/js/admin/MagnificPopUpImg.js' %}"></script>
 {% endblock %}

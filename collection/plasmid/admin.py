@@ -8,6 +8,10 @@ from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
+from collection.shared.map_dna.utils import (
+    detect_map_dna_features,
+    get_map_dna_feature_names,
+)
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 from formz.models import SequenceFeature
 
@@ -131,16 +135,9 @@ class PlasmidAdmin(
 
         return None
 
-    def _save_model_map_preview(self, request, obj, prefix=""):
-        detect_common_features = request.POST.get(
-            "detect_common_features"
-        ) or request.POST.get("detect_common_features")
-        detect_common_features = bool(detect_common_features)
-        # create_map_preview(obj, detect_common_features, prefix=prefix)
-
     def _save_model(self, request, obj, form, change):
-        rename_and_preview = False
-        self.rename_and_preview = False
+        is_new_map = False
+        self.is_new_map = False
         new_obj = False
         self.new_obj = False
         self.clear_sequence_features = False
@@ -163,8 +160,8 @@ class PlasmidAdmin(
 
             # If a map is present, enable renaming and previewing after initial save
             if obj.map_dna:
-                rename_and_preview = True
-                self.rename_and_preview = True
+                is_new_map = True
+                self.is_new_map = True
 
             # Approval logic for new objects
             self._save_model_approval(request, obj, new_obj=True)
@@ -183,8 +180,8 @@ class PlasmidAdmin(
             if obj.map_dna.name != saved_obj.map_dna.name:
                 # A new map: enable renaming and previewing after save
                 if obj.map_dna:
-                    rename_and_preview = True
-                    self.rename_and_preview = True
+                    is_new_map = True
+                    self.is_new_map = True
                     obj.save_without_historical_record()
                 # No map: clear sequence features
                 else:
@@ -194,7 +191,7 @@ class PlasmidAdmin(
                 obj.save()
 
         # Rename map
-        if rename_and_preview and getattr(obj, "map_dna", None):
+        if is_new_map and getattr(obj, "map_dna", None):
             old_dna_file_path = obj.map_dna.path
             map_ext = os.path.splitext(old_dna_file_path)[1].lower()
             timestamp = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
@@ -216,15 +213,6 @@ class PlasmidAdmin(
                 history_obj = obj.history.first()
                 history_obj.history_type = "+"
                 history_obj.save()
-
-            # Map preview
-            try:
-                self._save_model_map_preview(request, obj)
-            except Exception:
-                messages.error(
-                    request,
-                    "There was an error detecting common features and/or saving the map preview",
-                )
 
     djangoql_schema = PlasmidQLSchema
     inlines = [
@@ -257,55 +245,62 @@ class PlasmidAdmin(
 
         # If needed, add map features to sequence features, and display a warning message
         # if any map features could not be added
-        if self.rename_and_preview or "_redetect_sequence_features" in request.POST:
-            unknown_feat_name_list = []
-            try:
-                feature_names = obj.get_map_dna_feature_names()
-            except Exception as e:
-                messages.error(request, "There was an error getting your map features")
-                mail_map_dna_processing_error(
-                    getattr(self.map_dna, "path", "unknown"),
-                    "get_map_dna_feature_names",
-                    str(e),
-                    request=request,
-                )
-                feature_names = []
-
+        if self.is_new_map:
             if not self.new_obj:
                 obj.sequence_features.clear()
 
-            if feature_names:
-                sequence_features = SequenceFeature.objects.filter(
-                    alias__label__in=feature_names
-                ).distinct()
-                aliases = list(sequence_features.values_list("alias__label", flat=True))
+            feature_ids = request.POST.get("map_dna_sequence_feature_ids")
+            if feature_ids:
+                feature_ids = feature_ids.split(",")
+                sequence_features = SequenceFeature.objects.filter(id__in=feature_ids)
                 obj.sequence_features.add(*list(sequence_features))
-                unknown_feat_name_list = [
-                    feat for feat in feature_names if feat not in aliases
-                ]
 
-                if unknown_feat_name_list:
-                    self.redirect_to_obj_page = True
-                    unknown_feat_name_list = str(unknown_feat_name_list)[1:-1].replace(
-                        "'", ""
+            # Fall back in case the user hasn't saved the map from OVE
+            else:
+                map_dna_seqrecord = obj.get_map_dna_seqrecord()
+                if map_dna_seqrecord:
+                    # Detect features
+                    annotated_seqrecord = detect_map_dna_features(
+                        map_dna_seqrecord, ".dna"
                     )
-                    messages.warning(
-                        request,
-                        format_html(
-                            "The following map features were not added to "
-                            "<span style='background-color:rgba(0,0,0,0.1);'>Sequence Features</span>,"
-                            " because they cannot be found in the database: "
-                            "<span class='missing-formz-features' style='background-color:rgba(255,0,0,0.2)'>{}</span>. "
-                            "You may want to add them manually yourself below.",
-                            unknown_feat_name_list,
-                        ),
-                    )
+                    feature_names = get_map_dna_feature_names(annotated_seqrecord)
+                    if feature_names:
+                        feature_names = [
+                            n.replace(" (fragment)", "") for n in feature_names
+                        ]
+                        sequence_features = SequenceFeature.objects.filter(
+                            alias__label__in=feature_names
+                        ).distinct()
+                        aliases = list(
+                            sequence_features.values_list("alias__label", flat=True)
+                        )
+                        obj.sequence_features.add(*list(sequence_features))
+                        unknown_feat_name_list = [
+                            feat for feat in feature_names if feat not in aliases
+                        ]
+
+                        if unknown_feat_name_list:
+                            self.redirect_to_obj_page = True
+                            unknown_feat_name_list = str(unknown_feat_name_list)[
+                                1:-1
+                            ].replace("'", "")
+                            messages.warning(
+                                request,
+                                format_html(
+                                    "The following map features were not added to "
+                                    "<span style='background-color:rgba(0,0,0,0.1);'>Sequence Features</span>,"
+                                    " because they cannot be found in the database: "
+                                    "<span class='missing-formz-features' style='background-color:rgba(255,0,0,0.2)'>{}</span>. "
+                                    "You may want to add them manually yourself below.",
+                                    unknown_feat_name_list,
+                                ),
+                            )
 
         # For new records without map preview, delete first history record,
         # which contains the unformatted map name, and change the newer history
         # record's history_type from changed (~) to created (+). This gets rid of
         # a duplicate history record created when automatically generating a map name
-        if self.new_obj and not self.rename_and_preview:
+        if self.new_obj and not self.is_new_map:
             obj.save()
             obj.history.last().delete()
             history_obj = obj.history.first()
@@ -380,7 +375,7 @@ class PlasmidAdmin(
                 "<path:object_id>/map_dna_static_preview/",
                 self.admin_site.admin_view(self.map_dna_static_preview),
                 name=f"map_dna_static_preview_{self.model._meta.model_name}",
-            )
+            ),
         ] + super().get_urls()
 
     def map_dna_static_preview(self, request, *args, **kwargs):

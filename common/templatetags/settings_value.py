@@ -10,10 +10,11 @@ register = template.Library()
 @register.simple_tag
 def settings_value(name):
     # return getattr(settings, name, "")
-    if name == "OIDC_PROVIDER_NAME":
-        return getattr(settings, name, "")
-    elif name == "DOCS_URL":
-        return getattr(settings, name, "")
-    elif name == "SUPPORT_TICKET_URL":
+    if name in {
+        "OIDC_PROVIDER_NAME",
+        "DOCS_URL",
+        "SUPPORT_TICKET_URL",
+        "OVE_URL",
+    }:
         return getattr(settings, name, "")
     return ""

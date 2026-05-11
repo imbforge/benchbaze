@@ -1,4 +1,4 @@
-import time
+import re
 
 from django import forms
 from django.apps import apps
@@ -7,16 +7,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import path, re_path
+from django.urls import path, re_path, reverse
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-from import_export import resources
-from import_export.fields import Field
-from django.urls import reverse
+from djangoql.admin import DjangoQLSearchMixin
 
+from common.actions import export_action_tsv, export_action_xlsx
 
 from .models import (
     Header,
@@ -26,6 +25,7 @@ from .models import (
     SequenceFeatureAlias,
     Species,
 )
+from .search import SequenceFeatureQLSchema
 from .update_zkbs_records import (
     update_zkbs_celllines,
     update_zkbs_oncogenes,
@@ -378,63 +378,7 @@ class SequenceFeatureForm(forms.ModelForm):
         return self.cleaned_data
 
 
-class SequenceFeatureResource(resources.ModelResource):
-    """Defines a custom export resource class for SequenceFeature"""
-
-    donor_organism_name_rg = Field()
-    aliases = Field()
-
-    def dehydrate_donor_organism_name_rg(self, e):
-        return ", ".join(
-            f"{n} (RG{rg})" if rg else n
-            for n, rg in e.donor_organism.values_list("name_for_search", "risk_group")
-        )
-
-    def dehydrate_aliases(self, e):
-        return ", ".join(e.alias.values_list("label", flat=True))
-
-    class Meta:
-        model = SequenceFeature
-        fields = (
-            "id",
-            "name",
-            "donor_organism_name_rg",
-            "nuc_acid_purity__english_name",
-            "nuc_acid_risk__english_name",
-            "zkbs_oncogene__name",
-            "description",
-            "aliases",
-        )
-        export_order = (
-            "id",
-            "name",
-            "donor_organism_name_rg",
-            "nuc_acid_purity__english_name",
-            "nuc_acid_risk__english_name",
-            "zkbs_oncogene__name",
-            "description",
-            "aliases",
-        )
-
-
-@admin.action(description="Export selected sequence elements as XLSX")
-def export_sequence_features(modeladmin, request, queryset):
-    """Export Sequence feature"""
-
-    export_data = SequenceFeatureResource().export(queryset)
-
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = 'attachment; filename="{}_{}_{}.xlsx'.format(
-        queryset.model.__name__, time.strftime("%Y%m%d"), time.strftime("%H%M%S")
-    )
-    response.write(export_data.xlsx)
-
-    return response
-
-
-class SequenceFeatureAdmin(admin.ModelAdmin):
+class SequenceFeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = ("name", "get_donor_organism", "description", "get_aliass")
     list_display_links = ("name",)
     list_per_page = 25
@@ -443,7 +387,9 @@ class SequenceFeatureAdmin(admin.ModelAdmin):
     autocomplete_fields = ["zkbs_oncogene", "donor_organism"]
     inlines = [SequenceFeatureAliasAdmin]
     form = SequenceFeatureForm
-    actions = [export_sequence_features]
+    actions = [export_action_xlsx, export_action_tsv]
+    djangoql_schema = SequenceFeatureQLSchema
+    djangoql_completion_enabled_by_default = False
 
     @admin.display(description="aliases")
     def get_aliass(self, instance):
@@ -451,12 +397,7 @@ class SequenceFeatureAdmin(admin.ModelAdmin):
 
     @admin.display(description="donor organism")
     def get_donor_organism(self, instance):
-        species_names = []
-        for species in instance.donor_organism.all():
-            species_names.append(
-                species.latin_name if species.latin_name else species.common_name
-            )
-        return ", ".join(species_names)
+        return instance.donor_species_names_formatted()
 
 
 class ZkbsPlasmidAdmin(admin.ModelAdmin):
