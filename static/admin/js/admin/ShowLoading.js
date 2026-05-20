@@ -1,15 +1,26 @@
 function ShowLoading() {
-    var div = document.createElement('div');
-    var loader = document.createElement('div');
-    loader.className = "lds-ring";
-    loader.innerHTML = "<div></div><div></div><div></div><div></div>";
-    div.innerHTML = "</br>Please wait...</br></br>";
-    div.className = 'spinner-loader'
-    div.style.cssText = 'margin: 0; height: 10vw; width: 10vw; position: fixed; \
-     top: 50%; left: 50%; z-index: 5000; transform: translate(-50% , -50%); \
-     -webkit-transform: translate(-50%, -50%); box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .8); \
-     background-color: var(--body-bg); border: 3px solid var(--secondary); \
-     border-radius: 3px; font-family: "Roboto"; text-align: center;';
-    div.appendChild(loader);
-    document.body.appendChild(div);
+  var container = document.createElement("div");
+  container.className = "tg-loader-container";
+
+  var logoDiv = document.createElement("div");
+  logoDiv.className = "loading-logo";
+  logoDiv.setAttribute("aria-label", "Loading map viewer");
+  logoDiv.setAttribute("role", "status");
+
+  var img = document.createElement("img");
+  img.className = "loading-logo-mark";
+  img.src = "/static/authentication/logo-small.svg";
+  img.alt = "";
+  img.setAttribute("aria-hidden", "true");
+  logoDiv.appendChild(img);
+
+  var caption = document.createElement("p");
+  caption.className = "loading-caption";
+  caption.setAttribute("aria-hidden", "true");
+  caption.textContent = "Please wait";
+
+  container.appendChild(logoDiv);
+  container.appendChild(caption);
+
+  document.body.appendChild(container);
 }
