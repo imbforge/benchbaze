@@ -832,9 +832,12 @@ def convert_ove_to_sgff_primer(primer_ove, primer_sequence=""):
         annealed_bases = primer_sequence
         # N.B.: The value produced by mt.Tm_NN is more often than not ± 5° C from the one
         # reported by SnapGene
-        melting_temperature = mt.Tm_NN(
-            primer_sequence,
-            Na=100,
+        melting_temperature = round(
+            mt.Tm_NN(
+                primer_sequence,
+                Na=100,
+            ),
+            0,
         )
 
     primer_sgff = SgffPrimer(
