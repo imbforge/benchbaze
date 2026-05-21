@@ -677,15 +677,21 @@ class BaseCollectionModel(
             super().clean_field_name() if hasattr(super(), "clean_field_name") else {}
         )
 
-        if getattr(self, "name", None) is not None and self.name != "":
+        try:
+            self._meta.get_field("name")
             self.name = self.name.strip()
+        except:
+            pass
 
         return errors
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        if getattr(self, "name", None) is not None and self.name != "":
+        try:
+            self._meta.get_field("name")
             self.name = self.name.strip()
+        except:
+            pass
 
         super().save(force_insert, force_update, using, update_fields)
