@@ -585,6 +585,8 @@ $(document).ready(function () {
     updateReeditMapButtonState();
   }
 
+  const formElement = mapDnaInput?.closest("form");
+
   // If a previous upload was saved to a temp file (because form validation failed),
   // auto-load it into the file input so the user doesn't have to re-select it.
   const tempPathInput = document.querySelector(
@@ -592,15 +594,23 @@ $(document).ready(function () {
   );
   if (tempPathInput && tempPathInput.value) {
     const tempFileUrl = MEDIA_URL + tempPathInput.value;
-    fetchMapFileFromUrl(tempFileUrl)
-      .then(function (file) {
+    (async function () {
+      try {
+        const file = await fetchMapFileFromUrl(tempFileUrl);
         replaceMapDnaInputFile(file);
         createReeditMapButton();
         updateReeditMapButtonState();
-      })
-      .catch(function (err) {
+        const formElement = mapDnaInput.closest("form");
+        if (
+          formElement &&
+          $(formElement).attr("onsubmit") !== "ShowLoading()"
+        ) {
+          $(formElement).attr("onsubmit", "ShowLoading()");
+        }
+      } catch (err) {
         console.warn("Could not restore temp map file into input:", err);
-      });
+      }
+    })();
   }
 
   window.addEventListener("message", function (event) {
@@ -620,7 +630,6 @@ $(document).ready(function () {
     // set them in a hidden input field
     if (data.type === "BB_MAP_DNA_INITIAL_FEATURE_IDS") {
       const mapDnaInput = document.getElementById("id_map_dna");
-      const formElement = mapDnaInput?.closest("form");
 
       if (formElement) {
         updateSequenceFeatureIdsField(formElement, data.sequenceFeatureIds);
@@ -662,7 +671,9 @@ $(document).ready(function () {
       return;
     }
 
-    $(formElement).attr("onsubmit", "ShowLoading()");
+    if ($(formElement).attr("onsubmit") !== "ShowLoading()") {
+      $(formElement).attr("onsubmit", "ShowLoading()");
+    }
 
     // If no file was selected, update hidden input field to indicate that features
     // should not be detected and return
