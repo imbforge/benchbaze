@@ -42,6 +42,7 @@
   <script type="text/javascript">
     const MagnificiFrameClassIds = ['magnific-popup-iframe-map-dna', "magnific-popup-iframe-findoligos"];
     const OVE_URL = "{% settings_value 'OVE_URL'|escapejs %}";
+    const MEDIA_URL = "{{ MEDIA_URL|escapejs }}";
     {% if original.map_dna %} const oveUrls = {map_dna: "{{original.map_dna_preview_url}}"}; {% else %} const oveUrls = {}; {% endif %}
     {% block map_dna_document_ready_inline %}{% endblock %}
   </script>

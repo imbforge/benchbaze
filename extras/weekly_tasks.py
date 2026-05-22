@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils import timezone
+import os
+
 
 from approval.models import Approval
 from collection.models import (
@@ -128,6 +130,26 @@ def delete_dup_hist_rec_ids(model, time_delta):
 
     return hist_item_ids_delete
 
+
+def cleanup_temp_files(temp_dir, days=8):
+    """Delete all files in the temp directory that are older than days"""
+
+    now = timezone.now()
+
+    for filename in os.listdir(temp_dir):
+        file_path = os.path.join(temp_dir, filename)
+        if os.path.isfile(file_path):
+            file_age = now - timezone.datetime.fromtimestamp(
+                os.path.getmtime(file_path), tz=timezone.utc
+            )
+            if file_age > timedelta(days=days):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+
+
+cleanup_temp_files(os.path.join(settings.MEDIA_ROOT, "temp"))
 
 MODELS = {
     Plasmid: HistoricalPlasmid,

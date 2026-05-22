@@ -585,6 +585,24 @@ $(document).ready(function () {
     updateReeditMapButtonState();
   }
 
+  // If a previous upload was saved to a temp file (because form validation failed),
+  // auto-load it into the file input so the user doesn't have to re-select it.
+  const tempPathInput = document.querySelector(
+    'input[name="map_dna_temp_path"]'
+  );
+  if (tempPathInput && tempPathInput.value) {
+    const tempFileUrl = MEDIA_URL + tempPathInput.value;
+    fetchMapFileFromUrl(tempFileUrl)
+      .then(function (file) {
+        replaceMapDnaInputFile(file);
+        createReeditMapButton();
+        updateReeditMapButtonState();
+      })
+      .catch(function (err) {
+        console.warn("Could not restore temp map file into input:", err);
+      });
+  }
+
   window.addEventListener("message", function (event) {
     // Listen for the message from the map detect features popup with the processed map file,
     // and replace the file in the map_dna input field with the processed map file, so that

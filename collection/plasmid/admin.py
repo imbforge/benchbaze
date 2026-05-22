@@ -1,13 +1,17 @@
+import logging
 import os
+import uuid
 
 from django.conf import settings
 from django.contrib import admin, messages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.mail import mail_admins
 from django.shortcuts import render
 from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
+from collection.shared.forms import PersistentClearableFileInput
 from collection.shared.map_dna.utils import (
     detect_map_dna_features,
     get_map_dna_feature_names,
@@ -25,6 +29,8 @@ from ..shared.admin import (
 )
 from .models import PlasmidDoc
 from .search import PlasmidQLSchema
+
+logger = logging.getLogger("logfile")
 
 MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
@@ -225,12 +231,18 @@ class PlasmidAdmin(
     add_form_template = "admin/collection/plasmid/change_form.html"
 
     def save_model(self, request, obj, form, change):
-        self._save_model(
-            request,
-            obj,
-            form,
-            change,
-        )
+        self._save_model(request, obj, form, change)
+        # Clean up the temp file now that the upload has been saved successfully
+        temp_rel_path = getattr(request, "_map_dna_temp_path", None)
+        if temp_rel_path:
+            full_path = os.path.normpath(
+                os.path.join(os.path.normpath(settings.MEDIA_ROOT), temp_rel_path)
+            )
+            try:
+                os.remove(full_path)
+            except OSError:
+                pass
+            request._map_dna_temp_path = None
 
     def save_related(self, request, form, formsets, change):
         self.redirect_to_obj_page = False
@@ -339,6 +351,7 @@ class PlasmidAdmin(
         return super().response_change(request, obj)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
+        self._restore_temp_file(request)
         extra_context = extra_context or {}
 
         obj = self.model.objects.get(pk=object_id)
@@ -355,8 +368,106 @@ class PlasmidAdmin(
 
         return super().change_view(request, object_id, form_url, extra_context)
 
+    def add_view(self, request, form_url="", extra_context=None):
+        self._restore_temp_file(request)
+        return super().add_view(request, form_url, extra_context)
+
+    def _restore_temp_file(self, request):
+        """Called at the top of add_view/change_view for every POST
+
+        - If the POST includes a new map_dna upload: copy it to
+          uploads/temp/ and store the temp path on request so that
+          get_form can wire it into the widget's hidden input (for the
+          case where validation fails and the form is re-rendered)
+
+        - If the POST has no map_dna but carries a map_dna_temp_path:
+          restore the file from disk into request.FILES so that form
+          validation treats it as a fresh upload
+        """
+
+        if request.method != "POST":
+            return
+
+        media_root = os.path.normpath(settings.MEDIA_ROOT)
+        temp_dir = os.path.normpath(os.path.join(media_root, "temp"))
+
+        if "map_dna" in request.FILES:
+            # NEW UPLOAD
+            # Save a copy to temp so that, if validation fails, the widget can
+            # re-render the hidden input that carries the path to the next POST
+
+            # Clean up any previous temp file for this field, in case the user tries
+            # multiple times to upload a file that fails validation
+            old_temp = request.POST.get("map_dna_temp_path", "")
+            if old_temp:
+                old_full_path = os.path.normpath(os.path.join(media_root, old_temp))
+                if old_full_path.startswith(temp_dir + os.sep) and os.path.isfile(
+                    old_full_path
+                ):
+                    try:
+                        os.remove(old_full_path)
+                    except OSError:
+                        pass
+
+            # Save new file to temp and store temp path on request for get_form
+            file = request.FILES["map_dna"]
+            os.makedirs(temp_dir, exist_ok=True)
+            ext = os.path.splitext(file.name)[1].lower() if file.name else ""
+            temp_filename = f"map_dna_temp_{uuid.uuid4().hex}{ext}"
+            temp_rel_path = f"temp/{temp_filename}"
+            full_temp_path = os.path.join(media_root, temp_rel_path)
+            try:
+                file.seek(0)
+                with open(full_temp_path, "wb") as fh:
+                    fh.write(file.read())
+                file.seek(0)
+                request._map_dna_temp_path = temp_rel_path
+                request._map_dna_original_filename = file.name
+            except Exception as exc:
+                logger.exception(
+                    "_restore_temp_file: failed to save upload to temp: %s", exc
+                )
+            return
+
+        # RESTORE FROM TEMP
+        temp_rel_path = request.POST.get("map_dna_temp_path", "")
+        if not temp_rel_path:
+            return
+        full_path = os.path.normpath(os.path.join(media_root, temp_rel_path))
+        # Path must stay inside uploads/temp/
+        if not (full_path.startswith(temp_dir + os.sep) and os.path.isfile(full_path)):
+            return
+        with open(full_path, "rb") as fh:
+            content = fh.read()
+        # Keep the temp file on disk — it stays valid for subsequent re-renders
+        # until the form finally saves (cleanup happens in save_model)
+        request._map_dna_temp_path = temp_rel_path
+        request._map_dna_original_filename = os.path.basename(full_path)
+        request.FILES = request.FILES.copy()
+        request.FILES["map_dna"] = SimpleUploadedFile(
+            os.path.basename(full_path), content
+        )
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "map_dna":
+            kwargs["widget"] = PersistentClearableFileInput
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
+        # Wire the temp path into the widget so that, if the form is re-rendered due
+        # to validation errors, the user doesn't lose their uploaded file
+        # and have to re-upload it
+        temp_path = getattr(request, "_map_dna_temp_path", None)
+        orig_name = getattr(request, "_map_dna_original_filename", None)
+        if "map_dna" in form.base_fields:
+            widget = PersistentClearableFileInput(
+                temp_path=temp_path,
+                original_filename=orig_name,
+            )
+            widget.is_required = form.base_fields["map_dna"].required
+            form.base_fields["map_dna"].widget = widget
+
         # For new objects
         if not obj:
             # Set default E. coli strains

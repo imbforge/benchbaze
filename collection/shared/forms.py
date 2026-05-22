@@ -1,5 +1,35 @@
+from django.contrib.admin.widgets import AdminFileWidget
 from django.contrib.contenttypes.forms import BaseGenericInlineFormSet
 from django.forms import ValidationError
+from django.utils.html import format_html
+
+
+class PersistentClearableFileInput(AdminFileWidget):
+    """A ClearableFileInput that adds a hidden <name>_temp_path input when
+    temp_path has been set on the widget instance
+
+    The view is responsible for:
+    - Saving the uploaded file to a temporary location on the first (failing)
+      POST and storing the relative path + original filename on the request
+    - Creating this widget via get_form with those values
+    - Restoring the file from the temp path on the next POST (when no file
+      is re-uploaded by the browser)
+    """
+
+    def __init__(self, *args, temp_path=None, original_filename=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.temp_path = temp_path
+        self.original_filename = original_filename
+
+    def render(self, name, value, attrs=None, renderer=None):
+        html = super().render(name, value, attrs, renderer)
+        if self.temp_path:
+            html = html + format_html(
+                '<input type="hidden" name="{}_temp_path" value="{}">',
+                name,
+                self.temp_path,
+            )
+        return html
 
 
 class LocationCheckNumberInlineFormSet(BaseGenericInlineFormSet):
