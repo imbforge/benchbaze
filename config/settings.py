@@ -134,13 +134,23 @@ DEFAULT_FROM_EMAIL = SERVER_EMAIL_ADDRESS
 SERVER_EMAIL = SERVER_EMAIL_ADDRESS
 ADMINS = SITE_ADMIN_EMAIL_ADDRESSES
 
-# Plainly stolen from Parkour LIMS :)
-# Make sure the 'logs' directory exists. If not, create it
+# Make sure the 'logs' directory exists and is writable by the
+# web server user
 LOG_DIR = BASE_DIR / "logs"
 try:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.chmod(0o2775)
 except OSError:
     pass
+
+for logfile in ("django.log", "db.log"):
+    path = LOG_DIR / logfile
+    try:
+        if not path.exists():
+            path.touch()
+        path.chmod(0o664)
+    except OSError:
+        pass
 
 LOGGING = {
     "version": 1,
