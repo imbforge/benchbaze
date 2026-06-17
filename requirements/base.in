@@ -24,11 +24,11 @@ zmq==0.0.0
 django-better-admin-arrayfield==1.4.2
 backports-zoneinfo==0.2.1;python_version<"3.9"
 django-modelclone @git+https://github.com/al-beton/django-modelclone/
-djangorestframework
-reportlab
-biopython
-sgffp
-seguid
+djangorestframework==3.16.0
+reportlab==4.4.3
+biopython==1.86
+sgffp==0.19.1
+seguid==0.2.1
 numpy==1.26.4
 pandas==1.5.3
 PyYAML==6.0.3
