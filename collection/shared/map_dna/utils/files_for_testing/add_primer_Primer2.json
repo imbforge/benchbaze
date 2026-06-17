@@ -1,0 +1,760 @@
+{
+  "features": {
+    "VMCPMns5V": {
+      "name": "nts1",
+      "type": "gene",
+      "strand": 1,
+      "arrowheadType": "TOP",
+      "start": 3730,
+      "end": 5211,
+      "color": "#00e600",
+      "notes": { "note": ["SPCC24B10.19c"] },
+      "sgff_feature": {
+        "name": "nts1",
+        "type": "gene",
+        "strand": "+",
+        "segments": [
+          { "range": "3731-5212", "color": "#00e600", "type": "standard" }
+        ],
+        "qualifiers": { "note": "SPCC24B10.19c" },
+        "color": "#00e600",
+        "extras": {
+          "recentID": "0",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "VMCPMns5V",
+      "forward": true
+    },
+    "1-13_8MfYP": {
+      "name": "nmt1 terminator",
+      "type": "terminator",
+      "strand": 1,
+      "arrowheadType": "NONE",
+      "start": 5238,
+      "end": 6206,
+      "color": "#ffffff",
+      "notes": {},
+      "sgff_feature": {
+        "name": "nmt1 terminator",
+        "type": "terminator",
+        "strand": ".",
+        "segments": [
+          { "range": "5239-6207", "color": "#ffffff", "type": "standard" }
+        ],
+        "qualifiers": {},
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "9",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "1-13_8MfYP",
+      "forward": true
+    },
+    "ht1qydVPFm": {
+      "name": "AmpR",
+      "type": "CDS",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 7493,
+      "end": 8353,
+      "color": "#ccffcc",
+      "notes": {
+        "codon_start": ["1"],
+        "gene": ["<html><body><i>bla</i></body></html>"],
+        "note": [
+          "<html><body>confers resistance to ampicillin, carbenicillin, and related antibiotics</body></html>"
+        ],
+        "product": ["<html><body>β-lactamase</body></html>"],
+        "transl_table": ["1"],
+        "translation": [
+          "MSIQHFRVALIPFFAAFCLPVFA,HPETLVKVKDAEDQLGARVGYIELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYSPVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFFHNMGDHVTRLDRWEPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSALPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGASLIKHW*"
+        ]
+      },
+      "sgff_feature": {
+        "name": "AmpR",
+        "type": "CDS",
+        "strand": "-",
+        "segments": [
+          {
+            "range": "7494-8285",
+            "color": "#ccffcc",
+            "type": "standard",
+            "translated": "1"
+          },
+          {
+            "name": "signal sequence",
+            "range": "8286-8354",
+            "color": "#ccffcc",
+            "type": "standard",
+            "translated": "1"
+          }
+        ],
+        "qualifiers": {
+          "codon_start": 1,
+          "gene": "<html><body><i>bla</i></body></html>",
+          "note": "<html><body>confers resistance to ampicillin, carbenicillin, and related antibiotics</body></html>",
+          "product": "<html><body>β-lactamase</body></html>",
+          "transl_table": 1,
+          "translation": "MSIQHFRVALIPFFAAFCLPVFA,HPETLVKVKDAEDQLGARVGYIELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYSPVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFFHNMGDHVTRLDRWEPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSALPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGASLIKHW*"
+        },
+        "color": "#ccffcc",
+        "extras": {
+          "recentID": "10",
+          "translationMW": "31591.38",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "cleavageArrows": "8285",
+          "consecutiveTranslationNumbering": "1",
+          "hitsStopCodon": "1",
+          "detectionMode": "exactProteinMatch",
+          "readingFrame": "-1"
+        },
+        "raw_qualifiers": null
+      },
+      "locations": [
+        { "start": 7493, "end": 8284 },
+        { "start": 8285, "end": 8353 }
+      ],
+      "annotationTypePlural": "features",
+      "id": "ht1qydVPFm",
+      "forward": false
+    },
+    "7p2CVopl4p": {
+      "name": "ori",
+      "type": "rep_origin",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 6734,
+      "end": 7322,
+      "color": "#ffff00",
+      "notes": {
+        "direction": ["LEFT"],
+        "note": [
+          "<html><body>high-copy-number ColE1/pMB1/pBR322/pUC origin of replication</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "ori",
+        "type": "rep_origin",
+        "strand": "-",
+        "segments": [
+          { "range": "6735-7323", "color": "#ffff00", "type": "standard" }
+        ],
+        "qualifiers": {
+          "direction": "LEFT",
+          "note": "<html><body>high-copy-number ColE1/pMB1/pBR322/pUC origin of replication</body></html>"
+        },
+        "color": "#ffff00",
+        "extras": {
+          "recentID": "11",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "7p2CVopl4p",
+      "forward": false
+    },
+    "bLxcH8-djt": {
+      "name": "f1 ori",
+      "type": "rep_origin",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 2307,
+      "end": 2762,
+      "color": "#ffff00",
+      "notes": {
+        "direction": ["LEFT"],
+        "note": [
+          "<html><body>f1 bacteriophage origin of replication; arrow indicates direction of (+) strand synthesis</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "f1 ori",
+        "type": "rep_origin",
+        "strand": "-",
+        "segments": [
+          { "range": "2308-2763", "color": "#ffff00", "type": "standard" }
+        ],
+        "qualifiers": {
+          "direction": "LEFT",
+          "note": "<html><body>f1 bacteriophage origin of replication; arrow indicates direction of (+) strand synthesis</body></html>"
+        },
+        "color": "#ffff00",
+        "extras": {
+          "recentID": "12",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "bLxcH8-djt",
+      "forward": false
+    },
+    "sZ6bRNdRRk": {
+      "name": "AmpR promoter",
+      "type": "promoter",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 8354,
+      "end": 8458,
+      "color": "#ffffff",
+      "notes": { "gene": ["<html><body><i>bla</i></body></html>"] },
+      "sgff_feature": {
+        "name": "AmpR promoter",
+        "type": "promoter",
+        "strand": "-",
+        "segments": [
+          { "range": "8355-8459", "color": "#ffffff", "type": "standard" }
+        ],
+        "qualifiers": { "gene": "<html><body><i>bla</i></body></html>" },
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "13",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "sZ6bRNdRRk",
+      "forward": false
+    },
+    "OQ-ctbNQHY": {
+      "name": "lac promoter",
+      "type": "promoter",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 6380,
+      "end": 6410,
+      "color": "#ffffff",
+      "notes": {
+        "note": [
+          "<html><body>promoter for the <i>E. coli lac</i> operon</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "lac promoter",
+        "type": "promoter",
+        "strand": "-",
+        "segments": [
+          {
+            "name": "-10",
+            "range": "6381-6387",
+            "color": "#ffffff",
+            "type": "standard"
+          },
+          { "range": "6388-6405", "color": "#ffffff", "type": "standard" },
+          {
+            "name": "-35",
+            "range": "6406-6411",
+            "color": "#ffffff",
+            "type": "standard"
+          }
+        ],
+        "qualifiers": {
+          "note": "<html><body>promoter for the <i>E. coli lac</i> operon</body></html>"
+        },
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "14",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "locations": [
+        { "start": 6380, "end": 6386 },
+        { "start": 6387, "end": 6404 },
+        { "start": 6405, "end": 6410 }
+      ],
+      "annotationTypePlural": "features",
+      "id": "OQ-ctbNQHY",
+      "forward": false
+    },
+    "SU0gyXGBp1": {
+      "name": "T7 promoter",
+      "type": "promoter",
+      "strand": 1,
+      "arrowheadType": "TOP",
+      "start": 2935,
+      "end": 2953,
+      "color": "#ffffff",
+      "notes": {
+        "note": [
+          "<html><body>promoter for bacteriophage T7 RNA polymerase</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "T7 promoter",
+        "type": "promoter",
+        "strand": "+",
+        "segments": [
+          { "range": "2936-2954", "color": "#ffffff", "type": "standard" }
+        ],
+        "qualifiers": {
+          "note": "<html><body>promoter for bacteriophage T7 RNA polymerase</body></html>"
+        },
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "15",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "SU0gyXGBp1",
+      "forward": true
+    },
+    "28z9C61CLh": {
+      "name": "T3 promoter",
+      "type": "promoter",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 6293,
+      "end": 6311,
+      "color": "#ffffff",
+      "notes": {
+        "note": [
+          "<html><body>promoter for bacteriophage T3 RNA polymerase</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "T3 promoter",
+        "type": "promoter",
+        "strand": "-",
+        "segments": [
+          { "range": "6294-6312", "color": "#ffffff", "type": "standard" }
+        ],
+        "qualifiers": {
+          "note": "<html><body>promoter for bacteriophage T3 RNA polymerase</body></html>"
+        },
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "16",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "28z9C61CLh",
+      "forward": false
+    },
+    "hHMACwbPZi": {
+      "name": "M13 fwd",
+      "type": "primer_bind",
+      "strand": 1,
+      "arrowheadType": "TOP",
+      "start": 2909,
+      "end": 2925,
+      "color": "#a020f0",
+      "notes": {
+        "note": [
+          "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "M13 fwd",
+        "type": "primer_bind",
+        "strand": "+",
+        "segments": [
+          { "range": "2910-2926", "color": "#a020f0", "type": "standard" }
+        ],
+        "qualifiers": {
+          "note": "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        },
+        "color": "#a020f0",
+        "extras": {
+          "recentID": "17",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "hHMACwbPZi",
+      "forward": true
+    },
+    "pxbK9aFRP1": {
+      "name": "SK primer",
+      "type": "primer_bind",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 6240,
+      "end": 6256,
+      "color": "#a020f0",
+      "notes": {
+        "note": [
+          "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "SK primer",
+        "type": "primer_bind",
+        "strand": "-",
+        "segments": [
+          { "range": "6241-6257", "color": "#a020f0", "type": "standard" }
+        ],
+        "qualifiers": {
+          "note": "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        },
+        "color": "#a020f0",
+        "extras": {
+          "recentID": "18",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "pxbK9aFRP1",
+      "forward": false
+    },
+    "-hzWor08JL": {
+      "name": "M13 rev",
+      "type": "primer_bind",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 6332,
+      "end": 6348,
+      "color": "#a020f0",
+      "notes": {
+        "note": [
+          "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "M13 rev",
+        "type": "primer_bind",
+        "strand": "-",
+        "segments": [
+          { "range": "6333-6349", "color": "#a020f0", "type": "standard" }
+        ],
+        "qualifiers": {
+          "note": "<html><body>common sequencing primer, one of multiple similar variants</body></html>"
+        },
+        "color": "#a020f0",
+        "extras": {
+          "recentID": "19",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "-hzWor08JL",
+      "forward": false
+    },
+    "JiFIbFi0wj": {
+      "name": "lac operator",
+      "type": "protein_bind",
+      "strand": 1,
+      "arrowheadType": "NONE",
+      "start": 6356,
+      "end": 6372,
+      "color": "#31849b",
+      "notes": {
+        "bound_moiety": [
+          "<html><body><i>lac</i> repressor encoded by <i>lacI</i></body></html>"
+        ],
+        "note": [
+          "<html><body>The <i>lac</i> repressor binds to the <i>lac</i> operator to inhibit transcription in <i>E. coli</i>. This inhibition can be relieved by adding lactose or isopropyl-β-D-thiogalactopyranoside (IPTG).</body></html>"
+        ]
+      },
+      "sgff_feature": {
+        "name": "lac operator",
+        "type": "protein_bind",
+        "strand": ".",
+        "segments": [
+          { "range": "6357-6373", "color": "#31849b", "type": "standard" }
+        ],
+        "qualifiers": {
+          "bound_moiety": "<html><body><i>lac</i> repressor encoded by <i>lacI</i></body></html>",
+          "note": "<html><body>The <i>lac</i> repressor binds to the <i>lac</i> operator to inhibit transcription in <i>E. coli</i>. This inhibition can be relieved by adding lactose or isopropyl-β-D-thiogalactopyranoside (IPTG).</body></html>"
+        },
+        "color": "#31849b",
+        "extras": {
+          "recentID": "20",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "JiFIbFi0wj",
+      "forward": true
+    },
+    "ZJY9UJ_g7O": {
+      "name": "leu1",
+      "type": "CDS",
+      "strand": 1,
+      "arrowheadType": "TOP",
+      "start": 306,
+      "end": 1421,
+      "color": "#993366",
+      "notes": {
+        "codon_start": ["1"],
+        "transl_table": ["1"],
+        "translation": [
+          "MCAKKIVVLPGDHIGPEIVASALEVLKVVEKKRPELKLEFEEHKIGGASIDAYGTPLTDETVKACLEADGVLLGAVGGPEWTNPNCRPEQGLLKLRKSMGVWANLRPCNFASKSLVKYSPLKPEIVEGVDFCVVRELTGGCYFGERTEDNGSGYAMDTWPYSLEEVSRIARLAAWLAETSNPPAPVTLLDKANVLATSRLWRKTVAKIFKEEYPHLTLKNQLIDSAAMLLVKSPRTLNGVVLTDNLFGDIISDEASVIPGSLGLLPSASLSGVVGKSEEKVHCLVEPIHGSAPDIAGKGIVNPVGTILSASLLLRYGLNAPKEAEAIEAAVRKVLDDTSIGGRGLYTRDLGGEASTADITKAVVEELEKIL*"
+        ]
+      },
+      "sgff_feature": {
+        "name": "leu1",
+        "type": "CDS",
+        "strand": "+",
+        "segments": [
+          {
+            "range": "307-1422",
+            "color": "#993366",
+            "type": "standard",
+            "translated": "1"
+          }
+        ],
+        "qualifiers": {
+          "codon_start": 1,
+          "transl_table": 1,
+          "translation": "MCAKKIVVLPGDHIGPEIVASALEVLKVVEKKRPELKLEFEEHKIGGASIDAYGTPLTDETVKACLEADGVLLGAVGGPEWTNPNCRPEQGLLKLRKSMGVWANLRPCNFASKSLVKYSPLKPEIVEGVDFCVVRELTGGCYFGERTEDNGSGYAMDTWPYSLEEVSRIARLAAWLAETSNPPAPVTLLDKANVLATSRLWRKTVAKIFKEEYPHLTLKNQLIDSAAMLLVKSPRTLNGVVLTDNLFGDIISDEASVIPGSLGLLPSASLSGVVGKSEEKVHCLVEPIHGSAPDIAGKGIVNPVGTILSASLLLRYGLNAPKEAEAIEAAVRKVLDDTSIGGRGLYTRDLGGEASTADITKAVVEELEKIL*"
+        },
+        "color": "#993366",
+        "extras": {
+          "recentID": "21",
+          "translationMW": "39732.92",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1",
+          "hitsStopCodon": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "ZJY9UJ_g7O",
+      "forward": true
+    },
+    "igZEa8DVSz": {
+      "name": "sp ADH promoter",
+      "type": "promoter",
+      "strand": 1,
+      "arrowheadType": "NONE",
+      "start": 2967,
+      "end": 3716,
+      "color": "#ffffff",
+      "notes": {},
+      "sgff_feature": {
+        "name": "sp ADH promoter",
+        "type": "promoter",
+        "strand": ".",
+        "segments": [
+          { "range": "2968-3717", "color": "#ffffff", "type": "standard" }
+        ],
+        "qualifiers": {},
+        "color": "#ffffff",
+        "extras": {
+          "recentID": "22",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "annotationTypePlural": "features",
+      "id": "igZEa8DVSz",
+      "forward": true
+    },
+    "4ZCH01QTBp": {
+      "name": "Wraparound feature 1",
+      "type": "misc_feature",
+      "strand": 1,
+      "arrowheadType": "TOP",
+      "start": 8485,
+      "end": 179,
+      "color": "#a6acb3",
+      "notes": {},
+      "sgff_feature": {
+        "name": "Wraparound feature 1",
+        "type": "misc_feature",
+        "strand": "+",
+        "segments": [
+          {
+            "name": "wf1-1",
+            "range": "8486-11",
+            "color": "#a6acb3",
+            "type": "standard"
+          },
+          {
+            "name": "wf1-2",
+            "range": "12-180",
+            "color": "#a6acb3",
+            "type": "standard"
+          }
+        ],
+        "qualifiers": {},
+        "color": "#a6acb3",
+        "extras": {
+          "recentID": "8",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1"
+        },
+        "raw_qualifiers": null
+      },
+      "locations": [
+        { "start": 8485, "end": 10 },
+        { "start": 11, "end": 179 }
+      ],
+      "annotationTypePlural": "features",
+      "id": "4ZCH01QTBp",
+      "forward": true
+    },
+    "HfElauuv0EP": {
+      "name": "Wraparound feature 2",
+      "type": "misc_feature",
+      "strand": -1,
+      "arrowheadType": "BOTTOM",
+      "start": 8505,
+      "end": 176,
+      "color": "#a6acb3",
+      "notes": {},
+      "sgff_feature": {
+        "name": "Wraparound feature 2",
+        "type": "misc_feature",
+        "strand": "-",
+        "segments": [
+          {
+            "name": "wf2-2",
+            "range": "8506-64",
+            "color": "#a6acb3",
+            "type": "standard"
+          },
+          {
+            "name": "wf1-2",
+            "range": "65-177",
+            "color": "#a6acb3",
+            "type": "standard"
+          }
+        ],
+        "qualifiers": {},
+        "color": "#a6acb3",
+        "extras": {
+          "recentID": "2",
+          "swappedSegmentNumbering": "1",
+          "allowSegmentOverlaps": "0",
+          "consecutiveTranslationNumbering": "1",
+          "readingFrame": "-1"
+        },
+        "raw_qualifiers": null
+      },
+      "locations": [
+        { "start": 8505, "end": 63 },
+        { "start": 64, "end": 176 }
+      ],
+      "annotationTypePlural": "features",
+      "id": "HfElauuv0EP",
+      "forward": false
+    }
+  },
+  "name": "original.dna",
+  "sequence": "tcgcgcgtttcggtgatgacggtgaaaacctctgacacatgcagctcccggagacggtcacagcttgtctgtaagcggatgccgggagcagacaagcccgtcagggcgcgtcagcgggtgttggcgggtgtcggggctggcttaactatgcggcatcagagcagattgtactgagagtgcaccatacgatatcccaatctgtagtataaaaagtgcaacagtgttgagtttcccgaaaccaggcatttttgcggtagggtctgaaactttcacgaaaccatttcacaacaaaacttcttcaacaacatgtgtgcaaagaaaatcgtcgtcttaccaggagaccatattggccctgaaattgttgcttctgccttggaggttttgaaagtcgttgagaagaagcgacctgagttaaaactcgagtttgaagaacacaagattggaggtgcctctattgatgcctatggaacccctttgactgacgagactgtgaaggcttgtttggaagctgacggtgttcttttgggtgccgttggtggtcctgaatggaccaaccccaattgtcgtcctgagcaaggtttattgaagcttcgtaagagtatgggtgtttgggccaaccttcgaccttgcaactttgccagcaagtctttagtcaagtacagccctttgaagcctgaaatcgttgaaggtgtcgatttttgtgttgtacgagaacttactggaggttgttactttggtgagcgcactgaggacaacggatcgggttatgctatggacacttggccttacagtttggaagaagtttctcgtattgctcgtttggctgcttggttagctgaaacttccaaccctcctgctcccgtcacattactcgacaaagctaatgttttggcaacttctcgtctttggcgcaagactgtagctaagatttttaaggaggaatatcctcaccttaccttaaaaaaccagctcattgactccgcagccatgcttttggtcaagagccctcgtacacttaacggtgttgttttgactgacaacttgtttggtgacattatttcagatgaggcttctgtcattcctggtagcttgggccttttgccttctgcctccctttccggtgtggtaggaaaatcagaagaaaaggttcattgtttggttgagcccattcacggtagcgctcccgatatcgctggtaagggcattgttaatcctgttggtacaattttatctgcttcccttctccttcgttatggtttgaatgctcctaaggaggctgaagctatcgaagccgccgtacgcaaggtcttggatgatacttcaattggtggacgtggtctttatactcgcgatttgggaggtgaggcttctaccgctgatattactaaggctgttgttgaagaacttgaaaaaattttgtaatagggtttaatgtagaataaattcatatgatttgatttgacctaatttttattgattaattgtgtcgcatatttattatcgttaaaaatgcaattgacaaaagcgtaaattttaaggctctaatgttttttcttttggtatgttatagtcaagcaaagatgtattaagttgcaaaagcatggaattgatttacgacatccgttcaactttatgaccgagttgtcgctgtgtacttactctttttttactatgaaaagtttcaaacataatatcattaattatttctttttaaacgaagtaacctgtaacataaataataggggaaaagaagaaaaaaaccataaaaattcgagaatcgtaacaattattattgtaacgatgacaacccgattctttgagagagccagagacatgacttttgcattaccgtaattggtttctacttatgaattgtaaacttgtgtagggaatttcatccaccagctatcgcgggctgctctctgcatcagtgttagcacattttatattaatgaagattttgctatgcaaaatacgtaaatttctggcgcgatatatttttatcaaacgaacatgactatcctttccactttgatggttcgcaagtattttgatttgtattaaatgcacatctaacaagccatttcgcccaaaatcaccaactggcacatgtacccaaccagttaggttcctcgacttgaactgttgtaacaatttccaaatcttgaaaccctgtcccagctgatattcgcaaagtactgggagtataagattcatcaagggtgtattgaaggtacatactcacatacttaatcgatgcggtgtgaaataccgcacagatgcgtaaggagaaaataccgcatcaggaaattgtaaacgttaatattttgttaaaattcgcgttaaatttttgttaaatcagctcattttttaaccaataggccgaaatcggcaaaatcccttataaatcaaaagaatagaccgagatagggttgagtgttgttccagtttggaacaagagtccactattaaagaacgtggactccaacgtcaaagggcgaaaaaccgtctatcagggcgatggcccactacgtgaaccatcaccctaatcaagttttttggggtcgaggtgccgtaaagcactaaatcggaaccctaaagggagcccccgatttagagcttgacggggaaagccggcgaacgtggcgagaaaggaagggaagaaagcgaaaggagcgggcgctagggcgctggcaagtgtagcggtcacgctgcgcgtaaccaccacacccgccgcgcttaatgcgccgctacagggcgcgtcgcgccattcgccattcaggctgcgcaactgttgggaagggcgatcgcggtgcgggcctcttcgctattacgccagctggcgaaagggggatgtgctgcaaggcgattaagttgggtaacgccagggttttcccagtcacgacgttgtaaaacgacggccagtgagcgcgcgtaatacgactcactatagggcgaattgggtacCTGCAGCATGCCCTACAACAACTAAGAAAATGGCTATCATGCGGAAGCTGGTGAGAAGAACAGCATCGGGACAAGGGAAGGAAGAACAAAGACAAAGAAAACAAAAGAAAGCAATTGAAAACAAAACAAAACAATTTTCATTCCTTCTCTTATCATTCCTTTTCTTTTCTTTTCTCTCATTCAACGCACTCCATCGTATCCGTATTCCTCTTATTTTTTCTCTTTCTCTATATCCATTTCTTTCTCTCTAGGTGTGTCCTCTCTCTCTCTTCAATTTCTCTACTCCGCATTCCAACGCATCCTTCCCCCAACCTCCCATTTCCTCCTTACGGCCCGATAGCGATCGTCTTTCCCTCGCTATCACTCGCTACCGGCCCCTCCTCTGCACCGTAACCTCCTACGTATTTACCATATCATAAAGTTTTTTCCGACGCTTATCGCTGACCCCCTGTCGCCCTCCTATTGGCTTCCGGATTATCTTCTTGTCCATAAGGTGATCCATGCTTCCTGAAGATTCCCGAAATGTGTCCACTTTGGCGGGGAATCATTCCATCCACTTCTTTCTCTCTCGCTTTCCTCATTCGGCGCTCCCCTTCCGCGTCTCATTGGTCTTCCGCTCCGTTTTTGCTTTGCCGATGTTACTTGGGGAGAGGTGCGATAATCCTTTCGCAAAAACTCGGTTTGACGCCTCCCATGGTATAAATAGTGGGTGGTGGACAGGTGCCTTCGCTTTTCTTTTCTTTAAGCAAGGAATTcCGTCGACATGGTGAAATCGTGTCAAAAAAAACCGGATATTGATGAGTTCTTTTCATTTTTGCAGAGTGCATTCCATCCTCTACAGACCGAGGAACTTGATACATTCGTTCGCAACATTTTTGAATATGACGATCGAGGTCGTTTGTACAACTGCCTTTTAACTCTAGTTCCTTATGAAAGACTTCCAATAGATGCAGAGGATCTTAGTAGTCGAAAAACCTATGCGCGTCCCGTACTAATCCGACAATACCGCAGTTTGCGGTTTGCCAACAAAGAAGAAAACATTTGTCGGCTAACTCCCAACTCAGCGTTCGTCCCTGTTCGAGACTCTGCAGTCGCTAGCATTTCAACCTCAAAAGTGCAGGACTTTAACTCCTATGCTACTCTCACTGAAGCACAGAAAAAAACGGCCACTCCCGTTGAGGAAAAAAACTTCTTAAATCAAATTGTCATACAATGTTTAGACTCTTTGGAAACCGACGTTGAAACAAATACCACGCATGCTACTTTACTAGCCGTTGACCCTACTTGGTTAATCCGTGTATCACAGCATACCTGTGATCGGAAAGCTGTGGCTAATCTCTGTATTCAGTATGGAAGTCAAATATTTTATGATCCATCATTTCGAAATGCTTATGAATTATGGTCCAATCCTTCAGTTCTTTTGGCTTTTTTGAAGGCCCAAAGAGTGTTGGTCGTTTCAGATATATTTACTTCGTCAACATTGAGATCAACACAAGGGACGCCAATGTCTTTTCCTAATTTAGCTTTGGAAAGCGCTGATAATGTCGAGAACGTATCAAAGCCTATTAACCCTCGAATGGAAAGGTTTTCATCAGAGGTTAAATCTTCGAGTATTCTGAAACAACAGATTGCAGCCGTTGTTGAGAAAATCAATTATGACATACGCCCTCAACGTGATCAAATCCCTGAAGAAAATATCGTACCTAGAATCTCTTACTTAACAAGTACCACTACTTCGACCAAATCATCACCGGTTCCCGAAAGCACTACAACAAACACAACTGAAGTGCTGAAAGAACTTAATGACATTCAAGAGAACAAAAGCAGAAAAAATGTTGAAAAAGCGACTGCGGCAACAGAAGAAATGCTACGTGGCCATCACAAACCGGTAGAAGGAACAACGGCTACTTCGGAAAAAGAAAGCATTAAAGAAGAAGTTGATTTAGAAGTTAACGGTGACGGGAAAGTTGAAGCGGAAGAGAGAATAGAATTGGAATCTTCCGATTCAGAGAAAGAGCTTTCAGAGCTGATTGATTTTCTTAAAAGAGAACACCCACCGGAAGATACTCCAGAAAAACGAGTAAAGATTAAAAGAATTAGAACATTACTCGACACATGGCAGCAGGAGTGGAGAATTTTAAATAAAGCCATTTCAAATGCAGAGTCAAATTCTGGGCGAGGACAGAACTCCAAAACGAAAACTACTTCTGTAAACTTATCGCGAAACAAACGAACGAGGACTTAAgGATCCCCGGGTAAAAGGAATGTCTCCCTTGCCAGTACTGCTAGGGTTTTTCTTTCAAACTATGGAAGCCCATTCAAGCTGCATATTACGATTTTGTTTTTCGCTTTTAGAAAGTGGTTTAGATGAGATAATAGAAAAATTCTTGATCTCCGACAACGAGTACTTTTATTTTTTTTGCTAATCACTTTACTCAATATTAGCTCGAAATCGTAGAAACGTAGACGGGTGCGGGATACCGAGTGGTGTAGTTAAGAATTTTTATAAACCACGTGGCCCAAAAATATGAACCCAAAACGTTTATACATGAGTATACTTTAAGAAGGCTATACCCCTTCGTGTTAGATGTAGTTTTAGCTACCCAACCCGAGTCTATGAGCTTGACTTCAGATGTAGAAGGCATTAAATCGTTTTGAATATTAATTAAAAAACGATGAAAATTAAATATTTAAAAGCAATCATACGCTGAAAATTTAGTGCTGTGGCTAATCCTTCAACATGGAAATGCCATAAAAGTGACTTTGACAAAAAAAAAAGTATATACAGGTAGTAAACTCATCTACTTCATTGACTTTGTTTACAGCATGTGGAAGGAGGAATATTTATTGCTAAATCGTAGTTTAACATTCAATAAGTAATACTATTGAAATTCGACAAGATTGGCCGCATGGATGAAAAAGAGGCATTTTGCTTTGGGAGAATTAGTTCAAATTAGAACTGAAAAAAAAAACTTTACGAGGCAAAAATGTCGGATTGAGATCGTAAAAGTTCGCTCGTCGTCTTTTGCTTTGTGATTGTTTTCATGGATACATCTTGCTGGATATTTAAATTTTAGTACTATGTATAAGATATTCTATAAATGTTTTATCACCCAAACCTGTTAGCGCCTTCTTAATTCTATTCAATCTGGCTTTTGCTCTGAGACTACTTCTTGGACTTTCACTACTTGTTAGTTATACGGAATTTGTGTAATTAGAAGTGAAATAATCCTTTCTATTAGTAATGCGAGCTCGaattcctgcagcccgggggatccactagttctagagcggccgccaccgcggtggagctccagcttttgttccctttagtgagggttaattgcgcgcttggcgtaatcatggtcatagctgtttcctgtgtgaaattgttatccgctcacaattccacacaacataggagccggaagcataaagtgtaaagcctggggtgcctaatgagtgaggtaactcacattaattgcgttgcgctcactgcccgctttccagtcgggaaacctgtcgtgccagctgcattaatgaatcggccaacgcgcggggagaggcggtttgcgtattgggcgctcttccgcttcctcgctcactgactcgctgcgctcggtcgttcggctgcggcgagcggtatcagctcactcaaaggcggtaatacggttatccacagaatcaggggataacgcaggaaagaacatgtgagcaaaaggccagcaaaaggccaggaaccgtaaaaaggccgcgttgctggcgtttttccataggctcggcccccctgacgagcatcacaaaaatcgacgctcaagtcagaggtggcgaaacccgacaggactataaagataccaggcgttcccccctggaagctccctcgtgcgctctcctgttccgaccctgccgcttaccggatacctgtccgcctttctcccttcgggaagcgtggcgctttctcaatgctcacgctgtaggtatctcagttcggtgtaggtcgttcgctccaagctgggctgtgtgcacgaaccccccgttcagcccgaccgctgcgccttatccggtaactatcgtcttgagtccaacccggtaagacacgacttatcgccactggcagcagccactggtaacaggattagcagagcgaggtatgtaggcggtgctacagagttcttgaagtggtggcctaactacggctacactagaaggacagtatttggtatctgcgctctgctgaagccagttaccttcggaaaaagagttggtagctcttgatccggcaaacaaaccaccgctggtagcggtggtttttttgtttgcaagcagcagattacgcgcagaaaaaaaggatctcaagaagatcctttgatcttttctacggggtctgacgctcagtggaacgaaaactcacgttaagggattttggtcatgagattatcaaaaaggatcttcacctagatccttttaaattaaaaatgaagttttaaatcaatctaaagtatatatgagtaaacttggtctgacagttaccaatgcttaatcagtgaggcacctatctcagcgatctgtctatttcgttcatccatagttgcctgactgcccgtcgtgtagataactacgatacgggagggcttaccatctggccccagtgctgcaatgataccgcgagacccacgctcaccggctccagatttatcagcaataaaccagccagccggaagggccgagcgcagaagtggtcctgcaactttatccgcctccatccagtctattaattgttgccgggaagctagagtaagtagttcgccagttaatagtttgcgcaacgttgttgccattgctacaggcatcgtggtgtcacgctcgtcgtttggtatggcttcattcagctccggttcccaacgatcaaggcgagttacatgatcccccatgttgtgaaaaaaagcggttagctccttcggtcctccgatcgttgtcagaagtaagttggccgcagtgttatcactcatggttatggcagcactgcataattctcttactgtcatgccatccgtaagatgcttttctgtgactggtgagtactcaaccaagtcattctgagaatagtgtatgcggcgaccgagttgctcttgcccggcgtcaatacgggataataccgcgccacatagcagaactttaaaagtgctcatcattggaaaacgttcttcggggcgaaaactctcaaggatcttaccgctgttgagatccagttcgatgtaacccactcgtgcacccaactgatcttcagcatcttttactttcaccagcgtttctgggtgagcaaaaacaggaaggcaaaatgccgcaaaaaagggaataagggcgacacggaaatgttgaatactcatactcttcctttttcaatattattgaagcatttatcagggttattgtctcatgagcggatacatatttgaatgtatttagaaaaataaacaaataggggttccgcgcacatttccccgaaaagtgccacctgacgtctaagaaaccattattatcatgacattaacctataaaaataggcgtatcacgaggccctttcgtc",
+  "isDNA": true,
+  "exportVersion": 15,
+  "importVersion": 20,
+  "circular": true,
+  "size": 8554,
+  "primers": {
+    "cw3bSEmnXnc": {
+      "name": "Primer1",
+      "start": 7493,
+      "end": 7519,
+      "strand": 1,
+      "sgff_primer": {
+        "recentID": "0",
+        "color": "orange",
+        "phosphorylated": "1",
+        "description": "<html><body>For PCR</body></html>",
+        "dateAdded": "2026-06-17T10:14:46Z",
+        "name": "Primer1",
+        "sequence": "ttaccaatgcttaatcagtgaggcacc",
+        "BindingSite": [
+          {
+            "Component": {
+              "hybridizedRange": "7493-7519",
+              "bases": "ttaccaatgcttaatcagtgaggcacc"
+            },
+            "location": "7493-7519",
+            "boundStrand": "0",
+            "annealedBases": "ttaccaatgcttaatcagtgaggcacc",
+            "meltingTemperature": "61"
+          },
+          {
+            "Component": {
+              "hybridizedRange": "7493-7519",
+              "bases": "ttaccaatgcttaatcagtgaggcacc"
+            },
+            "simplified": "1",
+            "location": "7493-7519",
+            "boundStrand": "0",
+            "annealedBases": "ttaccaatgcttaatcagtgaggcacc",
+            "meltingTemperature": "61"
+          }
+        ]
+      },
+      "sgff_annealed_bases": "ttaccaatgcttaatcagtgaggcacc",
+      "sgff_range": "7493-7519",
+      "sgff_strand": 1,
+      "color": "orange",
+      "notes": { "description": ["For PCR"] },
+      "annotationTypePlural": "primers",
+      "id": "cw3bSEmnXnc",
+      "forward": true,
+      "type": "misc_feature"
+    },
+    "O6tOEXIol": {
+      "start": 1699,
+      "end": 1729,
+      "cursorAtEnd": true,
+      "id": "O6tOEXIol",
+      "forward": false,
+      "arrowheadType": "TOP",
+      "name": "Primer2",
+      "strand": -1,
+      "notes": { "description": ["Strong annealing"] },
+      "type": "primer_bind",
+      "annotationTypePlural": "primers",
+      "color": "#53d969"
+    }
+  },
+  "comments": [],
+  "extraLines": [],
+  "type": "DNA",
+  "proteinSequence": "",
+  "proteinSize": 0,
+  "warnings": {},
+  "assemblyPieces": {},
+  "lineageAnnotations": {},
+  "parts": {},
+  "cutsites": {},
+  "orfs": {},
+  "translations": {},
+  "guides": {},
+  "materiallyAvailable": true,
+  "description": "",
+  "fromFileUpload": false,
+  "stateTrackingId": "Rz2-NGg9wX"
+}

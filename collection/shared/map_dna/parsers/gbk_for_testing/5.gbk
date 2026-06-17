@@ -1,0 +1,322 @@
+LOCUS       Exported                6595 bp ds-DNA     circular SYN 23-NOV-2020
+DEFINITION  synthetic circular DNA
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 6595)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Jan 4, 2021 from SnapGene Server 2.0.9
+            http://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..6595
+                     /organism="synthetic DNA construct"
+                     /mol_type="other DNA"
+     promoter        join(189..529,553..740)
+                     /locus_tag="OpIE2\promoter"
+                     /label=OpIE2\promoter
+                     /note="OpIE2"
+                     /note="/vntifkey=29"
+     promoter        190..737
+                     /gene="immediate-early gene 2 from the Orgyia pseudotsugata
+                     multicapsid nucleopolyhedrovirus"
+                     /label=OpIE-2 promoter
+                     /note="strong constitutive baculovirus promoter for insect 
+                     cell expression"
+     misc_feature    530..552
+                     /locus_tag="WB477 Fwd"
+                     /label=WB477 Fwd
+     misc_feature    717..718
+                     /locus_tag="transcription\start"
+                     /label=transcription\start
+                     /note="/AApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} 
+                     {} 0}
+                     width 5 offset 0"
+                     /note="/vntifkey=21"
+     misc_feature    749..766
+                     /locus_tag="WB78 Fwd"
+                     /label=WB78 Fwd
+     misc_feature    767..835
+                     /locus_tag="N-peptide"
+                     /label=N-peptide
+                     /note="/vntifkey=21"
+     misc_feature    860..901
+                     /locus_tag="HA-peptide"
+                     /label=HA-peptide
+                     /note="/vntifkey=21"
+     CDS             866..892
+                     /codon_start=1
+                     /product="HA (human influenza hemagglutinin) epitope tag"
+                     /label=HA
+                     /translation="YPYDVPDYA"
+     misc_feature    join(911..1344,1346..1470,1472..1632,1634..1796,1798..1821,
+                     1823..1827,1829..1863,1865..1891,1893..1914,1916..1932,
+                     1934..2128,2130..2144,2146..2172,2174..2260,2262..2294,
+                     2296..2302,2304..2457,2459..2469,2471..2482,2484..2526,
+                     2528..2559,2561..2601,2603..2604)
+                     /locus_tag="Bm_Vreteno"
+                     /label=Bm_Vreteno
+     misc_feature    1040..1249
+                     /locus_tag="RRM domain"
+                     /label=RRM domain
+     misc_feature    1531..1550
+                     /locus_tag="sgRNA1-ACATGCTGAGAAGAGAC(AGG)"
+                     /label=sgRNA1-ACATGCTGAGAAGAGAC(AGG)
+     misc_feature    1685..1696
+                     /locus_tag="PXLE; MYND recognition domain"
+                     /label=PXLE; MYND recognition domain
+     misc_feature    1715..1828
+                     /locus_tag="ZF-MYND"
+                     /label=ZF-MYND
+     misc_feature    2194..2213
+                     /locus_tag="sgRNA2-GCAGCTGAAGTCGAATC(CGG)"
+                     /label=sgRNA2-GCAGCTGAAGTCGAATC(CGG)
+     misc_feature    2570..2572
+                     /locus_tag="Possibly methylated"
+                     /label=Possibly methylated
+     misc_feature    join(2607..2610,2612..2625,2627..2721,2723..2787,2789..2835,
+                     2837..2868,2870..2970,2972..3030,3032..3153,3155..3178)
+                     /locus_tag="Bm_Vreteno(1)"
+                     /label=Bm_Vreteno
+                     /label=Bm_Vreteno(1)
+     misc_feature    2906..2908
+                     /locus_tag="Possibly methylated(1)"
+                     /label=Possibly methylated
+                     /label=Possibly methylated(1)
+     misc_feature    2918..2920
+                     /locus_tag="Possibly methylated(2)"
+                     /label=Possibly methylated
+                     /label=Possibly methylated(2)
+     misc_feature    3062..3178
+                     /locus_tag="TUDOR domain"
+                     /label=TUDOR domain
+     misc_feature    3170..3172
+                     /locus_tag="Y754A"
+                     /label=Y754A
+     misc_feature    3176..3178
+                     /locus_tag="E756A"
+                     /label=E756A
+     misc_feature    3179..3181
+                     /locus_tag="Y757A"
+                     /label=Y757A
+     misc_feature    join(3182..3217,3219..3279,3281..3291,3293..3348,3350..3426,
+                     3428..3462,3464..3481,3483..3732,3734..3792,3794..3822,
+                     3824..3829,3831..3846,3848..3865,3867..3894,3896..3909,
+                     3911..3956,3959..3965,3967..4004,4006..4035,4037..4060,6595,
+                     1..4080,4082..4084,4086..4102)
+                     /locus_tag="Bm_Vreteno(2)"
+                     /label=Bm_Vreteno
+                     /label=Bm_Vreteno(2)
+     misc_feature    3182..3238
+                     /locus_tag="TUDOR domain(1)"
+                     /label=TUDOR domain
+                     /label=TUDOR domain(1)
+     misc_feature    3185..3187
+                     /locus_tag="N759A"
+                     /label=N759A
+     misc_feature    3710..3895
+                     /locus_tag="Tudor domain"
+                     /label=Tudor domain
+     CDS             4138..4179
+                     /codon_start=1
+                     /product="epitope tag from simian virus 5"
+                     /label=V5 tag
+                     /translation="GKPIPNPLLGLDST"
+     misc_feature    4138..4174
+                     /locus_tag="V5"
+                     /label=V5
+     misc_feature    4175..4195
+                     /locus_tag="WB369 Rev"
+                     /label=WB369 Rev
+     misc_feature    4175..4179
+                     /locus_tag="V5 epitope"
+                     /label=V5 epitope
+                     /note="V5 epitope"
+                     /note="/vntifkey=21"
+     CDS             4189..4206
+                     /codon_start=1
+                     /product="6xHis affinity tag"
+                     /label=6xHis
+                     /translation="HHHHHH"
+     misc_feature    4190..4195
+                     /locus_tag="HIS-tag"
+                     /label=HIS-tag
+                     /note="HIS-tag"
+                     /note="/vntifkey=21"
+     misc_feature    4196..4206
+                     /locus_tag="6xHis"
+                     /label=6xHis
+     polyA_signal    4222..4353
+                     /locus_tag="OpIE2 polyA"
+                     /label=OpIE2 polyA
+                     /note="OpIE2 poyA"
+                     /note="/vntifkey=25"
+     polyA_signal    4224..4353
+                     /gene="immediate-early gene 2 from the Orgyia pseudotsugata
+                     multicapsid nucleopolyhedrovirus"
+                     /label=OpIE-2 poly(A) signal
+                     /note="baculovirus polyadenylation signal"
+     primer_bind     4373..4390
+                     /label=M13/pUC reverse primer
+     primer_bind     complement(4374..4390)
+                     /label=M13 rev
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     protein_bind    4398..4414
+                     /label=lac operator
+                     /bound_moiety="lac repressor encoded by lacI"
+                     /note="The lac repressor binds to the lac operator to 
+                     inhibit transcription in E. coli. This inhibition can be 
+                     relieved by adding lactose or 
+                     isopropyl-beta-D-thiogalactopyranoside (IPTG)."
+     promoter        complement(4422..4452)
+                     /label=lac promoter
+                     /note="promoter for the E. coli lac operon"
+     protein_bind    4467..4488
+                     /label=CAP binding site
+                     /bound_moiety="E. coli catabolite activator protein"
+                     /note="CAP binding activates transcription in the presence 
+                     of cAMP."
+     misc_feature    4776..5364
+                     /locus_tag="Ori"
+                     /label=Ori
+                     /note="/vntifkey=21"
+     rep_origin      complement(4776..5364)
+                     /direction=LEFT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     misc_feature    5535..6395
+                     /locus_tag="Amp"
+                     /label=Amp
+                     /note="/vntifkey=21"
+     CDS             complement(5535..6395)
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label=AmpR
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     promoter        complement(6396..6500)
+                     /gene="bla"
+                     /label=AmpR promoter
+ORIGIN
+        1 tcgcgcgttt cggtgatgac ggtgaaaacc tctgacacat gcagctcccg gagacggtca
+       61 cagcttgtct gtaagcggat gccgggagca gacaagcccg tcagggcgcg tcagcgggtg
+      121 ttggcgggtg tcggggctgg cttaactatg cggcatcaga gcagattgta ctgagagtgc
+      181 accatatgtc atgatgataa acaatgtatg gtgctaatgt tgcttcaaca acaattctgt
+      241 tgaactgtgt tttcatgttt gccaacaagc acctttatac tcggtggcct ccccaccacc
+      301 aacttttttg cactgcaaaa aaacacgctt ttgcacgcgg gcccatacat agtacaaact
+      361 ctacgtttcg tagactattt tacataaata gtctacaccg ttgtatacgc tccaaataca
+      421 ctaccacaca ttgaaccttt ttgcagtgca aaaaagtacg tgtcggcagt cacgtaggcc
+      481 ggccttatcg ggtcgcgtcc tgtcacgtac gaatcacatt atcggaccgg acgagtgttg
+      541 tcttatcgtg acaggacgcc agcttcctgt gttgctaacc gcagccggac gcaactcctt
+      601 atcggaacag gacgcgcctc catatcagcc gcgcgttatc tcatgcgcgt gaccggacac
+      661 gaggcgcccg tcccgcttat cgcgcctata aatacagccc gcaacgatct ggtaaacaca
+      721 gttgaacagc atctgttcga atttaaagct tggtaccgcc accatggacg cacaaacacg
+      781 acgacgtgag cgtcgcgctg agaaacaagc tcaatggaaa gctgcaaacc caccgctcga
+      841 ggctgcccaa gcttacacca tggcctaccc atatgatgtt ccagattacg cttcactcga
+      901 cgcggatccc atgtcgaatc acagtaggcc tcagaggcgc cgggagtggg acccgatgag
+      961 ggacgatttt aacgaacaca cgtatgacgt gcaatacgcc gatgataatg ccggggaaca
+     1021 agtgcagctt gaccacacga agctgtacat aatcaacata ccgagaggtc tgagcgagga
+     1081 cggcattcgc gccgccttct cgaagcacgg aaaagtttta agcgcccgct tgagcaaaaa
+     1141 tcctaacaag agattcgcca tagtgcaatt cgagactgct agtgaagcca aactggccat
+     1201 gatgaaaatg aacggctccg aacctctgaa cctgaagata tccatagctc ataagacgat
+     1261 tcggaaaacg caacatgata ataaagacag gaattacagc acgtcacgaa atggtcattg
+     1321 tagtagagat gaagcatcca gtataagcag caagggatgg aatatgagga atctggacga
+     1381 tgtcatgaac aatgatgaaa ttgacgaaat tgatgacatg attcatgagg atcacgatga
+     1441 caaccttgac ttggagctgg acatgctcac actgaaacag ctgaagatca aagaggagca
+     1501 gctcatgtgt aagcgcagat tgctcctgcg acatgctgag aagagacagg tggctccgca
+     1561 ttcgtctgcc ggtagatccg tcctgcccga cggtcggatc gtcgtgagga acaacgccaa
+     1621 tgaaacggat tccgctgagg tggaaccttc gttcgctgga gccggttcag aatcgctaaa
+     1681 aacaccagga ctagaacgga acgcttcccg ccagtgcgtg aagtgcggcg cgcccgccga
+     1741 ctggtactgc tcgcgttgcg cgatcacgcc ctactgctcg cagacgtgcc agacgaggga
+     1801 ctggaccgag aggcacaagt ctgtctgtca ttatctagct cctttgaaaa ctgctggagg
+     1861 ctttgaagct gaagccacgt ctagtaagag cgtctctaat tcgacgccga tgcgttcctc
+     1921 acactcgcca ccaacaaagc agcagcgggg cgaagcagac gaaactgaca ataaggccaa
+     1981 gaacattcaa gaacccaggc aaaattacca tcgcccttcg aactctggcc ccaataaaaa
+     2041 cattccgggg aagaaccaag atcccagaag acccgctaca tccagagaag cgatagaaga
+     2101 ggagactgaa gaacggggag ccaggaaccc gaagccagcg gaggcaacga aagacaaaca
+     2161 tcatccgatg aatccggtta cgttccaaag gcggcagctg aagtcgaatc cggtggtgga
+     2221 tgcccagccg gcgccgagag agcagcagca gccggcggcg accagggcgc ccgaggcatc
+     2281 tcctactgaa cagagagagt caactcgacg gaccctcgta ccggataggt gcctcataga
+     2341 cagtctcagc gagggggacg tggtgctggt ctcggtggag ctgaaggcga gcgagtgctg
+     2401 caccaagcag ggcggctacg tgtgcctctc catgcacgag aagtacgaga gcgactacca
+     2461 gaagctgtgc gaggactacg tgttggactg cgaggctgac tcggacgagt acaaaattat
+     2521 aacgggagac accttctcgt acctgagccc cgaggacggg ggctggtacc gggcgcgggc
+     2581 gctgaacacg acgatggctg cacttttgga cggcagcaaa gtcgtgtact tgagaatgaa
+     2641 cgacaaagtg aagaagttgc cggcgaagta cagcgggata ccggagttct gttgcgtttt
+     2701 gaacgctgat gtcgaagtgg gcttaaatct caaatgttcg ttattgtcca aaacacccaa
+     2761 tggattcaaa gttacacttg aaaacgtcga aaccgaagct aacgtcggcg aaggggagat
+     2821 cacgaggtgg attcctgagg tggattatcc tccaccggtc aagaacgtgc cagttcaacg
+     2881 gtcagttgaa atacctgaag ttcctcgtcc ggagatcaag aacaagagca gagttatatt
+     2941 agtagatgcg accgacgtgc agcgtgtgtt cgtgaggccg gccgacacgc gctcgcagaa
+     3001 ggcgttcgat aatatactac aagatgtgct tctgtacggt acaacggctg aacccttgaa
+     3061 agagcctcca agtaagggac aaacagtagt cagcaagtac acagacaatt tgcactacag
+     3121 agcattgtgc aaacgtacta gtgttaacaa aaacaaatat ttacttgaag ctattgaagc
+     3181 tggcgccatt gaaataactc agctgaatcg tctgtacccg tgccccgagc acctgtcggt
+     3241 gacgtcacta gccagtctga cgtcacacgt gcaactggac actaccgtcg gagagctgac
+     3301 acctcgcgct ctagaataca ttgagactat caaagaggag gagatgatct tgactctatc
+     3361 gagcggcggc gacacagccc agagcggcgc ggccctcgtc aacctcaccc tggtcaagaa
+     3421 caacgataac gtcaataaga gaatagaaga actgtgcact ccagaatgga agaaactcga
+     3481 gctgaaagga gtcgatgtta tagaaacaga acgtctgatg tacggcaccg ctctggacta
+     3541 catcgagctg ccggccgcgc ccttcgacct gcaagtgctg gacgaggttg gcctcgactc
+     3601 tgggaacata tctggctgcc ccacgaactc ggactacgtg cgatacgtca tgacgaagct
+     3661 ccctgcgcgg atgagggaat actgcgagag cgaattcggt cggcagccgt acctgcccgc
+     3721 ggccgaggag ctttgcatcg cgcagctgcc gccctcctcc gaatggcaca gagcggtggt
+     3781 gctggaacag attctggggc ccggcggcgg caccgcgcgc gtgctgttcg tggaccacgg
+     3841 caacgttgcc gaggtgccgg tctcctcgct gcggaagatg ctggcggagt tcgtcaccga
+     3901 cctgccggcc gtcgcctgcc agatcgtcat tgaagatttc ccgaaacaag caacggccga
+     3961 gatgcttgcg aaggcgcgtc ggttcatgag cggcccggac aaggctcgcg ccgcccagct
+     4021 gcccgtccgg ggctgcgaca agcaggacgt cggcatctac gcgatccgcg tcccggagct
+     4081 cctcgaagcg atgaccgagt gagcggccgc tcgagtctag agggcccgcg gttcgaaggt
+     4141 aagcctatcc ctaaccctct cctcggtctc gattctacgc gtaccggtca tcatcaccat
+     4201 caccattgag tttatctgac taaatcttag tttgtattgt catgttttaa tacaatatgt
+     4261 tatgtttaaa tatgttttta ataaatttta taaaataatt tcaactttta ttgtaacaac
+     4321 attgtccatt tacacactcc tttcaagcgc gtgggaagct tggcgtaatc atggtcatag
+     4381 ctgtttcctg tgtgaaattg ttatccgctc acaattccac acaacatacg agccggaagc
+     4441 ataaagtgta aagcctgggg tgcctaatga gtgagctaac tcacattaat tgcgttgcgc
+     4501 tcactgcccg ctttccagtc gggaaacctg tcgtgccagc tgcattaatg aatcggccaa
+     4561 cgcgcgggga gaggcggttt gcgtattggg cgctcttccg cttcctcgct cactgactcg
+     4621 ctgcgctcgg tcgttcggct gcggcgagcg gtatcagctc actcaaaggc ggtaatacgg
+     4681 ttatccacag aatcagggga taacgcagga aagaacatgt gagcaaaagg ccagcaaaag
+     4741 gccaggaacc gtaaaaaggc cgcgttgctg gcgtttttcc ataggctccg cccccctgac
+     4801 gagcatcaca aaaatcgacg ctcaagtcag aggtggcgaa acccgacagg actataaaga
+     4861 taccaggcgt ttccccctgg aagctccctc gtgcgctctc ctgttccgac cctgccgctt
+     4921 accggatacc tgtccgcctt tctcccttcg ggaagcgtgg cgctttctca tagctcacgc
+     4981 tgtaggtatc tcagttcggt gtaggtcgtt cgctccaagc tgggctgtgt gcacgaaccc
+     5041 cccgttcagc ccgaccgctg cgccttatcc ggtaactatc gtcttgagtc caacccggta
+     5101 agacacgact tatcgccact ggcagcagcc actggtaaca ggattagcag agcgaggtat
+     5161 gtaggcggtg ctacagagtt cttgaagtgg tggcctaact acggctacac tagaagaaca
+     5221 gtatttggta tctgcgctct gctgaagcca gttaccttcg gaaaaagagt tggtagctct
+     5281 tgatccggca aacaaaccac cgctggtagc ggtggttttt ttgtttgcaa gcagcagatt
+     5341 acgcgcagaa aaaaaggatc tcaagaagat cctttgatct tttctacggg gtctgacgct
+     5401 cagtggaacg aaaactcacg ttaagggatt ttggtcatga gattatcaaa aaggatcttc
+     5461 acctagatcc ttttaaatta aaaatgaagt tttaaatcaa tctaaagtat atatgagtaa
+     5521 acttggtctg acagttacca atgcttaatc agtgaggcac ctatctcagc gatctgtcta
+     5581 tttcgttcat ccatagttgc ctgactcccc gtcgtgtaga taactacgat acgggagggc
+     5641 ttaccatctg gccccagtgc tgcaatgata ccgcgagacc cacgctcacc ggctccagat
+     5701 ttatcagcaa taaaccagcc agccggaagg gccgagcgca gaagtggtcc tgcaacttta
+     5761 tccgcctcca tccagtctat taattgttgc cgggaagcta gagtaagtag ttcgccagtt
+     5821 aatagtttgc gcaacgttgt tgccattgct acaggcatcg tggtgtcacg ctcgtcgttt
+     5881 ggtatggctt cattcagctc cggttcccaa cgatcaaggc gagttacatg atcccccatg
+     5941 ttgtgcaaaa aagcggttag ctccttcggt cctccgatcg ttgtcagaag taagttggcc
+     6001 gcagtgttat cactcatggt tatggcagca ctgcataatt ctcttactgt catgccatcc
+     6061 gtaagatgct tttctgtgac tggtgagtac tcaaccaagt cattctgaga atagtgtatg
+     6121 cggcgaccga gttgctcttg cccggcgtca atacgggata ataccgcgcc acatagcaga
+     6181 actttaaaag tgctcatcat tggaaaacgt tcttcggggc gaaaactctc aaggatctta
+     6241 ccgctgttga gatccagttc gatgtaaccc actcgtgcac ccaactgatc ttcagcatct
+     6301 tttactttca ccagcgtttc tgggtgagca aaaacaggaa ggcaaaatgc cgcaaaaaag
+     6361 ggaataaggg cgacacggaa atgttgaata ctcatactct tcctttttca atattattga
+     6421 agcatttatc agggttattg tctcatgagc ggatacatat ttgaatgtat ttagaaaaat
+     6481 aaacaaatag gggttccgcg cacatttccc cgaaaagtgc cacctgacgt ctaagaaacc
+     6541 attattatca tgacattaac ctataaaaat aggcgtatca cgaggccctt tcgtc
+//

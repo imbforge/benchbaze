@@ -1,0 +1,245 @@
+LOCUS       Exported                2820 bp ds-DNA     circular SYN 05-NOV-2021
+DEFINITION  synthetic circular DNA
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2820)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Jan 11, 2022 from SnapGene Server 2.0.9
+            http://www.snapgene.com
+COMMENT     UUID: f2d15e99-8721-4440-97cc-3c7eb2a57796
+            Type: Synthetic
+            ConfirmedExperimentally: 0
+            SequenceClass: UNA
+            TransformedInto: unspecified
+FEATURES             Location/Qualifiers
+     source          1..2820
+                     /organism="synthetic DNA construct"
+                     /mol_type="other DNA"
+     CDS             1..663
+                     /locus_tag="ORF frame 1"
+                     /locus_tag="ORF frame 1"
+                     /label=ORF frame 1
+                     /label=ORF frame 1
+     CDS             1..660
+                     /locus_tag="AmpR"
+                     /locus_tag="AmpR"
+                     /label=AmpR
+                     /label=AmpR
+     gene            7..663
+                     /locus_tag="Ampicillin (variant)"
+                     /locus_tag="Ampicillin (variant)"
+                     /label=Ampicillin (variant)
+                     /label=Ampicillin (variant)
+     rep_origin      758..1440
+                     /direction=BOTH
+                     /locus_tag="ColE1 origin"
+                     /locus_tag="ColE1 origin"
+                     /label=ColE1 origin
+                     /label=ColE1 origin
+     rep_origin      818..1437
+                     /direction=BOTH
+                     /locus_tag="pBR322_origin"
+                     /locus_tag="pBR322_origin"
+                     /label=pBR322_origin
+                     /label=pBR322_origin
+     rep_origin      834..1422
+                     /direction=RIGHT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     misc_feature    1549..1571
+                     /locus_tag="M13_pUC_rev_primer"
+                     /locus_tag="M13_pUC_rev_primer"
+                     /label=M13_pUC_rev_primer
+                     /label=M13_pUC_rev_primer
+     primer_bind     1568..1588
+                     /locus_tag="M13-rev"
+                     /locus_tag="M13-rev"
+                     /label=M13-rev
+                     /label=M13-rev
+     primer_bind     1568..1584
+                     /label=M13 rev
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     promoter        1570..1588
+                     /locus_tag="M13_reverse_primer"
+                     /locus_tag="M13_reverse_primer"
+                     /label=M13_reverse_primer
+                     /label=M13_reverse_primer
+     misc_feature    1607..1643
+                     /locus_tag="lacZ_a"
+                     /locus_tag="lacZ_a"
+                     /label=lacZ_a
+                     /label=lacZ_a
+     primer_bind     complement(1607..1624)
+                     /locus_tag="M13-fwd"
+                     /locus_tag="M13-fwd"
+                     /label=M13-fwd
+                     /label=M13-fwd
+     primer_bind     complement(1607..1623)
+                     /label=M13 fwd
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     misc_feature    complement(1616..1638)
+                     /locus_tag="M13_pUC_fwd_primer"
+                     /locus_tag="M13_pUC_fwd_primer"
+                     /label=M13_pUC_fwd_primer
+                     /label=M13_pUC_fwd_primer
+     primer_bind     complement(1624..1643)
+                     /locus_tag="Gateway Promoter L #73"
+                     /locus_tag="Gateway Promoter L #73"
+                     /label=Gateway Promoter L #73
+                     /label=Gateway Promoter L #73
+     promoter        1644..1993
+                     /locus_tag="U6 (R07E5.16) Promoter"
+                     /locus_tag="U6 (R07E5.16) Promoter"
+                     /label=U6 (R07E5.16) Promoter
+                     /label=U6 (R07E5.16) Promoter
+     enhancer        complement(1704..1711)
+                     /locus_tag="Putative Enhancer"
+                     /locus_tag="Putative Enhancer"
+                     /label=Putative Enhancer
+                     /label=Putative Enhancer
+     misc_signal     1994
+                     /locus_tag="Insert 19 bp targeting sequence
+                     betweenthese
+                     two b"
+                     /locus_tag="Insert 19 bp targeting
+                     sequence
+                     betweenthese two b"
+                     /label=Insert 19 bp targeting
+                     sequence
+                     betweenthes...
+                     /label=Insert 19 bp targeting sequence betweenthese
+                     two
+                     b
+                     /label=Insert 19 bp targeting sequence
+                     betweenthese
+                     two b
+     misc_feature    1995..2014
+                     /label=KIN-19 3' gRNA 3
+     misc_signal     2015
+                     /locus_tag="Insert 19 bp targeting sequence
+                     betweenthese
+                     two b(1)"
+                     /locus_tag="Insert 19 bp targeting
+                     sequence
+                     betweenthese two b(1)"
+                     /label=Insert 19 bp targeting
+                     sequence
+                     betweenthes...
+                     /label=Insert 19 bp targeting sequence betweenthese two
+                     b(1)
+                     /label=Insert 19 bp targeting sequence
+                     betweenthese
+                     two b(1)
+     misc_feature    2016..2104
+                     /locus_tag="gRNA (F+E) backbone"
+                     /locus_tag="gRNA (F+E) backbone"
+                     /label=gRNA (F+E) backbone
+                     /label=gRNA (F+E) backbone
+     terminator      2105..2114
+                     /locus_tag="U6 Terminator"
+                     /locus_tag="U6 Terminator"
+                     /label=U6 Terminator
+                     /label=U6 Terminator
+     misc_feature    2115..2180
+                     /locus_tag="lacZ_a(1)"
+                     /locus_tag="lacZ_a(1)"
+                     /label=lacZ_a
+                     /label=lacZ_a(1)
+                     /label=lacZ_a(1)
+     primer_bind     2115..2134
+                     /locus_tag="U6 Vector 3' #162"
+                     /locus_tag="U6 Vector 3' #162"
+                     /label=U6 Vector 3' #162
+                     /label=U6 Vector 3' #162
+     CDS             2116..2184
+                     /locus_tag="LacZ alpha"
+                     /locus_tag="LacZ alpha"
+                     /label=LacZ alpha
+                     /label=LacZ alpha
+     primer_bind     complement(2214..2233)
+                     /locus_tag="gRNA Seq #164"
+                     /locus_tag="gRNA Seq #164"
+                     /label=gRNA Seq #164
+                     /label=gRNA Seq #164
+     misc_feature    2372..2394
+                     /locus_tag="pGEX_3_primer"
+                     /locus_tag="pGEX_3_primer"
+                     /label=pGEX_3_primer
+                     /label=pGEX_3_primer
+     promoter        2518..2622
+                     /gene="bla"
+                     /label=AmpR promoter
+     promoter        2553..2581
+                     /locus_tag="AmpR_promoter"
+                     /locus_tag="AmpR_promoter"
+                     /label=AmpR_promoter
+                     /label=AmpR_promoter
+     CDS             join(2623..2820,1..663)
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label=AmpR
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+ORIGIN
+        1 atgagcactt ttaaagttct gctatgtggc gcggtattat cccgtattga cgccgggcaa
+       61 gagcaactcg gtcgccgcat acactattct cagaatgact tggttgagta ctcaccagtc
+      121 acagaaaagc atcttacgga tggcatgaca gtaagagaat tatgcagtgc tgccataacc
+      181 atgagtgata acactgcggc caacttactt ctgacaacga tcggaggacc gaaggagcta
+      241 accgcttttt tgcacaacat gggggatcat gtaactcgcc ttgatcgttg ggaaccggag
+      301 ctgaatgaag ccataccaaa cgacgagcgt gacaccacga tgcctgtagc aatggcaaca
+      361 acgttgcgca aactattaac tggcgaacta cttactctag cttcccggca acaattaata
+      421 gactggatgg aggcggataa agttgcagga ccacttctgc gctcggccct tccggctggc
+      481 tggtttattg ctgataaatc tggagccggt gagcgtgggt ctcgcggtat cattgcagca
+      541 ctggggccag atggtaagcc ctcccgtatc gtagttatct acacgacggg gagtcaggca
+      601 actatggatg aacgaaatag acagatcgct gagataggtg cctcactgat taagcattgg
+      661 taactgtcag accaagttta ctcatatata ctttagattg atttaaaact tcatttttaa
+      721 tttaaaagga tctaggtgaa gatccttttt gataatctca tgaccaaaat cccttaacgt
+      781 gagttttcgt tccactgagc gtcagacccc gtagaaaaga tcaaaggatc ttcttgagat
+      841 cctttttttc tgcgcgtaat ctgctgcttg caaacaaaaa aaccaccgct accagcggtg
+      901 gtttgtttgc cggatcaaga gctaccaact ctttttccga aggtaactgg cttcagcaga
+      961 gcgcagatac caaatactgt ccttctagtg tagccgtagt taggccacca cttcaagaac
+     1021 tctgtagcac cgcctacata cctcgctctg ctaatcctgt taccagtggc tgctgccagt
+     1081 ggcgataagt cgtgtcttac cgggttggac tcaagacgat agttaccgga taaggcgcag
+     1141 cggtcgggct gaacgggggg ttcgtgcaca cagcccagct tggagcgaac gacctacacc
+     1201 gaactgagat acctacagcg tgagctatga gaaagcgcca cgcttcccga agggagaaag
+     1261 gcggacaggt atccggtaag cggcagggtc ggaacaggag agcgcacgag ggagcttcca
+     1321 gggggaaacg cctggtatct ttatagtcct gtcgggtttc gccacctctg acttgagcgt
+     1381 cgatttttgt gatgctcgtc aggggggcgg agcctatgga aaaacgccag caacgcggcc
+     1441 tttttacggt tcctggtctt ttgctggcct tttgctcaca tgttctttcc tgcgttatcc
+     1501 cctgattctg tggataaccg tattaccgcc tttgagtgag ctgataccag cggataacaa
+     1561 tttcacacag gaaacagcta tgaccatgat tacgccaagc tatcaaactg gccgtcgttt
+     1621 tacaacgtcg tgactgggaa aaccaaaaaa aactagcaat aaaggaataa aaaactgtac
+     1681 accttaaagg cgcacactct gttttgcaaa ttttattttt agttgtgaat tttctgctga
+     1741 gacctgaaaa tagcaacttt agtactacta taatttgtca accttttcaa aaaaagcatg
+     1801 caatttttga gaaactctta taaaagctat tattaaaaaa acaccttttt tccaaaatta
+     1861 ttccacaaaa aatatgttat gaaatgccta caccctctca cacacactct ttatactact
+     1921 ctgtcaaact cacgagatgt ctgccgcctc ttgtgttgcc cctatataaa cacctcctat
+     1981 tgcgagatgt cttgggcaac aaaacgtctt actggtttaa gagctatgct ggaaacagca
+     2041 tagcaagttt aaataaggct agtccgttat caacttgaaa aagtggcacc gagtcggtgc
+     2101 tttttgtgaa atttctggcg taatagcgaa gaggcccgca ccgatcgccc ttcccaacag
+     2161 ttgcgcagcc tgaatggcga atggcgcctg atgcggtatt ttctccttac gcatctgtgc
+     2221 ggtatttcac accgcatatg gtgcactctc agtacaatct gctctgatgc cgcatagtta
+     2281 agccagcccc gacacccgcc aacacccgct gacgcgccct gacgggcttg tctgctcccg
+     2341 gcatccgctt acagacaagc tgtgaccgtc tccgggagct gcatgtgtca gaggttttca
+     2401 ccgtcatcac cgaaacgcgc gagacgaaag ggcctcgtga tacgcctatt tttataggtt
+     2461 aatgtcatga taataatggt ttcttagacg tcaggtggca cttttcgggg aaatgtgcgc
+     2521 ggaaccccta tttgtttatt tttctaaata cattcaaata tgtatccgct catgagacaa
+     2581 taaccctgat aaatgcttca ataatattga aaaaggaaga gtatgagtat tcaacatttc
+     2641 cgtgtcgccc ttattccctt ttttgcggca ttttgccttc ctgtttttgc tcacccagaa
+     2701 acgctggtga aagtaaaaga tgctgaagat cagttgggtg cacgagtggg ttacatcgaa
+     2761 ctggatctca acagcggtaa gatccttgag agttttcgcc ccgaagaacg ttttccaatg
+//

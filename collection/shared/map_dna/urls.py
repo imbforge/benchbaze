@@ -1,22 +1,17 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 
-from .views import create_map_file, map_dna_detect_features, convert_snapgene_to_genbank
+from .views import convert_any_to_ove_json, create_map_file
 
 urlpatterns = [
-    path(
-        "detect_features/",
-        login_required(map_dna_detect_features),
-        name="map_dna_detect_features",
-    ),
     path(
         "create_map_file/",
         login_required(create_map_file),
         name="create_map_file",
     ),
     path(
-        "convert_snapgene_to_genbank/",
-        login_required(convert_snapgene_to_genbank),
-        name="convert_snapgene_to_genbank",
+        "convert_any_to_ove_json/",
+        login_required(convert_any_to_ove_json),
+        name="convert_any_to_ove_json",
     ),
 ]

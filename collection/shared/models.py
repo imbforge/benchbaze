@@ -17,7 +17,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 
 from approval.models import Approval
-from collection.shared.map_dna.utils import (
+from collection.shared.map_dna.utils.common import (
     convert_map_dna_to_svg,
     get_map_dna_feature_names,
     get_map_dna_features_simple,

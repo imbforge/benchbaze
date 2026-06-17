@@ -12,10 +12,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from collection.shared.forms import PersistentClearableFileInput
-from collection.shared.map_dna.utils import (
-    detect_map_dna_features,
-    get_map_dna_feature_names,
-)
+from collection.shared.map_dna.utils.common import get_map_dna_feature_names
+from collection.shared.map_dna.utils.detect_features import detect_map_dna_features
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 from formz.models import SequenceFeature
 
@@ -272,9 +270,7 @@ class PlasmidAdmin(
                 map_dna_seqrecord = obj.get_map_dna_seqrecord()
                 if map_dna_seqrecord:
                     # Detect features
-                    annotated_seqrecord = detect_map_dna_features(
-                        map_dna_seqrecord, ".dna"
-                    )
+                    annotated_seqrecord = detect_map_dna_features(map_dna_seqrecord)
                     feature_names = get_map_dna_feature_names(annotated_seqrecord)
                     if feature_names:
                         feature_names = [

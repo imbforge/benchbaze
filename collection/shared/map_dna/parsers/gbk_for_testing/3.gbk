@@ -1,0 +1,105 @@
+LOCUS       Exported                2169 bp ds-DNA     circular SYN 11-JUL-2013
+DEFINITION  DR274.
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2169)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Apr 23, 2020 from SnapGene Server 2.0.9
+            http://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          join(1..279,302..2169)
+                     /organism="DR274"
+                     /mol_type="other DNA"
+                     /label=source:DR274
+     promoter        6..22
+                     /label=M13_forward20_primer
+     primer_bind     6..22
+                     /label=M13 fwd
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     misc_RNA        complement(204..279)
+                     /label=gRNA scaffold
+                     /note="guide RNA scaffold for the Streptococcus pyogenes 
+                     CRISPR/Cas9 system"
+     misc_feature    280..301
+                     /label=Insertion
+     misc_feature    303..308
+                     /label=BsaI restriction site
+     promoter        complement(323..341)
+                     /label=T7_promoter
+     promoter        324..341
+                     /label=T7 promotor
+     primer_bind     complement(470..486)
+                     /label=M13 rev
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     terminator      534..565
+                     /label=tonB terminator
+                     /note="bidirectional E. coli tonB-P14 transcription 
+                     terminator"
+     promoter        566..668
+                     /label=cat promoter
+                     /note="promoter of the E. coli cat gene encoding 
+                     chloramphenicol acetyltransferase"
+     gene            669..1484
+                     /gene="KanR2 (variant)"
+                     /label=KanR2 (variant)
+     CDS             669..1484
+                     /codon_start=1
+                     /label=ORF frame 2
+                     /translation="MSHIQRETSCLKPRLNSNMDADLYGYKWARDNVGQSGATIYRLYG
+                     KPDAPELFLKHGKGSVANDVTDEMVRLNWLTEFMPLPTIKHFIRTPDDAWLLTTAIPGK
+                     TAFQVLEEYPDSGENIVDALAVFLRRLHSIPVCNCPFNGDRVFRLAQAQSRMNNGLVGA
+                     SDFDDERNGWPVEQVWKEMHKLLPFSPDSVVTHGDFSLDNLIFDEGKLIGCIDVGRVGI
+                     ADRYQDLAILWNCLGEFSPSLQKRLFQKYGIDNPDMNKLQFHLMLDEFF"
+     terminator      1508..1535
+                     /label=T7Te terminator
+                     /note="phage T7 early transcription terminator"
+     rep_origin      complement(1547..2134)
+                     /direction=LEFT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+ORIGIN
+        1 cccgtgtaaa acgacggcca gtttatctag tcagcttgat tctagctgat cgtggaccgg
+       61 aaggtgagcc agtgagttga ttgcagtcca gttacgctgg agtctgaggc tcgtcctgaa
+      121 tgatatgcga ccgccggagg gttgcgtttg agacgggcga cagatccagt cgcgctgctc
+      181 tcgtcgatcc aagcttttta aaagcaccga ctcggtgcca ctttttcaag ttgataacgg
+      241 actagcctta ttttaacttg ctatttctag ctctaaaacg ttgtcctgcg gtgtctgcct
+      301 atgagaccct ctctcggtct ctcctatagt gagtcgtatt agctagcggt gcgagcggat
+      361 cgagcagtgt cgatcactac tggaccgcga gctgtgctgc gacccgtgat cttacggcat
+      421 tatacgtatg atcggtccac gatcagctag attatctagt cagcttgatg tcatagctgt
+      481 ttcctgaggc tcaatactga ccatttaaat catacctgac ctccatagca gaaagtcaaa
+      541 agcctccgac cggaggcttt tgacttgatc ggcacgtaag aggttccaac tttcaccata
+      601 atgaaataag atcactaccg ggcgtatttt ttgagttatc gagattttca ggagctaagg
+      661 aagctaaaat gagccatatt caacgggaaa cgtcttgctt gaagccgcga ttaaattcca
+      721 acatggatgc tgatttatat gggtataaat gggctcgcga taatgtcggg caatcaggtg
+      781 cgacaatcta tcgattgtat gggaagcccg atgcgccaga gttgtttctg aaacatggca
+      841 aaggtagcgt tgccaatgat gttacagatg agatggtcag gctaaactgg ctgacggaat
+      901 ttatgcctct tccgaccatc aagcatttta tccgtactcc tgatgatgca tggttactca
+      961 ccactgcgat cccagggaaa acagcattcc aggtattaga agaatatcct gattcaggtg
+     1021 aaaatattgt tgatgcgctg gcagtgttcc tgcgccggtt gcattcgatt cctgtttgta
+     1081 attgtccttt taacggcgat cgcgtatttc gtctcgctca ggcgcaatca cgaatgaata
+     1141 acggtttggt tggtgcgagt gattttgatg acgagcgtaa tggctggcct gttgaacaag
+     1201 tctggaaaga aatgcataaa ctcttgccat tctcaccgga ttcagtcgtc actcatggtg
+     1261 atttctcact tgataacctt atttttgacg aggggaaatt aataggttgt attgatgttg
+     1321 gacgagtcgg aatcgcagac cgataccagg atcttgccat cctatggaac tgcctcggtg
+     1381 agttttctcc ttcattacag aaacggcttt ttcaaaaata tggtattgat aatcctgata
+     1441 tgaataaatt gcagtttcac ttgatgctcg atgagttttt ctaatgagga cctaaatgta
+     1501 atcacctggc tcaccttcgg gtgggccttt ctgcgttgct ggcgtttttc cataggctcc
+     1561 gcccccctga cgagcatcac aaaaatcgat gctcaagtca gaggtggcga aacccgacag
+     1621 gactataaag ataccaggcg tttccccctg gaagctccct cgtgcgctct cctgttccga
+     1681 ccctgccgct taccggatac ctgtccgcct ttctcccttc gggaagcgtg gcgctttctc
+     1741 atagctcacg ctgtaggtat ctcagttcgg tgtaggtcgt tcgctccaag ctgggctgtg
+     1801 tgcacgaacc ccccgttcag cccgaccgct gcgccttatc cggtaactat cgtcttgagt
+     1861 ccaacccggt aagacacgac ttatcgccac tggcagcagc cactggtaac aggattagca
+     1921 gagcgaggta tgtaggcggt gctacagagt tcttgaagtg gtggcctaac tacggctaca
+     1981 ctagaagaac agtatttggt atctgcgctc tgctgaagcc agttacctcg gaaaaagagt
+     2041 tggtagctct tgatccggca aacaaaccac cgctggtagc ggtggttttt ttgtttgcaa
+     2101 gcagcagatt acgcgcagaa aaaaaggatc tcaagaagat cctttgattt tctaccgaag
+     2161 aaaggccca
+//

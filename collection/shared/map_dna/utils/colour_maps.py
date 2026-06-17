@@ -1,4 +1,4 @@
-SNAPGENE_COLOUR_MAP = {
+SNAPGENE_FEATURE_COLOUR_MAP = {
     "terminator": "#ffffff",
     "source": "#ffffff",
     "sig_peptide": "#cc99b2",
@@ -19,7 +19,7 @@ SNAPGENE_COLOUR_MAP = {
     "_default": "#a6acb3",
 }
 
-OVE_COLOUR_MAP = {
+OVE_FEATURE_COLOUR_MAP = {
     "-10_signal": "#4ecdc4",
     "-35_signal": "#f7fff7",
     "3'clip": "#ff6b6b",
@@ -111,3 +111,5 @@ OVE_COLOUR_MAP = {
     "V_region": "#7b5ee7",
     "variation": "#2ee455",
 }
+
+SNAPGENE_PRIMER_COLOURS = ("red", "orange", "green", "blue", "purple", "gray - 50")
