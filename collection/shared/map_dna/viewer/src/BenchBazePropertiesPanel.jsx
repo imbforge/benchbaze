@@ -10,19 +10,21 @@ export default function BenchBazePropertiesPanel(props) {
     PropertiesProps = {},
     isPostPayloadMode = false,
     isDetectFeatures = false,
+    showLegend = false,
+    onRestoreOriginalColors,
     ...rest
   } = props;
   const [isLegendVisible, setLegendVisible] = React.useState(
-    () => isDetectFeatures,
+    () => isDetectFeatures || showLegend,
   );
 
   // Show the legend by default only when the posted payload is asking for
   // feature detection. The user can still hide it after it appears
   React.useEffect(() => {
-    if (isDetectFeatures) {
+    if (isDetectFeatures || showLegend) {
       setLegendVisible(true);
     }
-  }, [isDetectFeatures]);
+  }, [isDetectFeatures, showLegend]);
 
   const defaultPropertiesList =
     PropertiesProps.propertiesList || [
@@ -65,7 +67,14 @@ export default function BenchBazePropertiesPanel(props) {
   };
 
   const legend = (
-    <BenchBazePropertiesPanelLegend onClose={() => setLegendVisible(false)} />
+    <BenchBazePropertiesPanelLegend
+      onClose={() => {
+        if (typeof onRestoreOriginalColors === "function") {
+          onRestoreOriginalColors();
+        }
+        setLegendVisible(false);
+      }}
+    />
   );
 
   return (

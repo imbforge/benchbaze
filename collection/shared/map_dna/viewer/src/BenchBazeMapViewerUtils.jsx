@@ -514,103 +514,37 @@ function reformatMapFeatures(mapDnaJson) {
 
     feature.color = newColor;
     feature.color_detected_feature = true;
+    delete feature.notes.bb_feat_type;
   });
 
   return mapDnaJson;
 }
 
-async function convertSnapgeneToGenbank(mapData) {
-  // For SnapGene files, convert to GenBank format using Biopython before parsing
-  // to OVE JSON. The OVE Snapgene parser does not extract all information from
-  // features (e.g. "custom" qualifiers), but the Biopython parser does.
-
-  const formData = new FormData();
-  formData.append("map_file_snapgene", mapData);
-  const csrfToken = getCookie("csrftoken");
-  const response = await fetch("/utils/map_dna/convert_snapgene_to_genbank/", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to convert SnapGene to GenBank (Error ${response.status}).`,
-    );
-  }
-
-  const contentDisposition = response.headers.get("content-disposition");
-  const responseFileName = parseContentDispositionFileName(contentDisposition);
-  const outMapData = await response.text();
-
-  return {
-    fileName: responseFileName,
-    outMapData,
-  };
-}
-
 export async function convertMapPathToOveJson(fileName) {
-  // Fetch the map file from the given URL, parse it using bio-parsers, and return
-  // the parsed sequence data in OVE JSON format
+  // Fetch the map file from a given URL and return it as an OVE JSON
 
   if (!fileName) {
     throw new Error("Missing map file.");
   }
 
-  const normalizedFileFormat = normalizeFileFormat(
-    fileName ? getFileExtensionFromPath(fileName) : null,
-  );
-
-  if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
-    throw new Error(
-      `Unsupported file format \"${normalizedFileFormat}\". Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
-    );
-  }
-
-  let response;
-
-  try {
-    response = await fetch(
-      new Request(fileName, {
-        //probably don't need this header.. fetch should just work
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      }),
-    );
-  } catch (error) {
-    throw new Error(
-      "Failed to download the map. You can try loading it again.",
-    );
-  }
+    const formData = new FormData();
+    formData.append("map_file_path", fileName);
+    const csrfToken = getCookie("csrftoken");
+    const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
+        body: formData,
+    });
 
   if (!response.ok) {
-    throw new Error(`Failed to download the map (Error ${response.status}).`);
+    throw new Error(
+      `Failed to convert map file to OVE JSON (Error ${response.status}).`,
+    );
   }
 
-  let mapData;
-  try {
-    mapData = SUPPORTED_FILE_FORMATS_GENBANK.includes(normalizedFileFormat)
-      ? await response.text()
-      : SUPPORTED_FILE_FORMATS_SNAPGENE.includes(normalizedFileFormat)
-        ? await response.blob()
-        : null;
-  } catch (error) {
-    throw new Error("Failed to read the map file content.");
-  }
-
-  if (!mapData) {
-    throw new Error("The map file is empty.");
-  }
-
-  if (normalizedFileFormat === ".dna") {
-    const converted = await convertSnapgeneToGenbank(mapData);
-    mapData = converted.outMapData;
-    fileName = converted.fileName || fileName;
-  }
-
-  const { anyToJson } = await import("@teselagen/bio-parsers");
-  mapData = await anyToJson(mapData, { fileName });
-  const parsedSequence = mapData?.[0]?.parsedSequence;
+  const responseJson = await response.json();
+  const parsedSequence = responseJson?.[0]?.parsedSequence;
 
   if (!parsedSequence) {
     throw new Error("The map file cannot be parsed.");
@@ -619,8 +553,11 @@ export async function convertMapPathToOveJson(fileName) {
   return parsedSequence;
 }
 
-export async function convertPostedMapFileToOveJson(mapFile) {
+export async function convertPostedMapFileToOveJsonDetectFeatures(payload, detectFeatures) {
   // Convert a posted map file to OVE JSON format by parsing it with bio-parsers
+  // Optionally detect features during conversion
+  
+  const { mapFile } = payload;
 
   if (!(mapFile instanceof Blob)) {
     throw new Error("Missing posted map file object.");
@@ -631,28 +568,31 @@ export async function convertPostedMapFileToOveJson(mapFile) {
   );
   if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
     throw new Error(
-      `Unsupported posted file format "${normalizedFileFormat}". Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
+      `Unsupported posted file format "${normalizedFileFormat}". ` + 
+      `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
     );
   }
 
-  let mapData;
-  try {
-    mapData = SUPPORTED_FILE_FORMATS_GENBANK.includes(normalizedFileFormat)
-      ? await mapFile.text()
-      : mapFile;
-  } catch (error) {
-    throw new Error("Failed to read posted map file content.");
+    const formData = new FormData();
+    formData.append("map_file_content", mapFile);
+    formData.append("map_file_name", fileName);
+    formData.append("detect_features", detectFeatures ? "true" : "false");
+    const csrfToken = getCookie("csrftoken");
+    const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
+        body: formData,
+    });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to convert map file to OVE JSON (Error ${response.status}).`,
+    );
   }
 
-  if (normalizedFileFormat === ".dna") {
-    const converted = await convertSnapgeneToGenbank(mapData);
-    mapData = converted.outMapData;
-    fileName = converted.fileName || fileName;
-  }
-
-  const { anyToJson } = await import("@teselagen/bio-parsers");
-  mapData = await anyToJson(mapData, { fileName: fileName || "posted_map" });
-  let parsedSequence = mapData?.[0]?.parsedSequence;
+const responseJson = await response.json();
+  let parsedSequence = responseJson?.[0]?.parsedSequence;
 
   if (!parsedSequence) {
     throw new Error("Posted map file cannot be parsed.");
@@ -667,7 +607,7 @@ function reformatProcessedMap(mapDnaJson) {
   //   Restore colors by moving any color_original values back to the color property and
   //   removing color if no original color exists.
   //   This removes any temporary color overrides applied to show detected features vs original features
-  //   Also remove the following notes: bb_feat_type and any that starts with plannot_
+  //   Also remove the following notes, if they still exist: bb_feat_type
 
   for (const feature of Object.values(mapDnaJson.features || {})) {
     if (!feature || typeof feature !== "object") continue;
@@ -685,13 +625,34 @@ function reformatProcessedMap(mapDnaJson) {
 
     const notes = feature.notes || {};
     delete notes.bb_feat_type;
-    Object.keys(notes).forEach((key) => {
-      if (key.startsWith("plannot_")) {
-        delete notes[key];
-      }
-    });
+
   }
   return mapDnaJson;
+}
+
+export function restoreOriginalFeatureColors(sequenceDataJson) {
+  if (!sequenceDataJson || typeof sequenceDataJson !== "object") {
+    return sequenceDataJson;
+  }
+
+  const clonedDataJson = structuredClone(sequenceDataJson);
+
+  for (const feature of Object.values(clonedDataJson.features || {})) {
+    if (!feature || typeof feature !== "object") continue;
+    if (feature.hasOwnProperty("color_detected_feature")) {
+      if (feature.hasOwnProperty("color_original")) {
+        [feature.color, feature.color_original] = [
+          feature.color_original,
+          feature.color,
+        ];
+        delete feature.color_original;
+      } else {
+        delete feature.color;
+      }
+    }
+  }
+
+  return clonedDataJson;
 }
 
 function normalizeFeatureNoteValues(obj) {
@@ -768,11 +729,12 @@ export async function saveToFile(sequenceDataJson, originalFile) {
   );
   if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
     throw new Error(
-      `Unsupported save file format "${normalizedFileFormat}". Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `".${f}"`).join(", ")}.`,
+      `Unsupported save file format "${normalizedFileFormat}". ` +
+      `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `".${f}"`).join(", ")}.`,
     );
   }
 
-  // Get the IDs of the sequence features
+  // Get the  IDs of the BenchBaze sequence features
   const sequenceFeatureIds = getSequenceFeatureIds(sequenceDataJson);
 
   // Remove temporary colours used during feature detection
@@ -782,7 +744,6 @@ export async function saveToFile(sequenceDataJson, originalFile) {
   // @teselagen/bio-parsers expects that
   clonedDataJson = normalizeFeatureNoteValues(clonedDataJson);
 
-  let contentType;
   const { jsonToGenbank } = await import("@teselagen/bio-parsers");
 
   // Create map file to save back to the parent form on the server
@@ -790,10 +751,13 @@ export async function saveToFile(sequenceDataJson, originalFile) {
   formData.append("map_file_name", fileName);
   formData.append("map_file_format", normalizedFileFormat);
 
+  let contentType;
+
   // Genbank
   if (SUPPORTED_FILE_FORMATS_GENBANK.includes(normalizedFileFormat)) {
-    // For GenBank convert clonedDataJson back to GenBank format,
-    // the server simply re-saves this using Biopython for consistency
+    // For GenBank convert clonedDataJson back to GenBank format first using bio-parsers, 
+    // then send the GenBank file back to the server to be re-saved as GenBank by
+    // Biopython to ensure that the file is properly formatted
     const genBankData = await jsonToGenbank(clonedDataJson);
     const genBankBlob = new Blob([genBankData], {
       type: "text/plain;charset=utf-8",
@@ -802,8 +766,9 @@ export async function saveToFile(sequenceDataJson, originalFile) {
 
     contentType = "text/plain;charset=utf-8";
   }
-  // For SnapGene, send the edited sequence data as JSON back to the server along with the original file,
-  // then create a new .dna file on the server using the original file as base but update its features,
+  // SnapGene
+  // Send the OVE JSON map back to the server along with the original .dna file,
+  // then save the .dna file on the server using the original file as base and update its features,
   // primers and sequence based on the edited sequence data
   else if (SUPPORTED_FILE_FORMATS_SNAPGENE.includes(normalizedFileFormat)) {
     formData.append("map_file_original_sg", originalFile);
@@ -826,6 +791,7 @@ export async function saveToFile(sequenceDataJson, originalFile) {
     throw new Error(`Failed to save map (Error ${response.status}).`);
   }
 
+  // Get response file content as a Blob and create a new File object to return to the parent form
   const outMapData = await response.blob();
 
   const fileBaseName = getFileBaseNameFromPath(fileName);
