@@ -1,4 +1,3 @@
-const DETECT_FEATURES_URL = "/utils/map_dna/detect_features/";
 const THEME_STORAGE_KEY = "theme";
 
 export function getPanelsShown(isCircular, isPostPayloadMode) {
@@ -14,18 +13,17 @@ export function getPanelsShown(isCircular, isPostPayloadMode) {
         id: "rail",
         name: "Linear Map",
         active: !isCircular
+      },
+      {
+        id: "sequence",
+        name: "Sequence Map"
       }
     ],
     [
       {
-        id: "sequence",
-        name: "Sequence Map",
-        active: !isPostPayloadMode
-      },
-      {
         id: "properties",
         name: "Properties",
-        active: isPostPayloadMode
+        active: true
       }
     ]
   ];
@@ -104,42 +102,4 @@ export function getCookie(name) {
   }
 
   return null;
-}
-
-export async function detectMapFeaturesOnServer(payload) {
-  // Detect features by sending the file to the server,
-  // which will return a new file with features detected and added.
-
-  // Prepare form data with the map file, the server expects a field named "map_dna_file"
-  const formData = new FormData();
-  formData.append("map_dna_file", payload.mapFile, payload.fileName);
-
-  // Include CSRF token for security if available, this is required for POST requests
-  // in Django when using session authentication
-  const csrfToken = getCookie("csrftoken");
-  const response = await fetch(DETECT_FEATURES_URL, {
-    method: "POST",
-    credentials: "same-origin",
-    headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
-    body: formData
-  });
-
-  // Check if response is successful
-  if (!response.ok) {
-    throw new Error(`Feature detection failed (Error ${response.status}).`);
-  }
-
-  // Get the detected map file as a Blob from the response and create a new File
-  const detectedMapBlob = await response.blob();
-  const responseFileName =
-    response.headers.get("X-BB-Viewer-File-Name") || payload.fileName || null;
-
-  return {
-    ...payload,
-    fileName: responseFileName,
-    mapFile: new File([detectedMapBlob], responseFileName, {
-      type: detectedMapBlob.type || "application/octet-stream"
-    }),
-    detectFeatures: false
-  };
 }

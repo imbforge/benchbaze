@@ -2,6 +2,9 @@ import React from "react";
 import {
   Button,
   Icon,
+  Menu,
+  MenuItem,
+  Popover,
   Position,
   Tooltip,
   Toaster,
@@ -13,8 +16,9 @@ import {
   downloadMapFile,
   downloadMapPreview,
   convertMapPathToOveJson,
-  convertPostedMapFileToOveJson,
+  convertPostedMapFileToOveJsonDetectFeatures,
   getSequenceFeatureIds,
+  restoreOriginalFeatureColors,
   saveToFile,
 } from "./BenchBazeMapViewerUtils";
 import { setToasterInstance, toastr } from "./toaster";
@@ -26,10 +30,9 @@ import {
   getPostedPayloadFromWindow,
   isBlobPostedPayload,
   getFileFormatFromFileName,
-  detectMapFeaturesOnServer,
 } from "./App.helpers";
 import BenchBazePropertiesPanel from "./BenchBazePropertiesPanel";
-import BenchBazeAddOrEditPrimerDialogOverride from "./BenchBazeAddOrEditPrimerDialogOverride";
+import BenchBazeAddOrEditFeatureDialog from "./BenchBazeAddOrEditFeatureDialog";
 
 import "./App.css";
 
@@ -105,6 +108,7 @@ function App() {
   const [loadError, setLoadError] = React.useState(null);
   const [loadAttempt, setLoadAttempt] = React.useState(0);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isDetectingFeatures, setIsDetectingFeatures] = React.useState(false);
   const [theme, setTheme] = React.useState(getInitialTheme);
   const [prefersDarkScheme, setPrefersDarkScheme] = React.useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches,
@@ -125,6 +129,16 @@ function App() {
   const isDetectFeatures =
     postedPayload?.detectFeatures === true ||
     Boolean(originalPostedPayloadRef.current?.detectFeatures === true);
+
+  const [showLegendOnDetect, setShowLegendOnDetect] = React.useState(
+    () => Boolean(isDetectFeatures),
+  );
+
+  React.useEffect(() => {
+    if (isDetectFeatures) {
+      setShowLegendOnDetect(true);
+    }
+  }, [isDetectFeatures]);
 
   // Read-only/edit state is determined by the presence of a posted payload
   const [isReadOnly, setIsReadOnly] = React.useState(() => !isPostPayloadMode);
@@ -180,6 +194,30 @@ function App() {
       updateUnsavedChanges();
     },
     [updateUnsavedChanges],
+  );
+
+  const prepareSequenceDataForEditor = React.useCallback(
+    (incomingSeqData) => {
+      const seqData = { ...incomingSeqData };
+      seqData.name = resolvedTitle || seqData.name;
+      const plasmidLength = seqData.size;
+      const featNameExclude = [
+        "synthetic dna construct",
+        "recombinant plasmid",
+        "source",
+      ];
+
+      seqData.features = seqData.features.filter(
+        (feat) =>
+          !(
+            featNameExclude.includes(feat.name.toLowerCase()) &&
+            plasmidLength === feat.end - feat.start + 1
+          ),
+      );
+
+      return seqData;
+    },
+    [resolvedTitle],
   );
 
   // Determine whether dark theme is active
@@ -321,7 +359,66 @@ function App() {
     }
   }, [postedPayload, resolvedFileFormat, resolvedFileName, resolvedTitle]);
 
+  const detectFeaturesHandle = React.useCallback(async () => {
+    if (!isBlobPostedPayload(postedPayload)) {
+      return;
+    }
+
+    setIsDetectingFeatures(true);
+    try {
+      const incomingSeqData = await convertPostedMapFileToOveJsonDetectFeatures(postedPayload, true);
+
+      if (!incomingSeqData) {
+        throw new Error("Failed to detect features on the posted map file.");
+      }
+
+      const seqData = prepareSequenceDataForEditor(incomingSeqData);
+      const oveModule = await oveModulePromise;
+      const { updateEditor } = oveModule;
+      updateEditor(store, EDITOR_NAME, {
+        sequenceData: seqData,
+        panelsShown: getPanelsShown(seqData.circular, isPostPayloadMode),
+        readOnly: isReadOnly,
+        annotationVisibility: {
+          features: true,
+          cutsites: false,
+          primers: resolvedShowOligos,
+          translations: !resolvedShowOligos,
+        },
+      });
+
+      setShowLegendOnDetect(true);
+      setBaselineSequenceData(seqData);
+      toastr.success("Detected features on the posted map file.");
+    } catch (error) {
+      toastr.error(getLoadErrorMessage(error));
+    } finally {
+      setIsDetectingFeatures(false);
+    }
+  }, [postedPayload, resolvedTitle, isPostPayloadMode, isReadOnly, resolvedShowOligos]);
+
   // Function to render the load error message with a retry button
+  const restoreOriginalColors = React.useCallback(() => {
+    void oveModulePromise.then(({ updateEditor }) => {
+      const editorState = store.getState()?.VectorEditor?.[EDITOR_NAME];
+      const sequenceData = editorState?.sequenceData;
+      if (!sequenceData) {
+        return;
+      }
+
+      const restoredSequenceData = restoreOriginalFeatureColors(sequenceData);
+      if (restoredSequenceData === sequenceData) {
+        return;
+      }
+
+      updateEditor(store, EDITOR_NAME, {
+        sequenceData: restoredSequenceData,
+      }, undefined, {
+        justPassingPartialSeqData: true,
+      });
+    });
+  }, []);
+
   const renderLoadError = React.useCallback(
     (error) => (
       <div className="load-state-panel tg-flex justify-center align-center">
@@ -420,31 +517,17 @@ function App() {
 
     (async () => {
       try {
-        let resolvedPostedPayload = postedPayload;
-
-        // If the posted payload indicates that features should be detected, send the file
-        // to the server for processing before loading it in the editor
-        if (
-          isBlobPostedPayload(postedPayload) &&
-          postedPayload.detectFeatures !== false
-        ) {
-          resolvedPostedPayload =
-            await detectMapFeaturesOnServer(postedPayload);
-          if (!isMounted) {
-            return;
-          }
-          setPostedPayload(resolvedPostedPayload);
-        }
 
         // Get plasmid data and editor module in parallel to reduce startup latency
         const [incomingSeqData, oveModule] = await Promise.all([
-          isBlobPostedPayload(resolvedPostedPayload)
-            ? convertPostedMapFileToOveJson(
-                resolvedPostedPayload.mapFile,
+          isBlobPostedPayload(postedPayload)
+            ? convertPostedMapFileToOveJsonDetectFeatures(
+                postedPayload, postedPayload.detectFeatures
               )
             : convertMapPathToOveJson(resolvedFileName),
           oveModulePromise,
         ]);
+        
         if (!isMounted) {
           return;
         }
@@ -455,24 +538,8 @@ function App() {
         }
 
         // Get sequence data and process it to remove unwanted features before loading
-        const seqData = { ...incomingSeqData }; // Shallow copy to avoid mutating original data used for change detection baseline
+        const seqData = prepareSequenceDataForEditor(incomingSeqData);
         const { updateEditor } = oveModule;
-        seqData.name = resolvedTitle || seqData.name;
-        const plasmidLength = seqData.size;
-
-        // Remove features that do not need to be shown, ever!
-        const featNameExclude = [
-          "synthetic dna construct",
-          "recombinant plasmid",
-          "source",
-        ];
-        seqData.features = seqData.features.filter(
-          (feat) =>
-            !(
-              featNameExclude.includes(feat.name.toLowerCase()) &&
-              plasmidLength === feat.end - feat.start + 1
-            ),
-        );
 
         // Update the editor state with the loaded sequence data and other relevant properties
         updateEditor(store, EDITOR_NAME, {
@@ -545,6 +612,7 @@ function App() {
     isFullscreen: true,
     showMenuBar: false,
     readOnly: isReadOnly,
+    showCicularViewInternalLabels: true,
     ToolBarProps: {
       toolList: [
         ...(isPostPayloadMode
@@ -568,7 +636,7 @@ function App() {
         "findTool",
       ],
       // Modify the list of tools displayed in the toolbar to include custom save and
-      // download preview button in post payload mode
+      // download preview buttons in post payload mode
       modifyTools: (tools) => [
         ...(isPostPayloadMode
           ? [
@@ -627,6 +695,82 @@ function App() {
           </div>
         </div>,
         ...tools.slice(1),
+        ...(isPostPayloadMode && isBlobPostedPayload(postedPayload)
+          ? [
+              <div
+                key="detectFeaturesTool"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <div className="veToolbarSpacer" />
+                <div className="veToolbarItemOuter">
+                  <Tooltip
+                    content={
+                      isDetectingFeatures
+                        ? "Detecting features..."
+                        : "Detect features"
+                    }
+                  >
+                    <Button
+                      minimal
+                      intent="primary"
+                      loading={isDetectingFeatures}
+                      disabled={isDetectingFeatures || loading}
+                      icon={<Icon icon="tag" />}
+                      onClick={detectFeaturesHandle}
+                    />
+                  </Tooltip>
+                </div>
+              </div>,
+            ]
+          : []),
+        <div
+          key="acknowledgementsTool"
+          style={{ display: "flex", alignItems: "center" }}
+        >
+          <div className="veToolbarSpacer" />
+          <div className="veToolbarItemOuter">
+            <Popover
+              minimal
+              position={Position.BOTTOM}
+              content={
+                <Menu>
+                  <MenuItem
+                    text="Open Vector Editor (OVE)"
+                    href="https://github.com/TeselaGen/tg-oss/tree/master/packages/ove"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                  <MenuItem
+                    text="pLannotate"
+                    href="https://github.com/mmcguffi/pLannotate"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                 <MenuItem
+                    text="BioPython"
+                    href="https://github.com/biopython/biopython"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                 <MenuItem
+                    text="sgff"
+                    href="https://github.com/merv1n34k/sgffp"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                </Menu>
+              }
+            >
+              <Tooltip content="About">
+                <Button
+                  minimal
+                  intent="primary"
+                  icon={<Icon icon="info-sign" />}
+                />
+              </Tooltip>
+            </Popover>
+          </div>
+        </div>,
       ],
     },
     // Specify which annotation types to show in the properties panel and other relevant props
@@ -639,12 +783,14 @@ function App() {
         "orfs",
       ],
     },
-    AddOrEditPrimerDialogOverride: BenchBazeAddOrEditPrimerDialogOverride,
     isPostPayloadMode,
     isDetectFeatures:
       postedPayload?.detectFeatures === true ||
       Boolean(originalPostedPayloadRef.current?.detectFeatures === true),
+    showLegend: showLegendOnDetect,
     isDarkTheme,
+    onRestoreOriginalColors: restoreOriginalColors,
+    AddOrEditFeatureDialogOverride: BenchBazeAddOrEditFeatureDialog,
     panelMap: {
       properties: {
         comp: BenchBazePropertiesPanel,
@@ -652,7 +798,9 @@ function App() {
           "PropertiesProps",
           "isPostPayloadMode",
           "isDetectFeatures",
+          "showLegend",
           "isDarkTheme",
+          "onRestoreOriginalColors",
         ],
       },
     },
