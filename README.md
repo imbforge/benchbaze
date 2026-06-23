@@ -1,43 +1,102 @@
-# Django-based web app for managing the lab collections and orders of the Ulrich lab @ IMB Mainz
+# BenchBaze
 
-This is a web app for managing the lab collections and 
-orders of the Ulrich lab @ IMB Mainz. It is based on a heavily customised Django admin site.
+BenchBaze is a Django-based laboratory inventory and purchasing management system. It provides a highly customized Django admin experience for managing biological collection items, approvals, GMO compliance (AKA Formblatt Z in Germany), purchasing, user access, as well as an built-in DNA map viewer.
 
-If you want to use this app as is, you will need to
+## Key features
 
-* Set up a SnapGene server (free for academic use, see <https://www.snapgene.com/academics/snapgene-server/>)
-* Set up a [plasmid viewer](https://github.com/helle-ulrich-lab/ove-plasmid-viewer) based on [TeselaGen's openVectorEditor](https://github.com/TeselaGen/openVectorEditor)
-* Include a file called private_settings.py in the config folder that contains the following variables (amend as appropriate!)
+- Inventory management for plasmids, cell lines, strains (yeast and bacteria), oligos, antibodies, viruses, and related assets
+- Purchasing and order tracking workflows
+- Approval forms and document attachments
+- GMO compliance support for German laboratories
+- Custom user roles and OIDC-aware authentication
+- Open Vector Editor (OVE) integration for DNA map visualization
+- REST API endpoints for frontend integration
 
-```python
-# /config/private_settings.py
-# Django settings
+## Repository structure
 
-SECRET_KEY = 'secret_key'
-ALLOWED_HOSTS = ['host1', 'host2'] # The first item should be the publicly accessible domain 
-DB_NAME = 'db_name'
-DB_USER = 'db_user'
-DB_PASSWORD = 'db_password'
-DEBUG = False
-SERVER_EMAIL_ADDRESS = 'server_email_address'
-SITE_ADMIN_EMAIL_ADDRESSES = [('name', 'email')]
+- `config/` - Django configuration, settings, URL routing, and WSGI entrypoint
+- `collection/` - inventory app modules for biological collections and shared utilities
+- `purchasing/` - purchasing, orders, cost units, and hazardous materials support
+- `approval/` - approval workflows and forms
+- `common/` - shared models, admin site customizations, authentication backends, and utilities
+- `formz/` - form-related models and management logic
+- `frontend/` - Vue 3 + Vite frontend project used for client-side UI components (very much in development)
+- `requirements/` - Python dependency manifests and environment definitions
+- `templates/` - Django templates used by the admin and authentication views
+- `staticfiles/` - static assets
+- `uploads/` - media upload directory
 
-# The title to show in the header and some email communication
-SITE_TITLE = 'site_title'
+## Technology stack
 
-# Abbreviation to be appended to files, e.g. HU for Helle Ulrich. Can be empty, like so ''
-LAB_ABBREVIATION_FOR_FILES = 'lab_abbreviation_for_files'
+- Python 3.11
+- Django 4.2
+- PostgreSQL
+- Vue 3 + Vite for frontend UI
+- Mozilla Django OIDC for authentication
+- django-guardian for object permissions
+- django-import-export, djangoql, django-simple-history, background_task
+- Open Vector Editor (OVE) integration for DNA map support
 
-# OIDC settings
-OIDC_ENABLE = True
-OIDC_PROVIDER_NAME = 'oidc_provider_name'
-OIDC_RP_CLIENT_ID = 'oidc_rp_client_id'
-OIDC_RP_CLIENT_SECRET = 'oidc_rp_client_secret'
-OIDC_RP_SIGN_ALGO = 'oidc_rp_sign_algo'
-OIDC_OP_JWKS_ENDPOINT = "oidc_op_jwks_endpoint"
-OIDC_OP_AUTHORIZATION_ENDPOINT = "oidc_op_authorization_endpoint"
-OIDC_OP_TOKEN_ENDPOINT = "oidc_op_token_endpoint"
-OIDC_OP_USER_ENDPOINT = "oidc_op_user_endpoint"
-OIDC_RP_SCOPES = 'openid email name groups'
-OIDC_ALLOWED_GROUPS = ['group1', 'group2', ]
+## Setup
+
+### 1. Create `private_settings.py`
+
+Copy the template and update the values for your environment:
+
+```bash
+cp config/private_settings_template.py config/private_settings.py
 ```
+
+Edit `config/private_settings.py` to set relevant values for your database, email, and other environment-specific settings.
+
+
+### 2. Install Python dependencies
+
+Install from the pinned requirement file:
+
+```bash
+conda create -n benchbaze -f requirements/conda.yml
+conda activate benchbaze
+```
+
+```bash
+python -m pip install -r requirements/prod.txt
+```
+
+For development dependencies:
+
+```bash
+python -m pip install -r requirements/dev.txt
+```
+
+### 3. Initialize the database
+
+Create and migrate the PostgreSQL database:
+
+```bash
+python manage.py migrate
+```
+
+Create a superuser:
+
+```bash
+python manage.py createsuperuser
+```
+
+### 4. Collect static assets
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+## Running the application
+
+For local development, use Django's built-in server:
+
+```bash
+python manage.py runserver
+```
+
+## License
+
+See `LICENSE` for project licensing details.
