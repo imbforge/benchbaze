@@ -1,7 +1,9 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from import_export.fields import Field
 
 from common.models import DocFileMixin
+from formz.models import Species
 
 from ..shared.models import (
     ApprovalFieldsMixin,
@@ -22,7 +24,7 @@ VIRUS_BASE_LIST_DISPLAY = [
 VIRUS_BASE_EXPORT_FIELD_NAMES = [
     "id",
     "name",
-    "typ_e",
+    "type_custom_field",
     "resistance",
     "us_e",
     "helper_plasmids",
@@ -44,6 +46,7 @@ VIRUS_BASE_AUTOCOMPLETE_FIELDS = [
 VIRUS_BASE_SPECIFIC_FIELDS = [
     "name",
     "typ_e",
+    "type_other",
     "resistance",
     "us_e",
     "helper_plasmids",
@@ -90,13 +93,19 @@ class VirusBase(
         max_length=15,
         blank=False,
     )
+    type_other = models.CharField(
+        "Other type",
+        max_length=255,
+        blank=True,
+        help_text="If virus type is not in the list above, specify it here",
+    )
     helper_cellline = models.ForeignKey(
         "CellLine",
         verbose_name="helper cell line",
         help_text="The cell line used to produce the virus",
         on_delete=models.PROTECT,
         related_name="%(class)s_helper_cellline",
-        blank=False,
+        blank=True,
         null=True,
     )
     resistance = models.CharField("resistance", max_length=255, blank=True)
@@ -106,7 +115,7 @@ class VirusBase(
         verbose_name="helper plasmids",
         help_text="Add both helper/packaging and specific plasmids",
         related_name="%(class)s_helper_plasmids",
-        blank=False,
+        blank=True,
     )
     construction = models.TextField("construction", blank=True)
     note = models.CharField("note", max_length=255, blank=True)
@@ -131,9 +140,21 @@ class VirusBase(
         "name",
     ]
     _list_display_frozen = _search_fields
+    _export_custom_fields = {
+        "fields": {
+            "type_custom_field": Field(column_name="Type"),
+        },
+        "dehydrate_methods": {
+            "type_custom_field": lambda obj: obj.get_type(),
+        },
+    }
 
     def __str__(self):
-        return f"{self.id} - {self.name}"
+        return f"{self.id} - {self.name} ({self.get_typ_e_display() if self.typ_e != 'other' else self.type_other})"
+
+    def get_type(self):
+        """Returns the type of the virus, either from the typ_e field or the type_other field if typ_e is 'other'"""
+        return self.get_typ_e_display() if self.typ_e != "other" else self.type_other
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
@@ -156,17 +177,46 @@ class VirusBase(
         for pl in all_plasmids:
             elements = elements | pl.sequence_features.all()
 
-        elements = (
-            elements.distinct()
-            | self.helper_cellline.all_sequence_features.all().distinct()
-        )
+        if self.helper_cellline:
+            elements = (
+                elements.distinct()
+                | self.helper_cellline.all_sequence_features.all().distinct()
+            )
+
         return elements.distinct().order_by("name")
 
     @property
     def formz_species(self):
-        species = self.helper_cellline.organism
-        species.virus_helper = self.helper_cellline
+        if self.helper_cellline:
+            species = self.helper_cellline.organism
+            species.virus_helper = self.helper_cellline
+        else:
+            species = Species(
+                common_name=self.get_type(), risk_group=self.formz_risk_group
+            )
+
         return species
+
+    def clean_field_typ_e(self):
+        errors = {}
+
+        if self.typ_e == "other" and not self.type_other:
+            errors["type_other"] = ["This field must be filled when type is 'Other'"]
+
+        if self.typ_e != "other" and self.type_other:
+            errors["type_other"] = [
+                "This field should be filled only when type is 'Other'"
+            ]
+
+        if self.typ_e != "other" and not self.helper_cellline:
+            errors["helper_cellline"] = [
+                "A helper cell line must be set if type is not 'Other'"
+            ]
+
+        # We check for helper_plasmids in form because of the M2M relation, which does not exist
+        # for newly created objects
+
+        return errors
 
 
 # Virus Mammalian
@@ -198,6 +248,7 @@ class VirusMammalian(VirusBase):
             ("lenti", "Lentivirus"),
             ("retro", "Retrovirus"),
             ("adenoassociated", "Adeno-associated virus"),
+            ("other", "Other"),
         ),
         max_length=15,
         blank=False,
@@ -273,7 +324,7 @@ class VirusInsect(VirusBase):
     # Fields
     typ_e = models.CharField(
         "type",
-        choices=(("baculo", "Baculovirus"),),
+        choices=(("baculo", "Baculovirus"), ("other", "Other")),
         default="baculo",
         max_length=15,
         blank=False,
@@ -284,7 +335,7 @@ class VirusInsect(VirusBase):
         help_text="The strain used for bacmid generation",
         on_delete=models.PROTECT,
         related_name="%(class)s_helper_ecolistrain",
-        blank=False,
+        blank=True,
         null=True,
     )
 
@@ -349,3 +400,13 @@ class VirusInsect(VirusBase):
             | self.helper_ecolistrain.all_sequence_features.all().distinct()
         )
         return elements.distinct().order_by("name")
+
+    def clean_field_helper_ecolistrain(self):
+        if self.typ_e != "other" and not self.helper_ecolistrain:
+            return {
+                "helper_ecolistrain": [
+                    "A helper E. coli strain must be set if type is not 'Other'"
+                ]
+            }
+
+        return {}

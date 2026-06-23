@@ -1,9 +1,6 @@
 from django.conf import settings
 
-from common.admin import (
-    AddDocFileInlineMixin,
-    DocFileInlineMixin,
-)
+from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
 from ..shared.admin import (
     AddLocationInline,
@@ -12,6 +9,7 @@ from ..shared.admin import (
     LocationInline,
     SortAutocompleteResultsId,
 )
+from .forms import VirusInsectForm, VirusMammalianForm
 from .models import VirusInsectDoc, VirusMammalianDoc
 from .search import VirusInsectQLSchema, VirusMammalianQLSchema
 
@@ -50,6 +48,7 @@ class VirusInsectAddDocInline(AddDocFileInlineMixin):
 class VirusMammalianAdmin(
     SortAutocompleteResultsId, CustomGuardedModelAdmin, CollectionUserProtectionAdmin
 ):
+    form = VirusMammalianForm
     djangoql_schema = VirusMammalianQLSchema
     inlines = [
         LocationInline,
@@ -63,6 +62,7 @@ class VirusMammalianAdmin(
 class VirusInsectAdmin(
     SortAutocompleteResultsId, CustomGuardedModelAdmin, CollectionUserProtectionAdmin
 ):
+    form = VirusInsectForm
     djangoql_schema = VirusInsectQLSchema
     inlines = [
         LocationInline,
