@@ -126,7 +126,7 @@
     <div><span class="formztextbold">Risikogruppe: </span>{{object.formz_risk_group}}</div>
 
     <!-- Donor organism -->
-    <div><span class="formztextbold">Empfängerorganismus: </span><span style='font-style: italic'>{{object.formz_species.display_name}}</span>
+    <div><span class="formztextbold">Empfängerorganismus: </span><span>{{object.formz_species.name_formatted}}</span>
       <!-- For plasmids, list all E. coli strains -->
       {% if object.formz_ecoli_strains.exists %}
         {% for ecoli in object.formz_ecoli_strains.all %}

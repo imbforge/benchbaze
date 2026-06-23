@@ -79,12 +79,12 @@
       }
 
     </style>
-    <title>Formblatt Z:{% if pi %} AG {{pi.first_name}} {{pi.last_name}}{% endif %} {{object.formz_species.display_name}} #{{object}}</title>
+    <title>Formblatt Z:{% if pi %} AG {{pi.first_name}} {{pi.last_name}}{% endif %} {{object.formz_species.name_formatted}} #{{object}}</title>
   </head>
 
   <body style='font-family:"arial"'>
 
-    <h1>Formblatt Z: <span style='font-style: italic'>{{object.formz_species.display_name}}</span> #{{object}}</h1>
+    <h1>Formblatt Z: <span>{{object.formz_species.name_formatted}}</span> #{{object}}</h1>
 
     {% if pi %}
       <h1>AG {{pi.first_name}} {{pi.last_name}}</h1>
@@ -119,7 +119,7 @@
       <div><span class="formztextbold">Risikogruppe: </span>{{object.formz_risk_group}}</div>
 
       <!-- Donor organism -->
-      <div><span class="formztextbold">Empfängerorganismus: </span><span style='font-style: italic'>{{object.formz_species.display_name}}</span>
+      <div><span class="formztextbold">Empfängerorganismus: </span><span>{{object.formz_species.name_formatted}}</span>
         <!-- For plasmids, list all E. coli strains -->
         {% if object.formz_ecoli_strains.exists %}
           {% for ecoli in object.formz_ecoli_strains.all %}
