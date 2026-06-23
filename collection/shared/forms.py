@@ -63,4 +63,5 @@ class LocationCheckNumberInlineFormSet(BaseGenericInlineFormSet):
                     f"At least one {self.model._meta.verbose_name if self.model else 'item'} is required."
                 )
 
-        raise ValidationError(errors)
+        if errors:
+            raise ValidationError(errors)

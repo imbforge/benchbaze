@@ -246,6 +246,17 @@ class LocationItem(models.Model):
     def clean(self):
         errors = {}
 
+        if not self.location:
+            if self.box.strip() or self.coordinate.strip() or self.comment.strip():
+                errors["location"] = [
+                    "A location is required when another field is provided."
+                ]
+
+            if errors:
+                raise ValidationError(errors)
+
+            return
+
         if self.location.mandatory_position:
             # Check that box is provided
             if not self.box.strip():
@@ -295,8 +306,8 @@ class LocationItem(models.Model):
                         "Coordinate must be numeric."
                     ]
 
-            if len(errors) > 0:
-                raise ValidationError(errors)
+        if errors:
+            raise ValidationError(errors)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
