@@ -9,4 +9,4 @@ Last name: {{user.last_name}}
 You can amend this user's properties at {{url}}.
 
 Regards,
-The {{site_title}}
+{{site_title}}

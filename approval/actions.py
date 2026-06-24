@@ -12,7 +12,7 @@ from purchasing.models import Order
 from .models import Approval
 
 User = get_user_model()
-SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
+SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "email@example.com")
 
 

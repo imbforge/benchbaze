@@ -5,4 +5,4 @@ Dear {{recipient.first_name}},
 {{records_str}}
 
 Regards,
-The {{site_title}}
+{{site_title}}

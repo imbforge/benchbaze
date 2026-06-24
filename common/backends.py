@@ -12,7 +12,7 @@ from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 User = get_user_model()
 OIDC_ALLOWED_GROUPS = getattr(settings, "OIDC_ALLOWED_GROUPS", [])
 OIDC_ALLOWED_USER_EMAILS = getattr(settings, "OIDC_ALLOWED_USER_EMAILS", [])
-SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
+SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 SITE_ADMIN_EMAIL_ADDRESSES = getattr(settings, "SITE_ADMIN_EMAIL_ADDRESSES", [])
 OIDC_UPN_FIELD_NAME = getattr(settings, "OIDC_UPN_FIELD_NAME", "upn")
 OIDC_PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", "")
@@ -66,7 +66,7 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         ):
             messages.warning(
                 self.request,
-                f"Your user is valid but not yet allowed to access the {SITE_TITLE}.",
+                f"Your user is valid but not yet allowed to access {SITE_TITLE}.",
             )
             user = AnonymousUser()
             user.email = user_email

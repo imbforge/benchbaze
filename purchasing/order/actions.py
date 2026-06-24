@@ -24,7 +24,7 @@ from common.actions import export_action
 
 from .forms import MassUpdateOrderForm
 
-SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
+SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
 
 

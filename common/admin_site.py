@@ -20,6 +20,7 @@ from approval.admin import ApprovalAdmin
 from approval.models import Approval
 from collection.admin import (
     AntibodyAdmin,
+    BacterialStrainAdmin,
     CellLineAdmin,
     EColiStrainAdmin,
     InhibitorAdmin,
@@ -41,6 +42,7 @@ from collection.admin import (
 )
 from collection.models import (
     Antibody,
+    BacterialStrain,
     CellLine,
     EColiStrain,
     Inhibitor,
@@ -108,7 +110,7 @@ from purchasing.models import (
 from .admin import OwnUserAdmin
 
 User = get_user_model()
-SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
+SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 
 
 class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
@@ -263,6 +265,6 @@ admin_site.register(VirusMammalian, VirusMammalianAdmin)
 admin_site.register(VirusInsect, VirusInsectAdmin)
 admin_site.register(CollectionStorage, CollectionStorageAdmin)
 admin_site.register(CollectionLocationName, CollectionLocationNameAdmin)
-
+admin_site.register(BacterialStrain, BacterialStrainAdmin)
 
 admin_site.register(Approval, ApprovalAdmin)

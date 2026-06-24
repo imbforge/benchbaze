@@ -50,7 +50,7 @@ ORDER_EMAIL_ADDRESSES = getattr(
 )
 MS_TEAMS_WEBHOOK = getattr(settings, "MS_TEAMS_WEBHOOK", "")
 TIME_ZONE = settings.TIME_ZONE
-SITE_TITLE = getattr(settings, "SITE_TITLE", "Lab DB")
+SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 ALLOWED_HOSTS = getattr(settings, "ALLOWED_HOSTS", [])
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
 
