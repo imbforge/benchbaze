@@ -282,8 +282,11 @@ class Species(models.Model):
         "risk group", choices=((1, 1), (2, 2), (3, 3), (4, 4)), blank=False, null=True
     )
     name_for_search = models.CharField(max_length=255, null=False, unique=True)
-    show_in_cell_line_collection = models.BooleanField(
-        "show as organism in cell line collection?", default=False
+    show_for_cell_line = models.BooleanField(
+        "show as organism in 'Cell lines'?", default=False
+    )
+    show_for_other_bacterium_strain = models.BooleanField(
+        "show as species in 'Other bacterium strains'?", default=False
     )
 
     @property

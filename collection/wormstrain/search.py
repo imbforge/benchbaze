@@ -1,6 +1,8 @@
 from django.db.models import Q
 from djangoql.schema import IntField, RelationField, StrField
 
+from common.search import check_search_length
+
 from ..shared.admin import (
     FieldCreated,
     FieldFormZProject,
@@ -44,8 +46,8 @@ class WormStrainSearchFieldAlleleName(StrField):
         """Suggest allele names based on the search input, looking in both
         transgene and mutation fields of WormStrainAllele"""
 
-        if len(search) < 3:
-            return ["Type 3 or more characters to see suggestions"]
+        if default_option := check_search_length(search):
+            return default_option
 
         qs = self.model.objects.filter(
             Q(transgene__icontains=search) | Q(mutation__icontains=search)

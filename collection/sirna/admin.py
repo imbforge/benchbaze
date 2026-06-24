@@ -1,17 +1,10 @@
 from django.contrib.auth import get_user_model
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
-from common.admin import (
-    AddDocFileInlineMixin,
-    DocFileInlineMixin,
-)
+from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 from formz.models import Species
 
-from ..shared.admin import (
-    AddLocationInline,
-    CollectionSimpleAdmin,
-    LocationInline,
-)
+from ..shared.admin import AddLocationInline, CollectionSimpleAdmin, LocationInline
 from .models import SiRnaDoc
 from .search import SiRnaQLSchema
 
@@ -65,8 +58,6 @@ class SiRnaAdmin(
 
         # Only show species that have been set to be shown in cell line collection
         if db_field.name == "species":
-            kwargs["queryset"] = Species.objects.filter(
-                show_in_cell_line_collection=True
-            )
+            kwargs["queryset"] = Species.objects.filter(show_for_cell_line=True)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

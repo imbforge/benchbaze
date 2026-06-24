@@ -44,11 +44,13 @@ from common.admin import (
     save_history_fields,
 )
 from common.model_clone import CustomClonableModelAdmin
+from common.search import check_search_length
 from formz.models import (
     Project as FormZProject,
 )
 from formz.models import (
     SequenceFeature,
+    Species,
 )
 from snapgene.pyclasses.client import Client
 from snapgene.pyclasses.config import Config
@@ -1006,6 +1008,33 @@ class FieldFormZProject(StrField):
         return "formz_projects__short_title"
 
 
+class FieldFormZSpecies(StrField):
+    def __init__(self, field_name, show_for_model, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = field_name
+        self.show_for_model = show_for_model
+
+    suggest_options = True
+    limit_options = 20
+
+    def get_options(self, search):
+        if default_option := check_search_length(search):
+            return default_option
+
+        options = list(
+            Species.objects.filter(**{self.show_for_model: True})
+            .limit(self.limit_options + 1)
+            .values_list("name_for_search", flat=True)
+        )
+
+        if len(options) > self.limit_options:
+            return options[: self.limit_options] + ["..."]
+        return options
+
+    def get_lookup_name(self):
+        return f"{self.name}__name_for_search"
+
+
 class FieldParent1(IntField):
     name = "parent_1_id"
 
@@ -1023,14 +1052,21 @@ class FieldParent2(IntField):
 class FieldSequenceFeature(StrField):
     name = "sequence_features_name"
     suggest_options = True
+    limit_options = 20
 
     def get_options(self, search):
-        if len(search) < 3:
-            return ["Type 3 or more characters to see suggestions"]
-        else:
-            return SequenceFeature.objects.filter(name__icontains=search).values_list(
-                "name", flat=True
-            )
+        if default_option := check_search_length(search):
+            return default_option
+
+        options = list(
+            SequenceFeature.objects.filter(name__icontains=search)
+            .limit(self.limit_options + 1)
+            .values_list("name", flat=True)
+        )
+
+        if len(options) > self.limit_options:
+            return options[: self.limit_options] + ["..."]
+        return options
 
     def get_lookup_name(self):
         return "sequence_features__name"

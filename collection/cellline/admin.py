@@ -160,8 +160,6 @@ class CellLineAdmin(
         # For organism field, only show those species for
         # which show_in_cell_line_collect was ticked
         if db_field.name == "organism":
-            kwargs["queryset"] = Species.objects.filter(
-                show_in_cell_line_collection=True
-            )
+            kwargs["queryset"] = Species.objects.filter(show_for_cell_line=True)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

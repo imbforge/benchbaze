@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 from django.apps import apps
 from django.contrib import admin, messages
@@ -531,7 +529,13 @@ class SpeciesAdmin(admin.ModelAdmin):
     list_per_page = 25
     search_fields = ["name_for_search"]
     ordering = ["name_for_search"]
-    fields = ["latin_name", "common_name", "risk_group", "show_in_cell_line_collection"]
+    fields = [
+        "latin_name",
+        "common_name",
+        "risk_group",
+        "show_for_cell_line",
+        "show_for_other_bacterium_strain",
+    ]
     form = SpeciesForm
 
     @admin.display(description="name")

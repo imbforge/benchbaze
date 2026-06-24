@@ -6,6 +6,7 @@ from ..shared.admin import (
     FieldCreated,
     FieldEpisomalPlasmidM2M,
     FieldFormZProject,
+    FieldFormZSpecies,
     FieldIntegratedPlasmidM2M,
     FieldLastChanged,
 )
@@ -67,7 +68,7 @@ class CellLineQLSchema(CollectionQLSchema):
         "box_name",
         "alternative_name",
         CellLineSearchFieldParentalCellLineId(),
-        "organism",
+        FieldFormZSpecies("organism", "show_for_cell_line"),
         "cell_type_tissue",
         "culture_type",
         "growth_condition",

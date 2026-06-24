@@ -20,11 +20,11 @@ from approval.admin import ApprovalAdmin
 from approval.models import Approval
 from collection.admin import (
     AntibodyAdmin,
-    BacterialStrainAdmin,
     CellLineAdmin,
     EColiStrainAdmin,
     InhibitorAdmin,
     OligoAdmin,
+    OtherBacteriumStrainAdmin,
     PlasmidAdmin,
     SaCerevisiaeStrainAdmin,
     ScPombeStrainAdmin,
@@ -42,11 +42,11 @@ from collection.admin import (
 )
 from collection.models import (
     Antibody,
-    BacterialStrain,
     CellLine,
     EColiStrain,
     Inhibitor,
     Oligo,
+    OtherBacteriumStrain,
     Plasmid,
     SaCerevisiaeStrain,
     ScPombeStrain,
@@ -265,6 +265,6 @@ admin_site.register(VirusMammalian, VirusMammalianAdmin)
 admin_site.register(VirusInsect, VirusInsectAdmin)
 admin_site.register(CollectionStorage, CollectionStorageAdmin)
 admin_site.register(CollectionLocationName, CollectionLocationNameAdmin)
-admin_site.register(BacterialStrain, BacterialStrainAdmin)
+admin_site.register(OtherBacteriumStrain, OtherBacteriumStrainAdmin)
 
 admin_site.register(Approval, ApprovalAdmin)

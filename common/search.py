@@ -5,28 +5,43 @@ from djangoql.schema import StrField
 User = get_user_model()
 
 
+def check_search_length(search):
+    """Check if the search string is less than 3 characters long and
+    return a default message if so."""
+    if len(search) < 3:
+        return ["Type 3 or more characters to see suggestions"]
+    return None
+
+
 class SearchFieldWithOptions(StrField):
-    """Search field with unlimited options"""
+    """Search field with a certain number of options"""
+
+    def __init__(self, limit_options=20, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.limit_options = limit_options
 
     suggest_options = True
-    limit_options = None
 
     def get_options(self, search):
         filter_search = {f"{self.model_fieldname}__icontains": search}
 
         if self.limit_options:
-            if len(search) < 3:
-                return ["Type 3 or more characters to see suggestions"]
-            return (
-                self.model.objects.filter(**filter_search)
-                .distinct()[: self.limit_options]
-                .values_list(
-                    self.name
-                    if self.name == self.model_fieldname
-                    else self.model_fieldname,
-                    flat=True,
-                )
+            if default_option := check_search_length(search):
+                return default_option
+
+            option_field = (
+                self.name if self.name == self.model_fieldname else self.model_fieldname
             )
+            options = list(
+                self.model.objects.filter(**filter_search)
+                .distinct()
+                .order_by(option_field)
+                .values_list(option_field, flat=True)[: self.limit_options + 1]
+            )
+
+            if len(options) > self.limit_options:
+                return options[: self.limit_options] + ["..."]
+            return options
 
         return (
             self.model.objects.filter(**filter_search)

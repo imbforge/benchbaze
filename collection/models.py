@@ -8,6 +8,11 @@ from .cellline.models import (
 from .ecolistrain.models import EColiStrain, EColiStrainDoc, HistoricalEColiStrain
 from .inhibitor.models import HistoricalInhibitor, Inhibitor, InhibitorDoc
 from .oligo.models import HistoricalOligo, Oligo, OligoDoc
+from .otherbacteriumstrain.models import (
+    HistoricalOtherBacteriumStrain,
+    OtherBacteriumStrain,
+    OtherBacteriumStrainDoc,
+)
 from .plasmid.models import HistoricalPlasmid, Plasmid, PlasmidDoc
 from .sacerevisiaestrain.models import (
     HistoricalSaCerevisiaeStrain,
@@ -22,6 +27,8 @@ from .scpombestrain.models import (
     ScPombeStrainEpisomalPlasmid,
 )
 from .sirna.models import HistoricalSiRna, SiRna, SiRnaDoc
+from .storage.models import Location, LocationName, Storage
+from .virus.models import VirusInsect, VirusMammalian
 from .wormstrain.models import (
     HistoricalWormStrain,
     HistoricalWormStrainAllele,
@@ -31,5 +38,3 @@ from .wormstrain.models import (
     WormStrainDoc,
     WormStrainGenotypingAssay,
 )
-from .virus.models import VirusMammalian, VirusInsect
-from .storage.models import Storage, Location, LocationName
