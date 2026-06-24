@@ -129,6 +129,7 @@ class VirusBase(
     )
 
     # Static properties
+    _is_guarded_model = True
     _history_view_ignore_fields = (
         ApprovalFieldsMixin._history_view_ignore_fields
         + BaseCollectionModel._history_view_ignore_fields

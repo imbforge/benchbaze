@@ -642,6 +642,7 @@ class BaseCollectionModel(
         abstract = True
 
     _actions = [export_action_xlsx, export_action_tsv]
+    _is_guarded_model = False
 
     def clean(self):
         """Enhanced clean method to call all methods starting with 'clean_field_'"""

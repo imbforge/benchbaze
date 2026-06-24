@@ -124,6 +124,7 @@ class Plasmid(
     # Static properties
     _model_abbreviation = "p"
     _show_in_frontend = True
+    _is_guarded_model = True
     _history_array_fields = {
         "history_formz_projects": "formz.Project",
         "history_formz_gentech_methods": "formz.GenTechMethod",

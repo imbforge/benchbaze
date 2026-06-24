@@ -102,6 +102,7 @@ class ScPombeStrain(
 
     # Static properties
     _model_abbreviation = "sp"
+    _is_guarded_model = True
     _show_in_frontend = "Strains - <em>Sc. pombe</em>"
     _frontend_verbose_name = "Strain - <em>Sc. pombe</em>"
     _frontend_verbose_plural = _show_in_frontend

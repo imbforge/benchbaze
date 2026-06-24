@@ -385,6 +385,7 @@ class WormStrain(
     # Static properties
     _model_abbreviation = "w"
     _show_in_frontend = True
+    _is_guarded_model = True
     _history_array_fields = {
         "history_integrated_dna_plasmids": "collection.Plasmid",
         "history_integrated_dna_oligos": "collection.Oligo",

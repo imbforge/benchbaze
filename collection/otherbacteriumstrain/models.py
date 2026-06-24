@@ -62,6 +62,7 @@ class OtherBacteriumStrain(
     # Static properties
     _model_abbreviation = "bac"
     _show_formz = True
+    _is_guarded_model = True
     _show_in_frontend = "Strains - Bacterial"
     _frontend_verbose_name = "Strain - Bacterial"
     _storage_requires_species = True

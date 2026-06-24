@@ -9,6 +9,7 @@ from common.admin import (
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
+    CustomGuardedModelAdmin,
     LocationInline,
     SortAutocompleteResultsId,
 )
@@ -67,6 +68,7 @@ class ScPombeStrainAddDocInline(AddDocFileInlineMixin):
 
 class ScPombeStrainAdmin(
     SortAutocompleteResultsId,
+    CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = ScPombeStrainQLSchema

@@ -134,6 +134,7 @@ class SaCerevisiaeStrain(
 
     # Static properties
     _model_abbreviation = "sc"
+    _is_guarded_model = True
     _show_in_frontend = "Strains - <em>Sa. cerevisiae</em>"
     _frontend_verbose_name = "Strain - <em>Sa. cerevisiae</em>"
     _frontend_verbose_plural = _show_in_frontend

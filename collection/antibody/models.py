@@ -65,7 +65,6 @@ class Antibody(
     # Static properties
     _model_abbreviation = "ab"
     _show_in_frontend = True
-    _is_guarded_model = False
     _backup = True
     _history_array_fields = {
         "history_documents": "collection.AntibodyDoc",

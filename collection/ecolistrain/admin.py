@@ -6,6 +6,7 @@ from common.admin import (
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
+    CustomGuardedModelAdmin,
     LocationInline,
 )
 from .models import EColiStrainDoc
@@ -24,7 +25,7 @@ class EColiStrainAddDocInline(AddDocFileInlineMixin):
     model = EColiStrainDoc
 
 
-class EColiStrainAdmin(CollectionUserProtectionAdmin):
+class EColiStrainAdmin(CustomGuardedModelAdmin, CollectionUserProtectionAdmin):
     djangoql_schema = EColiStrainQLSchema
     inlines = [
         LocationInline,

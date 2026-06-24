@@ -86,7 +86,7 @@ class Oligo(
     # Static properties
     _model_abbreviation = "o"
     _show_in_frontend = True
-    _is_guarded_model = False
+    _is_guarded_model = True
     _show_formz = False
     _backup = True
     _history_array_fields = {

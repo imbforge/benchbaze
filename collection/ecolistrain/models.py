@@ -65,6 +65,7 @@ class EColiStrain(
     # Static properties
     _model_abbreviation = "ec"
     _show_formz = True
+    _is_guarded_model = True
     _show_in_frontend = "Strains - <em>E. coli</em>"
     _frontend_verbose_name = "Strain - <em>E. coli</em>"
     _storage_requires_species = "Escherichia coli"

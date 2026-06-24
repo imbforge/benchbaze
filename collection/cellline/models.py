@@ -140,6 +140,7 @@ class CellLine(
     _model_abbreviation = "cl"
     _show_formz = True
     _show_in_frontend = True
+    _is_guarded_model = True
     _related_name_base = "cellline"
     _representation_field = "name"
     _list_display_links = ["id"]

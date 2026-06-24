@@ -8,6 +8,7 @@ from common.admin import (
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
+    CustomGuardedModelAdmin,
     LocationInline,
     rename_info_sheet_save_obj_update_history,
 )
@@ -29,6 +30,7 @@ class OligoAddDocInline(AddDocFileInlineMixin):
 
 class OligoAdmin(
     OligoDjangoQLSearchMixin,
+    CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
 ):
     djangoql_schema = OligoQLSchema

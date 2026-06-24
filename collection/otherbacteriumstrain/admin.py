@@ -4,6 +4,7 @@ from formz.models import Species
 from ..shared.admin import (
     AddLocationInline,
     CollectionUserProtectionAdmin,
+    CustomGuardedModelAdmin,
     LocationInline,
 )
 from .models import OtherBacteriumStrainDoc
@@ -22,7 +23,7 @@ class OtherBacteriumStrainAddDocInline(AddDocFileInlineMixin):
     model = OtherBacteriumStrainDoc
 
 
-class OtherBacteriumStrainAdmin(CollectionUserProtectionAdmin):
+class OtherBacteriumStrainAdmin(CustomGuardedModelAdmin, CollectionUserProtectionAdmin):
     djangoql_schema = OtherBacteriumStrainQLSchema
     inlines = [
         LocationInline,
