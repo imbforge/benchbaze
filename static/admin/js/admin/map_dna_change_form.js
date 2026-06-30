@@ -745,8 +745,9 @@ $(document).ready(function () {
 
         // If the mapBaseUrl exists, add the "button" to show map as an OVE preview in a magnific popup
         if (fieldName !== undefined && mapBaseUrl !== undefined) {
+          const viewerUrl = `${mapBaseUrl}${SNAPGENE_ENABLED ? "&snapgene_enabled=1" : ""}`;
           $(
-            `<a class="magnific-popup-iframe-map-dna viewlink" style="margin-left:10px; margin-right:10px;" href=${mapBaseUrl} title="View Map"></a>`
+            `<a class="magnific-popup-iframe-map-dna viewlink" style="margin-left:10px; margin-right:10px;" href=${viewerUrl} title="View Map"></a>`
           ).insertAfter(mapLinkElement);
         }
       }
@@ -776,16 +777,17 @@ function downloadMapWithImportedOligos(event) {
       var a = document.createElement("a");
       var url = window.URL.createObjectURL(data);
       a.href = url;
-      a.download = decodeURI(
-        jqXHR
-          .getResponseHeader("Content-Disposition")
-          .match(/filename\*=utf-8''(.*)/)[1]
-      );
+      a.download =
+        jqXHR.getResponseHeader("X-BB-Find-Oligos-File-Name") ||
+        "map_with_imported_oligos.dna";
       document.body.append(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      $(".spinner-loader").remove();
+      $(".tg-loader-container").remove();
+    },
+    complete: function () {
+      $(".tg-loader-container").remove();
     }
   });
 }

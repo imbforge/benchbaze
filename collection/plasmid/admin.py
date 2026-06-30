@@ -19,7 +19,6 @@ from formz.models import SequenceFeature
 
 from ..shared.admin import (
     AddLocationInline,
-    AdminOligosInMap,
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
     LocationInline,
@@ -34,20 +33,6 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 DEFAULT_ECOLI_STRAIN_IDS = getattr(settings, "DEFAULT_ECOLI_STRAIN_IDS", [])
 PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
-
-
-def mail_map_dna_processing_error(
-    map_path, function_name="", error_message="", request=None
-):
-    mail_admins(
-        "DNA map processing error",
-        "There was an error with creating the preview"
-        f"for {map_path} with snapgene server.\n\n"
-        f"Function: {function_name}\n"
-        f"Errors: {error_message}.\n"
-        f"Request info:\n{request.META if request else 'None'}",
-        fail_silently=True,
-    )
 
 
 class PlasmidDocInline(DocFileInlineMixin):
@@ -66,7 +51,6 @@ class PlasmidAdmin(
     SortAutocompleteResultsId,
     CustomGuardedModelAdmin,
     CollectionUserProtectionAdmin,
-    AdminOligosInMap,
 ):
     def _save_model_approval(self, request, obj, new_obj):
         if new_obj:

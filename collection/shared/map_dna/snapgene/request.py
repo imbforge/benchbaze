@@ -3,8 +3,9 @@ import json
 import sys
 
 import zmq
-from pyclasses.config import Config
-from pyclasses.multi_client import MutliClient
+
+from collection.shared.map_dna.snapgene.pyclasses.config import Config
+from collection.shared.map_dna.snapgene.pyclasses.multi_client import MutliClient
 
 parser = argparse.ArgumentParser(
     description="Dispatch commands to snapgene-server",

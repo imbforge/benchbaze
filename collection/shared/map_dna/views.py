@@ -1,7 +1,10 @@
 import os
+from io import BytesIO
 
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
+
+from collection.shared.map_dna.snapgene.utils import find_oligos_in_map_snapgene
 
 from .parsers.genbank import genbank_to_json
 from .parsers.seqrecord import seqrecord_to_json
@@ -49,6 +52,21 @@ def _resolve_map_file_path(file_path):
     return normalized_path
 
 
+def find_oligos_in_map(request):
+    """Find oligos in the map file and return the processed content"""
+    file_path = request.POST.get("map_file_path")
+    if not file_path:
+        return _bad_request(
+            "Missing required file or parameter: map_file_path or map_file_content"
+        )
+    normalized_path = _resolve_map_file_path(file_path)
+    file_name = os.path.splitext(file_path)[0] + ".dna"
+
+    return FileResponse(
+        BytesIO(find_oligos_in_map_snapgene(normalized_path)), filename=file_name
+    )
+
+
 def convert_any_to_ove_json(request):
     """Accept uploaded map file as content or file path, convert it to OVE JSON
     for the viewer, and return the JSON content.
@@ -86,21 +104,21 @@ def convert_any_to_ove_json(request):
 
         # Otherwise read it from the provided file path
         else:
-            map_file_path = request.POST.get("map_file_path", "")
-            normalized_path = _resolve_map_file_path(map_file_path)
+            normalized_path = _resolve_map_file_path(file_name)
             with open(normalized_path, "rb") as content_file:
                 map_file = content_file.read()
 
-        # If detect_features flag is set, process the map file to detect features before converting to JSON
+        # If detect_features flag is set, process the map file to detect features
         if detect_features:
             map_file = detect_map_dna_features(map_file, file_format)
             file_format = (
                 ".seqrecord"  # Detected features are returned as SeqRecord format
             )
-    except ValueError as exc:
-        return _bad_request(str(exc))
-    except Exception as exc:
-        return _bad_request(f"Error processing map file: {exc}")
+
+    except ValueError as e:
+        return _bad_request(str(e))
+    except Exception as e:
+        return _bad_request(f"Error processing map file: {e}")
 
     # Convert the map file content to JSON format for the viewer
     if file_format == ".dna":

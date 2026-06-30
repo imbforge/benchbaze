@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict, List, Optional
 
-from Bio.SeqFeature import SimpleLocation
+from Bio.SeqFeature import CompoundLocation, SimpleLocation
 
 UNTITLED_SEQUENCE_NAME = "Untitled Sequence"
 
@@ -82,18 +82,33 @@ def _normalize_snapgene_parsed_sequence(data: Dict[str, Any]) -> Dict[str, Any]:
 def _parse_primer_location(rangespec, strand, record_length, is_primer=False):
     """Stolen from Bio.SeqIO.SnapGeneIO._parse_location with some modifications to adapt it for OVE"""
 
+    class PrimerWrapAroundLocation(CompoundLocation):
+        """CompoundLocation subclass that preserves raw primer bounds for wrap-around locations"""
+
+        def __init__(self, parts, operator="join", raw_start=None, raw_end=None):
+            super().__init__(parts, operator)
+            self._raw_start = raw_start
+            self._raw_end = raw_end
+
+        @property
+        def start(self):
+            return self._raw_start if self._raw_start is not None else super().start
+
+        @property
+        def end(self):
+            return self._raw_end if self._raw_end is not None else super().end
+
     start, end = (int(x) for x in rangespec.split("-"))
     # Account for SnapGene's 1-based coordinates
     start = start - 1
     if is_primer:
-        # Primers' coordinates in SnapGene files are shifted by -1
-        # for some reasons
+        # Primers' coordinates in SnapGene files are shifted by -1 for some reasons
         start += 1
     if start > end:
         # Range wrapping the end of the sequence
         l1 = SimpleLocation(start, record_length, strand=strand)
         l2 = SimpleLocation(0, end, strand=strand)
-        location = l1 + l2
+        location = PrimerWrapAroundLocation([l1, l2], raw_start=start, raw_end=end)
     else:
         location = SimpleLocation(start, end, strand=strand)
     return location

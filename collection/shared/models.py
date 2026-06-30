@@ -35,6 +35,7 @@ OVE_URL = getattr(settings, "OVE_URL", "")
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
+SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", True)
 
 
 class ApprovalFieldsMixin(models.Model):
@@ -426,24 +427,11 @@ class MapFileCheckPropertiesMixin:
 
     @property
     def map_dna_preview_url(self):
-        """Returns the url to view the a SnapGene file in OVE"""
+        """Returns the url to view the map in OVE"""
 
         params = {
             "file_name": self.map_dna.url,
             "title": self.full_title,
-        }
-
-        return f"{OVE_URL}?{urlencode(params)}"
-
-    @property
-    def find_oligos_map_gbk_ove_url(self):
-        """Returns the url to import all oligos into the plasmid map
-        and view it in OVE"""
-
-        params = {
-            "file_name": f"/{self._meta.app_label}/{self._meta.model_name}/{self.pk}/find_oligos/",
-            "title": f"{self.full_title} (imported oligos)",
-            "show_oligos": "true",
         }
 
         return f"{OVE_URL}?{urlencode(params)}"
@@ -457,7 +445,7 @@ class MapFileCheckPropertiesMixin:
     def map_formatted(self):
         if self.map_dna:
             return mark_safe(
-                f'<a class="magnific-popup-iframe-map-dna viewlink" title="Map viewer" href="{self.map_dna_preview_url}"></a>'
+                f'<a class="magnific-popup-iframe-map-dna viewlink" title="Map viewer" href="{self.map_dna_preview_url}{ "&snapgene_enabled=1" if SNAPGENE_ENABLED else "" }"></a>'
             )
         else:
             return ""

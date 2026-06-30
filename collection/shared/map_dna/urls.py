@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 
-from .views import convert_any_to_ove_json, create_map_file
+from .views import convert_any_to_ove_json, create_map_file, find_oligos_in_map
 
 urlpatterns = [
     path(
@@ -13,5 +13,10 @@ urlpatterns = [
         "convert_any_to_ove_json/",
         login_required(convert_any_to_ove_json),
         name="convert_any_to_ove_json",
+    ),
+    path(
+        "find_oligos_in_map/",
+        login_required(find_oligos_in_map),
+        name="find_oligos_in_map",
     ),
 ]

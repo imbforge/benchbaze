@@ -1,11 +1,8 @@
-import json
 import os
 import urllib.parse
 from collections import OrderedDict
 from urllib.parse import quote as urlquote
-from uuid import uuid4
 
-import zmq
 from background_task import background
 from django import forms
 from django.apps import apps
@@ -15,11 +12,9 @@ from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.exceptions import PermissionDenied
-from django.core.mail import mail_admins
 from django.db.models import CharField
-from django.db.models.functions import Collate
 from django.forms import TextInput
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path, re_path, reverse
 from django.utils import timezone
@@ -34,7 +29,6 @@ from guardian.shortcuts import (
     remove_perm,
 )
 
-from collection.models import Oligo
 from common.admin import (
     AddInlineMixin,
     AdminChangeFormWithNavigation,
@@ -52,202 +46,15 @@ from formz.models import (
     SequenceFeature,
     Species,
 )
-from snapgene.pyclasses.client import Client
-from snapgene.pyclasses.config import Config
 
 from ..storage.models import LocationItem
 from .forms import LocationCheckNumberInlineFormSet
 
 User = get_user_model()
-BASE_DIR = settings.BASE_DIR
 MEDIA_ROOT = settings.MEDIA_ROOT
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
-SNAPGENE_COMMON_FEATURES_PATH = os.path.join(
-    BASE_DIR, "snapgene/standardCommonFeatures.ftrs"
-)
 
-################################################
-#         DNA map processing functions         #
-################################################
-
-
-def connect_snapgene_server():
-    """Create SnapGene client"""
-
-    config = Config()
-    server_ports = config.get_server_ports()
-    client = None
-
-    for port in server_ports.values():
-        try:
-            client = Client(port, zmq.Context())
-        except Exception:
-            continue
-        else:
-            break
-
-    if not client:
-        raise Exception("Could not connect to SnapGene Server")
-
-    return client
-
-
-def mail_snapgene_error(map_path, messages):
-    mail_admins(
-        "Snapgene server error",
-        "There was an error with creating the preview"
-        f"for {map_path} with snapgene server.\n\n"
-        f"Errors: {messages}.",
-        fail_silently=True,
-    )
-
-
-def create_map_preview(
-    obj, detect_common_features, attempt_number=3, messages=[], **kwargs
-):
-    """For a .dna map, use SnapGene server to 1) detect common features,
-    2) create a .png preview of the .dna file, and 3) create a .gbk map"""
-
-    if attempt_number > 0:
-        try:
-            client = connect_snapgene_server()
-
-            # Detect common features
-            if detect_common_features:
-                argument = {
-                    "request": "detectFeatures",
-                    "inputFile": obj.map.path,
-                    "outputFile": obj.map.path,
-                    "featureDatabase": SNAPGENE_COMMON_FEATURES_PATH,
-                }
-                r = client.requestResponse(argument, 10000)
-                r_code = r.get("code", 1)
-                if r_code > 0:
-                    error_message = f"detectFeatures - error {r_code}"
-                    if error_message not in messages:
-                        messages.append(error_message)
-                    client.close()
-                    raise Exception
-
-            # Create a .png preview of the .dna map
-            argument = {
-                "request": "generatePNGMap",
-                "inputFile": obj.map.path,
-                "outputPng": obj.map_png.path,
-                "title": (
-                    kwargs["prefix"]
-                    if "prefix" in kwargs
-                    else f"{obj._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}"
-                    f"{obj.id} - {obj.name}"
-                ),
-                "showEnzymes": True,
-                "showFeatures": True,
-                "showPrimers": True,
-                "showORFs": False,
-            }
-            r = client.requestResponse(argument, 10000)
-            r_code = r.get("code", 1)
-            if r_code > 0:
-                error_message = f"generatePNGMap - error {r_code}"
-                if error_message not in messages:
-                    messages.append(error_message)
-                client.close()
-                raise Exception
-
-            # Create a .gbk map
-            argument = {
-                "request": "exportDNAFile",
-                "inputFile": obj.map.path,
-                "outputFile": obj.map_gbk.path,
-                "exportFilter": "biosequence.gb",
-            }
-            r = client.requestResponse(argument, 10000)
-            r_code = r.get("code", 1)
-            if r_code > 0:
-                error_message = f"exportDNAFile - error {r_code}"
-                if error_message not in messages:
-                    messages.append(error_message)
-                client.close()
-                raise Exception
-
-            client.close()
-
-        except Exception:
-            create_map_preview(
-                obj, detect_common_features, attempt_number - 1, messages, **kwargs
-            )
-
-    else:
-        mail_snapgene_error(obj.map.path, messages)
-        raise Exception
-
-
-def get_map_features(obj, attempt_number=3, messages=[]):
-    """For a .dna  map, use SnapGene server to get its
-    features, as json"""
-
-    if attempt_number > 0:
-        try:
-            client = connect_snapgene_server()
-
-            # Get features
-            argument = {"request": "reportFeatures", "inputFile": obj.map.path}
-            r = client.requestResponse(argument, 10000)
-            r_code = r.get("code", 1)
-            if r_code > 0:
-                error_message = f"reportFeatures - error {r_code}"
-                if error_message not in messages:
-                    messages.append(error_message)
-                client.close()
-                raise Exception
-
-            client.close()
-
-            plasmid_features = r.get("features", [])
-            feature_names = [feat["name"].strip() for feat in plasmid_features]
-            return feature_names
-
-        except Exception:
-            get_map_features(obj, attempt_number - 1, messages)
-
-    else:
-        mail_snapgene_error(obj, messages)
-        raise Exception
-
-
-def convert_map_gbk_to_dna(gbk_map_path, dna_map_path, attempt_number=3, messages=[]):
-    """For a gbk  map (.gbk), use SnapGene server
-    to convert it to .dna"""
-
-    if attempt_number > 0:
-        try:
-            client = connect_snapgene_server()
-
-            # Convert .dna to .gbk
-            argument = {
-                "request": "importDNAFile",
-                "inputFile": gbk_map_path,
-                "outputFile": dna_map_path,
-            }
-            r = client.requestResponse(argument, 10000)
-            r_code = r.get("code", 1)
-            if r_code > 0:
-                error_message = f"importDNAFile - error {r_code}"
-                if error_message not in messages:
-                    messages.append(error_message)
-                client.close()
-                raise Exception
-
-            client.close()
-
-        except Exception:
-            convert_map_gbk_to_dna(
-                gbk_map_path, dna_map_path, attempt_number - 1, messages
-            )
-
-    else:
-        mail_snapgene_error(gbk_map_path, messages)
-        raise Exception
+SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", False)
 
 
 ################################################
@@ -383,6 +190,12 @@ class CollectionBaseAdmin(
         self.readonly_fields = self.set_readonly_fields + self.obj_unmodifiable_fields
 
         return super().add_view(request, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["snapgene_enabled"] = SNAPGENE_ENABLED
+
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def save_formset(self, request, form, formset, change):
         # Check if formset model has created_by field. If so,
@@ -727,155 +540,6 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
         self.message_user(request, "Permission removed.", messages.SUCCESS)
 
         return HttpResponseRedirect("../..")
-
-
-class AdminOligosInMap(admin.ModelAdmin):
-    def get_urls(self):
-        """Add navigation url"""
-
-        urls = super().get_urls()
-
-        urls = [
-            path("<path:object_id>/find_oligos/", view=self.find_oligos_in_map)
-        ] + urls
-
-        return urls
-
-    def find_oligos_in_map(
-        self, request, attempt_number=3, messages=[], *args, **kwargs
-    ):
-        """Given a path to a snapgene plasmid map, use snapegene server
-        to detect common features and create map preview as png
-        and gbk"""
-
-        file_format = request.GET.get("file_format", "gbk")
-
-        if attempt_number > 0:
-            try:
-                # Connect to SnapGene server
-                config = Config()
-                server_ports = config.get_server_ports()
-                for port in server_ports.values():
-                    try:
-                        client = Client(port, zmq.Context())
-                    except Exception:
-                        continue
-                    else:
-                        break
-
-                # Create paths for temp files
-                temp_dir_path = os.path.join(BASE_DIR, "uploads/temp")
-                oligos_json_path = os.path.join(temp_dir_path, str(uuid4()))
-                dna_temp_path = os.path.join(temp_dir_path, str(uuid4()))
-                gbk_temp_path = os.path.join(temp_dir_path, f"{str(uuid4())}.gb")
-
-                # Write oligos to file
-                if not Oligo.objects.exists():
-                    return HttpResponseNotFound
-                oligos = (
-                    Oligo.objects.annotate(
-                        sequence_deterministic=Collate("sequence", "und-x-icu")
-                    )
-                    .filter(sequence_deterministic__iregex=r"^[ATCG]+$", length__gte=15)
-                    .values_list("id", "sequence")
-                )
-                oligos = list(
-                    {
-                        "Name": f"! o{LAB_ABBREVIATION_FOR_FILES}{i[0]}",
-                        "Sequence": i[1],
-                        "Notes": "",
-                    }
-                    for i in oligos
-                )
-                with open(oligos_json_path, "w") as fhandle:
-                    json.dump(oligos, fhandle)
-
-                # Find oligos in object map and convert result to gbk
-                obj = self.model.objects.get(id=kwargs["object_id"])
-                argument = {
-                    "request": "importPrimersFromList",
-                    "inputFile": obj.map.path,
-                    "inputPrimersFile": oligos_json_path,
-                    "outputFile": dna_temp_path,
-                }
-                r = client.requestResponse(argument, 60000)
-                r_code = r.get("code", 1)
-                if r_code > 0:
-                    error_message = f"importPrimersFromList - error {r_code}"
-                    if error_message not in messages:
-                        messages.append(error_message)
-                    client.close()
-                    raise Exception
-
-                # If user wants to download file, then do so
-                if file_format == "dna":
-                    client.close()
-                    # Get processed .dna map and delete temp files
-                    with open(dna_temp_path, "rb") as fhandle:
-                        file_data = fhandle.read()
-
-                    # os.unlink(oligos_json_path)
-                    os.unlink(dna_temp_path)
-
-                    # Send response
-                    response = HttpResponse(
-                        file_data, content_type="application/octet-stream"
-                    )
-                    file_name = (
-                        f"{obj._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{obj.id}"
-                        + f" - {obj.name} (imported oligos).dna"
-                    )
-                    response["Content-Disposition"] = (
-                        f"attachment; filename*=utf-8''{urllib.parse.quote(file_name)}"
-                    )
-                    return response
-
-                argument = {
-                    "request": "exportDNAFile",
-                    "inputFile": dna_temp_path,
-                    "outputFile": gbk_temp_path,
-                    "exportFilter": "biosequence.gb",
-                }
-                r = client.requestResponse(argument, 10000)
-                r_code = r.get("code", 1)
-                if r_code > 0:
-                    error_message = f"exportDNAFile - error {r_code}"
-                    if error_message not in messages:
-                        messages.append(error_message)
-                    client.close()
-                    raise Exception
-
-                client.close()
-
-                # Get processed .gbk map and delete temp files
-                with open(gbk_temp_path) as fhandle:
-                    file_data = fhandle.read()
-
-                os.unlink(oligos_json_path)
-                os.unlink(dna_temp_path)
-                os.unlink(gbk_temp_path)
-
-                # Send response
-                response = HttpResponse(file_data, content_type="text/plain")
-                response["Content-Disposition"] = (
-                    'attachment; filename="map_with_imported_oligos.gbk"'
-                )
-                return response
-
-            except Exception as err:
-                messages.append(str(err))
-                self.find_oligos_in_map(
-                    request, attempt_number - 1, messages, *args, **kwargs
-                )
-        else:
-            mail_admins(
-                f"Error finding oligos in {obj._meta.verbose_name}",
-                "There was an error with finding oligos in "
-                f"{obj._meta.verbose_name} {kwargs['object_id']} "
-                f"with snapgene server.\n\nErrors: {messages}.",
-                fail_silently=True,
-            )
-            raise Exception
 
 
 class OptionalChoiceWidget(forms.MultiWidget):

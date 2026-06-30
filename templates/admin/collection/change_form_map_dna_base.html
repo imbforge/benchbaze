@@ -15,19 +15,6 @@
 {{ block.super }}
 
 {% block map_dna_extra_object_tools_before %}{% endblock %}
-
-  {% if original.map_dna %}
-    <li>
-      <div class="find-oligo">
-        <div>{% trans "Find Oligos" %}</div>
-        <a title='Download result as .dna file' style="pointer-events: all;"
-          onclick="downloadMapWithImportedOligos(event)" download_url="{% url "admin:app_list" app_label %}{{opts.model_name}}/{{object_id}}/find_oligos/?file_format=dna">🠇</a>
-        <a title='View result in OVE' style='margin-left:5px' class="magnific-popup-iframe-findoligos"
-          href="{{original.find_oligos_map_gbk_ove_url}}">⊙</a>
-      </div>
-    </li>
-  {% endif %}
-
 {% block map_dna_extra_object_tools_after %}{% endblock %}
 {% endblock %}
 
@@ -43,6 +30,7 @@
     const MagnificiFrameClassIds = ['magnific-popup-iframe-map-dna', "magnific-popup-iframe-findoligos"];
     const OVE_URL = "{% settings_value 'OVE_URL'|escapejs %}";
     const MEDIA_URL = "{{ MEDIA_URL|escapejs }}";
+    const SNAPGENE_ENABLED = {% if snapgene_enabled %}true{% else %}false{% endif %};
     {% if original.map_dna %} const oveUrls = {map_dna: "{{original.map_dna_preview_url}}"}; {% else %} const oveUrls = {}; {% endif %}
     {% block map_dna_document_ready_inline %}{% endblock %}
   </script>
