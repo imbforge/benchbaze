@@ -15,8 +15,8 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import {
   downloadMapFile,
   downloadMapPreview,
-  convertMapPathToOveJson,
-  convertPostedMapFileToOveJsonDetectFeatures,
+  getMapFileWithOligos,
+  convertMapToOveJson,
   getSequenceFeatureIds,
   restoreOriginalFeatureColors,
   saveToFile,
@@ -89,6 +89,9 @@ function App() {
   const fileName = params.get("file_name");
   const title = params.get("title");
   const showOligos = params.get("show_oligos") ? true : false;
+  const snapGeneEnabledParam = params.get("snapgene_enabled");
+  const isSnapGeneEnabled =
+    snapGeneEnabledParam === "1" || snapGeneEnabledParam === "true";
   // Detect if this is a post payload even before the payload is processed,
   // to determine whether to show edit controls during the initial load
   const forcePostMode = params.get("bb_post_mode") === "1";
@@ -109,6 +112,12 @@ function App() {
   const [loadAttempt, setLoadAttempt] = React.useState(0);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isDetectingFeatures, setIsDetectingFeatures] = React.useState(false);
+  const [isFindingOligos, setIsFindingOligos] = React.useState(false);
+  const [downloadFile, setDownloadFile] = React.useState(null);
+  const [isFindOligosTooltipOpen, setIsFindOligosTooltipOpen] =
+    React.useState(false);
+  const [isDetectFeaturesTooltipOpen, setIsDetectFeaturesTooltipOpen] =
+    React.useState(false);
   const [theme, setTheme] = React.useState(getInitialTheme);
   const [prefersDarkScheme, setPrefersDarkScheme] = React.useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches,
@@ -130,8 +139,8 @@ function App() {
     postedPayload?.detectFeatures === true ||
     Boolean(originalPostedPayloadRef.current?.detectFeatures === true);
 
-  const [showLegendOnDetect, setShowLegendOnDetect] = React.useState(
-    () => Boolean(isDetectFeatures),
+  const [showLegendOnDetect, setShowLegendOnDetect] = React.useState(() =>
+    Boolean(isDetectFeatures),
   );
 
   React.useEffect(() => {
@@ -366,7 +375,10 @@ function App() {
 
     setIsDetectingFeatures(true);
     try {
-      const incomingSeqData = await convertPostedMapFileToOveJsonDetectFeatures(postedPayload, true);
+      const incomingSeqData = await convertMapToOveJson({
+        payload: postedPayload,
+        detectFeatures: true,
+      });
 
       if (!incomingSeqData) {
         throw new Error("Failed to detect features on the posted map file.");
@@ -395,7 +407,102 @@ function App() {
     } finally {
       setIsDetectingFeatures(false);
     }
-  }, [postedPayload, resolvedTitle, isPostPayloadMode, isReadOnly, resolvedShowOligos]);
+  }, [
+    postedPayload,
+    resolvedTitle,
+    isPostPayloadMode,
+    isReadOnly,
+    resolvedShowOligos,
+  ]);
+
+  const findOligosHandle = React.useCallback(async () => {
+    setIsFindingOligos(true);
+    try {
+      if (isBlobPostedPayload(postedPayload)) {
+        throw new Error(
+          "Finding oligos is only supported for map files loaded from a file path, not posted payloads.",
+        );
+      }
+
+      const mapFileWithOligos = await getMapFileWithOligos(resolvedFileName);
+      setDownloadFile(mapFileWithOligos);
+
+      const incomingSeqData = await convertMapToOveJson({
+        payload: { mapFile: mapFileWithOligos },
+        fileName: mapFileWithOligos.name,
+      });
+
+      if (!incomingSeqData) {
+        throw new Error("Failed to find oligos in the map file.");
+      }
+
+      const seqData = prepareSequenceDataForEditor(incomingSeqData);
+      const oveModule = await oveModulePromise;
+      const { updateEditor } = oveModule;
+      updateEditor(store, EDITOR_NAME, {
+        sequenceData: seqData,
+        panelsShown: getPanelsShown(seqData.circular, isPostPayloadMode),
+        readOnly: isReadOnly,
+        annotationVisibility: {
+          features: true,
+          cutsites: false,
+          primers: true,
+          translations: !resolvedShowOligos,
+        },
+      });
+
+      setBaselineSequenceData(seqData);
+      toastr.success("Imported oligos from the posted map file.");
+    } catch (error) {
+      toastr.error(getLoadErrorMessage(error));
+    } finally {
+      setIsFindingOligos(false);
+    }
+  }, [
+    postedPayload,
+    resolvedFileName,
+    prepareSequenceDataForEditor,
+    isPostPayloadMode,
+    isReadOnly,
+    resolvedShowOligos,
+    setBaselineSequenceData,
+  ]);
+
+  React.useEffect(() => {
+    // Close the find oligos tooltip when the find oligos operation is complete
+    if (!isFindingOligos) {
+      setIsFindOligosTooltipOpen(false);
+    }
+  }, [isFindingOligos]);
+
+  const handleFindOligosTooltipInteraction = React.useCallback(
+    // Prevent the tooltip from opening while the find oligos operation is in progress
+    (nextOpen) => {
+      if (isFindingOligos) {
+        return;
+      }
+      setIsFindOligosTooltipOpen(nextOpen);
+    },
+    [isFindingOligos],
+  );
+
+  React.useEffect(() => {
+    // Close the detect features tooltip when the detect features operation is complete
+    if (!isDetectingFeatures) {
+      setIsDetectFeaturesTooltipOpen(false);
+    }
+  }, [isDetectingFeatures]);
+
+  const handleDetectFeaturesTooltipInteraction = React.useCallback(
+    // Prevent the tooltip from opening while the detect features operation is in progress
+    (nextOpen) => {
+      if (isDetectingFeatures) {
+        return;
+      }
+      setIsDetectFeaturesTooltipOpen(nextOpen);
+    },
+    [isDetectingFeatures],
+  );
 
   // Function to render the load error message with a retry button
   const restoreOriginalColors = React.useCallback(() => {
@@ -411,11 +518,17 @@ function App() {
         return;
       }
 
-      updateEditor(store, EDITOR_NAME, {
-        sequenceData: restoredSequenceData,
-      }, undefined, {
-        justPassingPartialSeqData: true,
-      });
+      updateEditor(
+        store,
+        EDITOR_NAME,
+        {
+          sequenceData: restoredSequenceData,
+        },
+        undefined,
+        {
+          justPassingPartialSeqData: true,
+        },
+      );
     });
   }, []);
 
@@ -444,9 +557,8 @@ function App() {
 
     // Listen for postMessage events containing the map file payload from the parent window
     const handlePostMessage = (event) => {
-      
       // Only accept messages from the same origin
-        if (event?.origin && event.origin !== window.location.origin) {
+      if (event?.origin && event.origin !== window.location.origin) {
         return;
       }
 
@@ -491,7 +603,7 @@ function App() {
       ) {
         return;
       }
-      // Update the posted payload state with the new data, which will trigger the re-loading and 
+      // Update the posted payload state with the new data, which will trigger the re-loading and
       // re-rendering of the new map file
       originalPostedPayloadRef.current = data;
       lastPostedPayloadSignatureRef.current = payloadSignature;
@@ -517,17 +629,17 @@ function App() {
 
     (async () => {
       try {
-
         // Get plasmid data and editor module in parallel to reduce startup latency
         const [incomingSeqData, oveModule] = await Promise.all([
           isBlobPostedPayload(postedPayload)
-            ? convertPostedMapFileToOveJsonDetectFeatures(
-                postedPayload, postedPayload.detectFeatures
-              )
-            : convertMapPathToOveJson(resolvedFileName),
+            ? convertMapToOveJson({
+                payload: postedPayload,
+                detectFeatures: postedPayload.detectFeatures,
+              })
+            : convertMapToOveJson({ fileName: resolvedFileName }),
           oveModulePromise,
         ]);
-        
+
         if (!isMounted) {
           return;
         }
@@ -555,7 +667,7 @@ function App() {
         });
 
         // Upon initial load, send the IDs of the sequence features back to the parent window
-        // in case the user does not save the map, Django still expects to receive the detected 
+        // in case the user does not save the map, Django still expects to receive the detected
         // feature IDs
         if (isDetectFeatures && window.parent && window.parent !== window) {
           const sequenceFeatureIds = getSequenceFeatureIds(seqData);
@@ -620,11 +732,14 @@ function App() {
           : [
               {
                 name: "downloadTool",
-                tooltip: `Download Map File (.${resolvedFileFormat || "dna"})`,
+                tooltip: "Download Map File",
                 noDropdownIcon: true,
                 Dropdown: null,
                 onIconClick: () => {
-                  downloadMapFile(resolvedFileName, resolvedTitle);
+                  downloadMapFile(
+                    downloadFile || resolvedFileName,
+                    resolvedTitle,
+                  );
                 },
               },
             ]),
@@ -640,7 +755,10 @@ function App() {
       modifyTools: (tools) => [
         ...(isPostPayloadMode
           ? [
-              <div key={isReadOnly ? "enableEditTool" : "saveMapTool"} style={{ display: "flex", alignItems: "center" }}>
+              <div
+                key={isReadOnly ? "enableEditTool" : "saveMapTool"}
+                style={{ display: "flex", alignItems: "center" }}
+              >
                 <div className="veToolbarItemOuter">
                   <Tooltip
                     content={
@@ -663,7 +781,9 @@ function App() {
                           <Icon icon="floppy-disk" />
                         ) : undefined
                       }
-                      onClick={isReadOnly ? () => setIsReadOnly(false) : saveMap}
+                      onClick={
+                        isReadOnly ? () => setIsReadOnly(false) : saveMap
+                      }
                     />
                   </Tooltip>
                 </div>
@@ -681,7 +801,10 @@ function App() {
               </div>,
             ]
           : [tools[0]]),
-        <div key="downloadPreviewTool" style={{ display: "flex", alignItems: "center" }}>
+        <div
+          key="downloadPreviewTool"
+          style={{ display: "flex", alignItems: "center" }}
+        >
           <div className="veToolbarSpacer" />
           <div className="veToolbarItemOuter ve-tool-container-downloadPreviewTool">
             <Tooltip content="Download Map Preview">
@@ -694,7 +817,36 @@ function App() {
             </Tooltip>
           </div>
         </div>,
+
         ...tools.slice(1),
+        ...(!isPostPayloadMode && isSnapGeneEnabled
+          ? [
+              <div
+                key="findOligosTool"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <div className="veToolbarSpacer" />
+                <div className="veToolbarItemOuter">
+                  <Tooltip
+                    content={
+                      isFindingOligos ? "Finding oligos..." : "Find oligos"
+                    }
+                    isOpen={isFindingOligos || isFindOligosTooltipOpen}
+                    onInteraction={handleFindOligosTooltipInteraction}
+                  >
+                    <Button
+                      minimal
+                      intent="primary"
+                      loading={isFindingOligos}
+                      disabled={isFindingOligos || loading}
+                      icon={<Icon icon="minus" />}
+                      onClick={findOligosHandle}
+                    />
+                  </Tooltip>
+                </div>
+              </div>,
+            ]
+          : []),
         ...(isPostPayloadMode && isBlobPostedPayload(postedPayload)
           ? [
               <div
@@ -709,6 +861,8 @@ function App() {
                         ? "Detecting features..."
                         : "Detect features"
                     }
+                    isOpen={isDetectingFeatures || isDetectFeaturesTooltipOpen}
+                    onInteraction={handleDetectFeaturesTooltipInteraction}
                   >
                     <Button
                       minimal
@@ -746,13 +900,13 @@ function App() {
                     target="_blank"
                     rel="noopener noreferrer"
                   />
-                 <MenuItem
+                  <MenuItem
                     text="BioPython"
                     href="https://github.com/biopython/biopython"
                     target="_blank"
                     rel="noopener noreferrer"
                   />
-                 <MenuItem
+                  <MenuItem
                     text="sgff"
                     href="https://github.com/merv1n34k/sgffp"
                     target="_blank"
@@ -839,7 +993,11 @@ function App() {
         </ViewerErrorBoundary>
       ) : (
         <div className="tg-loader-container">
-          <div className="loading-logo" aria-label="Loading map viewer" role="status">
+          <div
+            className="loading-logo"
+            aria-label="Loading map viewer"
+            role="status"
+          >
             <img
               className="loading-logo-mark"
               src={`${import.meta.env.BASE_URL}logo-small.svg`}
@@ -847,7 +1005,9 @@ function App() {
               aria-hidden="true"
             />
           </div>
-          <p className="loading-caption" aria-hidden="true">Please wait</p>
+          <p className="loading-caption" aria-hidden="true">
+            Please wait
+          </p>
         </div>
       )}
     </div>

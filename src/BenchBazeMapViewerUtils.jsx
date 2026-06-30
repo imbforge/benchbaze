@@ -156,26 +156,39 @@ export function normalizeSequenceElementOptionsWithMetadata(rawOptions) {
   return { names, metadataByName };
 }
 
-export function downloadMapFile(fileName, title) {
-  // Download map file directly from a the original URL supplied in the
-  // file_name GET parameter
-
-  if (!fileName) {
+export function downloadMapFile(fileOrUrl, title) {
+  // Download map file directly from a File/Blob or from a URL.
+  if (!fileOrUrl) {
     toastr.error("Map file not found");
     return;
   }
 
-  // Generate file name
-  const extension = getFileExtensionFromPath(fileName);
-  const downloadName = `${sanitizeFileName(title || "sequence")}${extension}`;
+  let extension;
+  let downloadName;
+  let href;
+  let revokeUrl = false;
 
-  // Trigger download by creating a temporary link element
+  if (fileOrUrl instanceof Blob) {
+    extension = getFileExtensionFromPath(fileOrUrl.name);
+    href = URL.createObjectURL(fileOrUrl);
+    revokeUrl = true;
+  } else {
+    extension = getFileExtensionFromPath(fileOrUrl);
+    href = fileOrUrl;
+  }
+
+  downloadName = `${sanitizeFileName(title || "BenchBaze Map")} [imported-oligos]${extension}`;
+
   const link = document.createElement("a");
-  link.href = fileName;
+  link.href = href;
   link.download = downloadName;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+
+  if (revokeUrl) {
+    URL.revokeObjectURL(href);
+  }
 
   toastr.success("Map downloaded");
 }
@@ -520,22 +533,86 @@ function reformatMapFeatures(mapDnaJson) {
   return mapDnaJson;
 }
 
-export async function convertMapPathToOveJson(fileName) {
-  // Fetch the map file from a given URL and return it as an OVE JSON
+export async function getMapFileWithOligos(fileName) {
+  // Fetch the map file with oligos from the server
+  const csrfToken = getCookie("csrftoken");
+  const formData = new FormData();
+  formData.append("map_file_path", fileName);
 
-  if (!fileName) {
-    throw new Error("Missing map file.");
+  const response = await fetch("/utils/map_dna/find_oligos_in_map/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to find oligos in map file (Error ${response.status}).`,
+    );
   }
 
-    const formData = new FormData();
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("Content-Disposition");
+  const fileNameFromHeader =
+    parseContentDispositionFileName(contentDisposition);
+  const finalFileName = fileNameFromHeader || getFileNameFromPath(fileName);
+
+  return new File([blob], finalFileName, {
+    type: "application/octet-stream",
+  });
+}
+
+export async function convertMapToOveJson({
+  fileName,
+  payload,
+  detectFeatures = false,
+} = {}) {
+  const formData = new FormData();
+
+  // If a payload is provided (posted mode), append it to the form data
+  if (payload) {
+    const { mapFile } = payload;
+    if (!(mapFile instanceof Blob)) {
+      throw new Error("Missing posted map file object.");
+    }
+
+    const postedFileName = mapFile.name || "posted_map";
+    const normalizedFileFormat = normalizeFileFormat(
+      postedFileName ? getFileExtensionFromPath(postedFileName) : null,
+    );
+    if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
+      throw new Error(
+        `Unsupported posted file format "${normalizedFileFormat}". ` +
+          `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
+      );
+    }
+
+    formData.append("map_file_content", mapFile);
+    formData.append("map_file_name", postedFileName);
+    formData.append("map_file_format", normalizedFileFormat);
+  }
+  // Otherwise append the file path
+  else {
+    if (!fileName) {
+      throw new Error("Missing map file.");
+    }
+
     formData.append("map_file_path", fileName);
-    const csrfToken = getCookie("csrftoken");
-    const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
-        body: formData,
-    });
+  }
+
+  if (detectFeatures) {
+    formData.append("detect_features", "true");
+  }
+
+  // Send the form data to the server for conversion to OVE JSON
+  const csrfToken = getCookie("csrftoken");
+  const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
+    body: formData,
+  });
 
   if (!response.ok) {
     throw new Error(
@@ -543,64 +620,19 @@ export async function convertMapPathToOveJson(fileName) {
     );
   }
 
+  // Parse the JSON response and extract the parsed sequence
   const responseJson = await response.json();
   const parsedSequence = responseJson?.[0]?.parsedSequence;
 
   if (!parsedSequence) {
-    throw new Error("The map file cannot be parsed.");
-  }
-
-  return parsedSequence;
-}
-
-export async function convertPostedMapFileToOveJsonDetectFeatures(payload, detectFeatures) {
-  // Convert a posted map file to OVE JSON format by parsing it with bio-parsers
-  // Optionally detect features during conversion
-  
-  const { mapFile } = payload;
-
-  if (!(mapFile instanceof Blob)) {
-    throw new Error("Missing posted map file object.");
-  }
-  let fileName = mapFile.name || "posted_map";
-  const normalizedFileFormat = normalizeFileFormat(
-    fileName ? getFileExtensionFromPath(fileName) : null,
-  );
-  if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
     throw new Error(
-      `Unsupported posted file format "${normalizedFileFormat}". ` + 
-      `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `"${f}"`).join(", ")}.`,
+      payload
+        ? "Posted map file cannot be parsed."
+        : "The map file cannot be parsed.",
     );
   }
 
-    const formData = new FormData();
-    formData.append("map_file_content", mapFile);
-    formData.append("map_file_name", fileName);
-    formData.append("detect_features", detectFeatures ? "true" : "false");
-    const csrfToken = getCookie("csrftoken");
-    const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
-        body: formData,
-    });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to convert map file to OVE JSON (Error ${response.status}).`,
-    );
-  }
-
-const responseJson = await response.json();
-  let parsedSequence = responseJson?.[0]?.parsedSequence;
-
-  if (!parsedSequence) {
-    throw new Error("Posted map file cannot be parsed.");
-  }
-
-  parsedSequence = reformatMapFeatures(parsedSequence);
-
-  return parsedSequence;
+  return payload ? reformatMapFeatures(parsedSequence) : parsedSequence;
 }
 
 function reformatProcessedMap(mapDnaJson) {
@@ -625,7 +657,6 @@ function reformatProcessedMap(mapDnaJson) {
 
     const notes = feature.notes || {};
     delete notes.bb_feat_type;
-
   }
   return mapDnaJson;
 }
@@ -712,7 +743,7 @@ export function getSequenceFeatureIds(mapDna) {
 }
 
 export async function saveToFile(sequenceDataJson, originalFile) {
-  // Save the edited sequence data as a new file with detected features.
+  // Save the edited sequence data as a new file .
   // For GenBank format we can create the final file directly with bio-parsers,
   // for SnapGene format we need to send the edited sequence data back to the server
   // to create a new .dna file with the original file's metadata (e.g. features,
@@ -730,7 +761,7 @@ export async function saveToFile(sequenceDataJson, originalFile) {
   if (!SUPPORTED_FILE_FORMATS.includes(normalizedFileFormat)) {
     throw new Error(
       `Unsupported save file format "${normalizedFileFormat}". ` +
-      `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `".${f}"`).join(", ")}.`,
+        `Supported formats: ${SUPPORTED_FILE_FORMATS.map((f) => `".${f}"`).join(", ")}.`,
     );
   }
 
@@ -755,7 +786,7 @@ export async function saveToFile(sequenceDataJson, originalFile) {
 
   // Genbank
   if (SUPPORTED_FILE_FORMATS_GENBANK.includes(normalizedFileFormat)) {
-    // For GenBank convert clonedDataJson back to GenBank format first using bio-parsers, 
+    // For GenBank convert clonedDataJson back to GenBank format first using bio-parsers,
     // then send the GenBank file back to the server to be re-saved as GenBank by
     // Biopython to ensure that the file is properly formatted
     const genBankData = await jsonToGenbank(clonedDataJson);
