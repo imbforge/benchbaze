@@ -5,6 +5,8 @@ logs/
 .logs/
 temp/
 db_backup/
+.backup/
+.backup
 private_settings*.py
 .local
 .local/
