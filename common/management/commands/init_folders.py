@@ -1,10 +1,9 @@
 from pathlib import Path
 
+from django.apps import apps
 from django.core.management.base import BaseCommand
 
-from config.settings import MEDIA_ROOT
-from config.settings import BASE_DIR
-from django import apps
+from config.settings import BASE_DIR, MEDIA_ROOT
 
 
 class Command(BaseCommand):
