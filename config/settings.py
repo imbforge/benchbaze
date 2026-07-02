@@ -136,7 +136,7 @@ ADMINS = SITE_ADMIN_EMAIL_ADDRESSES
 
 # Make sure the 'logs' directory exists and is writable by the
 # web server user
-LOG_DIR = BASE_DIR / "logs"
+LOG_DIR = BASE_DIR / ".logs"
 try:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.chmod(0o2775)
