@@ -1,6 +1,8 @@
 # Project-specific
 uploads/
 logs/
+.logs
+.logs/
 temp/
 db_backup/
 private_settings*.py
