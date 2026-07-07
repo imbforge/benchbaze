@@ -1,10 +1,8 @@
 import gzip
 import os
-import pathlib
 import shutil
 import warnings
 from datetime import datetime
-from os.path import dirname, join
 from subprocess import run
 
 from django.apps import apps
@@ -12,8 +10,8 @@ from django.conf import settings
 
 from common.actions import create_export_resource
 
-BASE_DIR = settings.BASE_DIR
-DB_CONFIG = settings.DATABASES.get("default", {})
+BASE_DIR = getattr(settings, "BASE_DIR", None)
+DB_CONFIG = getattr(settings, "DATABASES", {}).get("default", {})
 DB_NAME = DB_CONFIG.get("NAME", "")
 DB_USER = DB_CONFIG.get("USER", "")
 DB_PASSWORD = DB_CONFIG.get("PASSWORD", "")
@@ -21,6 +19,9 @@ DB_HOST = DB_CONFIG.get("HOST")
 DB_PORT = str(DB_CONFIG.get("PORT", ""))
 PG_DUMP_BIN = shutil.which("pg_dump") or "/usr/bin/pg_dump"
 RSYNC_BIN = shutil.which("rsync")
+BACKUP_DIR = BASE_DIR / ".backup"
+ENV_DIR = BASE_DIR.parent
+CURRENT_DATE_TIME = datetime.now().strftime("%Y%m%d_%H%M")
 
 # Suppress silly warning "UserWarning: Using a coordinate with ws.cell is deprecated..."
 warnings.simplefilter("ignore")
@@ -28,33 +29,35 @@ warnings.simplefilter("ignore")
 
 def export_db_table(model, export_resource):
     """Export a database table to both XLSX and TSV formats"""
-    file_name_base = join(BASE_DIR, f"db_backup/excel_tables/{model.__name__}")
+    file_name_base = BACKUP_DIR / f"excel_tables/{model.__name__}"
 
     if model.objects.exists():
         dataset = export_resource().export(model.objects.all().order_by("-id"))
 
-        with open(f"{file_name_base}.xlsx", "wb") as out_handle:
+        with open(file_name_base.with_suffix(".xlsx"), "wb") as out_handle:
             out_handle.write(dataset.xlsx)
 
-        with open(f"{file_name_base}.tsv", "w", encoding="utf-8") as out_handle:
+        with open(
+            file_name_base.with_suffix(".tsv"), "w", encoding="utf-8"
+        ) as out_handle:
             out_handle.write(dataset.tsv)
 
 
 def ensure_backup_directories():
     """Ensure that the required backup directories exist"""
     required_dirs = [
-        join(BACKUP_DIR, "db_dumps"),
-        join(BACKUP_DIR, "excel_tables"),
-        join(BACKUP_DIR, "uploads"),
+        BACKUP_DIR / "db_dumps",
+        BACKUP_DIR / "excel_tables",
+        BACKUP_DIR / "uploads",
     ]
     for directory in required_dirs:
-        pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+        directory.mkdir(parents=True, exist_ok=True)
 
 
 def remove_old_dumps(days=7):
     """Remove database dump files older than the specified number of days
     while ensuring at least one recent dump is retained"""
-    dumps_dir = pathlib.Path(BACKUP_DIR, "db_dumps")
+    dumps_dir = BACKUP_DIR / "db_dumps"
     cutoff = datetime.now().timestamp() - days * 24 * 60 * 60
     # Get all dump files sorted by modification time
     dump_files = sorted(
@@ -75,7 +78,7 @@ def remove_old_dumps(days=7):
 
 def create_db_dump(current_date_time):
     """Create a compressed database dump using pg_dump and gzip"""
-    output_path = join(BACKUP_DIR, "db_dumps", f"{current_date_time}.sql.gz")
+    output_path = BACKUP_DIR / "db_dumps" / f"{current_date_time}.sql.gz"
     env = os.environ.copy()
     if DB_PASSWORD:
         env["PGPASSWORD"] = DB_PASSWORD
@@ -123,8 +126,8 @@ def sync_uploads():
     """Sync the uploads directory to the backup location using
     rsync if available, otherwise fall back to shutil.copytree"""
 
-    src_dir = pathlib.Path(BASE_DIR, "uploads")
-    dst_dir = pathlib.Path(BACKUP_DIR, "uploads")
+    src_dir = BASE_DIR / "uploads"
+    dst_dir = BACKUP_DIR / "uploads"
 
     # Use rsync if available for efficient syncing, otherwise fall back to copying
     if RSYNC_BIN:
@@ -145,10 +148,6 @@ def sync_uploads():
             shutil.copy2(src_path, dst_path)
 
 
-ENV_DIR = dirname(BASE_DIR)
-BACKUP_DIR = join(BASE_DIR, "db_backup")
-
-CURRENT_DATE_TIME = datetime.now().strftime("%Y%m%d_%H%M")
 ensure_backup_directories()
 remove_old_dumps(days=7)
 create_db_dump(CURRENT_DATE_TIME)
