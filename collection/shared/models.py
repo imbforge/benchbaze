@@ -35,7 +35,7 @@ OVE_URL = getattr(settings, "OVE_URL", "")
 LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
-SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", True)
+SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", False)
 
 
 class ApprovalFieldsMixin(models.Model):
