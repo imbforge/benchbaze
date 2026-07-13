@@ -316,7 +316,7 @@ class InfoSheetMaxSizeMixin:
                 info_sheet_ext = os.path.splitext(self.info_sheet.name)[1].lower()
             except Exception:
                 info_sheet_ext = None
-            if info_sheet_ext is None or info_sheet_ext != "pdf":
+            if info_sheet_ext is None or info_sheet_ext != ".pdf":
                 errors["info_sheet"] = errors.get("info_sheet", []) + [
                     "Invalid file format. Please select a valid .pdf file"
                 ]
