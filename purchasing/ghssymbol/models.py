@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
@@ -52,10 +54,10 @@ class GhsSymbol(models.Model, RenameFileField):
 
             # Check if file has extension
             try:
-                img_ext = self.pictogram.name.split(".")[-1].lower()
+                img_ext = os.path.splitext(self.pictogram.name)[1].lower()
             except Exception:
                 img_ext = None
-            if img_ext is None or img_ext != "png":
+            if img_ext is None or img_ext != ".png":
                 errors.append(
                     ValidationError(
                         "Invalid file format. Please select a valid .png file"
