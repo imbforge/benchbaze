@@ -640,7 +640,6 @@ class OrderAdmin(
                     "show_close": True,
                     "show_save_and_add_another": True,
                     "show_save_and_continue": True,
-                    "show_save_as_new": False,
                     "show_save": True,
                 }
 
@@ -649,7 +648,6 @@ class OrderAdmin(
                     "show_close": True,
                     "show_save_and_add_another": False,
                     "show_save_and_continue": False,
-                    "show_save_as_new": False,
                     "show_save": False,
                 }
 

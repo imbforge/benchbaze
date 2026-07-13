@@ -142,10 +142,6 @@ class PlasmidAdmin(
             new_obj = True
             self.new_obj = True
 
-            # If object is 'Saved as new', clear all form Z elements
-            if "_saveasnew" in request.POST and obj.map_dna:
-                self.clear_sequence_features = True
-
             # If a map is present, enable renaming and previewing after initial save
             if obj.map_dna:
                 is_new_map = True
@@ -310,15 +306,6 @@ class PlasmidAdmin(
             post = request.POST.copy()
             post.update({"_continue": ""})
             request.POST = post
-
-        # If the object was cloned and has a map or gbk file, clear all sequence features,
-        # as these will likely not be relevant for the new object
-        if (
-            getattr(obj, "cloned", False)
-            and obj.map_dna
-            and obj.sequence_features.exists()
-        ):
-            obj.sequence_features.clear()
 
         return super().response_add(request, obj, post_url_continue)
 

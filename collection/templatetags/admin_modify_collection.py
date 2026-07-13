@@ -66,7 +66,6 @@ def submit_row(context):
     change = context["change"]
     is_popup = context["is_popup"]
     save_as = context["save_as"]
-    show_save_as_new = context.get("show_save_as_new", False)
     show_save = context.get("show_save", True)
     show_save_and_continue = context.get("show_save_and_continue", True)
     show_save_and_add_another = context.get("show_save_and_add_another", True)
@@ -94,17 +93,6 @@ def submit_row(context):
                 and change
                 and context.get("show_delete", True)
             ),
-            "show_save_as_new": (
-                not is_popup and has_change_permission and change and save_as
-            )
-            or show_save_as_new,
-            "show_save_and_add_another": (
-                has_add_permission
-                and not is_popup
-                and (not save_as or add)
-                and can_save
-            )
-            and show_save_and_add_another,
             "show_save_and_continue": can_save_and_continue,
             "show_save": show_save and can_save,
             "show_close": not (show_save and can_save) or show_close,

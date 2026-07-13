@@ -40,6 +40,9 @@ class CustomClonableModelAdmin(ClonableModelAdmin):
                 )
             )
 
+        if request.method == "POST" and hasattr(self, "_restore_temp_file"):
+            self._restore_temp_file(request)
+
         ModelForm = self.get_form(request)
         formsets = []
 
@@ -91,18 +94,13 @@ class CustomClonableModelAdmin(ClonableModelAdmin):
                     data=request.POST,
                     files=request_files,
                     instance=new_object,
-                    save_as_new="_saveasnew" in request.POST,  # ????
+                    save_as_new=True,
                     prefix=prefix,
                 )
                 formsets.append(formset)
 
             if all_valid(formsets) and form_validated:
-                # If original model has any file field, save new model
-                # with same paths to these files
-                for name in vars(original_obj):
-                    field = getattr(original_obj, name)
-                    if isinstance(field, FieldFile) and name not in request.FILES:
-                        setattr(new_object, name, field)
+                self.copy_cloned_file_fields(original_obj, new_object, request.FILES)
 
                 self.save_model(request, new_object, form, False)
                 self.save_related(request, form, formsets, False)
@@ -231,6 +229,16 @@ class CustomClonableModelAdmin(ClonableModelAdmin):
             fields.pop(f)
 
         return fields
+
+    def copy_cloned_file_fields(self, original_obj, new_object, request_files):
+        for name in vars(original_obj):
+            field = getattr(original_obj, name)
+            if (
+                isinstance(field, FieldFile)
+                and name not in request_files
+                and name not in self.clone_ignore_fields
+            ):
+                setattr(new_object, name, field)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
