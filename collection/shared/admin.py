@@ -1,5 +1,4 @@
 import os
-import urllib.parse
 from collections import OrderedDict
 from urllib.parse import quote as urlquote
 
@@ -14,9 +13,9 @@ from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.exceptions import PermissionDenied
 from django.db.models import CharField
 from django.forms import TextInput
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import path, re_path, reverse
+from django.urls import re_path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
@@ -686,9 +685,9 @@ class FieldFormZSpecies(StrField):
             return default_option
 
         options = list(
-            Species.objects.filter(**{self.show_for_model: True})
-            .limit(self.limit_options + 1)
-            .values_list("name_for_search", flat=True)
+            Species.objects.filter(**{self.show_for_model: True}).values_list(
+                "name_for_search", flat=True
+            )[: self.limit_options + 1]
         )
 
         if len(options) > self.limit_options:
@@ -723,9 +722,9 @@ class FieldSequenceFeature(StrField):
             return default_option
 
         options = list(
-            SequenceFeature.objects.filter(name__icontains=search)
-            .limit(self.limit_options + 1)
-            .values_list("name", flat=True)
+            SequenceFeature.objects.filter(name__icontains=search).values_list(
+                "name", flat=True
+            )[: self.limit_options + 1]
         )
 
         if len(options) > self.limit_options:
