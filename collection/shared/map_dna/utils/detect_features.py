@@ -1,11 +1,14 @@
 from io import BytesIO, StringIO
+
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 from django.utils import timezone
 from sgffp import SgffReader, SgffWriter
+
 from formz.models import SequenceFeature
+
 from ..plannotate.plannotate.annotate import annotate as plannotate_annotate
 from .common import get_feature_label, get_map_dna_feature_names
 

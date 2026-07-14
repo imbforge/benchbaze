@@ -1,18 +1,19 @@
 import re
+from io import StringIO
 from typing import Any, Dict, List, Optional
+
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-from io import StringIO
 
 from .common import (
     UNTITLED_SEQUENCE_NAME,
-    _parse_snapgene_primers_sgff,
+    _create_initial_sequence,
+    _flatten_sequence_array,
+    _normalize_genbank_qualifier_value,
     _normalize_snapgene_parsed_sequence,
     _parse_snapgene_feature_sgff,
+    _parse_snapgene_primers_sgff,
     _validate_sequence_array,
-    _flatten_sequence_array,
-    _create_initial_sequence,
-    _normalize_genbank_qualifier_value,
 )
 
 GenBankInput = str | SeqRecord
@@ -794,7 +795,7 @@ def _parse_genbank_locus_metadata(line: str, metadata: Dict[str, Any]) -> None:
             ):
                 locus_meta["isDoubleStrandedRNA"] = True
 
-        if isinstance(item, str) and GB_DIVISIONS.get(item.upper()):
+        if isinstance(item, str) and item.upper() in GB_DIVISIONS:
             gb_division = item.upper()
 
     # Only set the name from the LOCUS line if it's not "Exported"
@@ -900,8 +901,9 @@ def _genbank_to_json_via_seqio(
             "circular": True
             if topology == "circular"
             else raw_meta.get("circular", False),
-            "gbDivision": annotations.get("data_file_division")
-            or raw_meta.get("gbDivision"),
+            "gbDivision": annotations.get("data_file_division", "").strip()
+            or raw_meta.get("gbDivision", "").strip()
+            or "SYN",
             "date": annotations.get("date") or raw_meta.get("date"),
             "definition": raw_meta.get("definition") or record.description or "",
             "description": raw_meta.get("description") or record.description or "",
