@@ -18,9 +18,6 @@ import warnings
 warnings.filterwarnings("ignore", message="errors='ignore'")
 
 
-log = NamedTemporaryFile()
-
-
 def BLAST(seq, db):
     task = db["method"]
     parameters = db["parameters"]
@@ -465,9 +462,6 @@ def annotate(inSeq, yaml_file=rsc.get_yaml_path(), linear=False, is_detailed=Fal
         ),
         axis=1,
     )
-
-    global log
-    log.close()
 
     # fill in edge cases (kludge)
     blastDf["Feature"] = blastDf["Feature"].fillna(blastDf["sseqid"])
