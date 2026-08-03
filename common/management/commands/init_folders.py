@@ -12,8 +12,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         paths = set()
 
-        # Add the .logs folder to the set of paths to create
+        # Add .logs and uploads temp folders to the set of paths to create
         paths.add(Path(BASE_DIR / ".logs"))
+        paths.add(Path(MEDIA_ROOT / "uploads"))
+        paths.add(Path(MEDIA_ROOT / "uploads" / "temp"))
 
         # Get all paths for the uploads folder
         for model in apps.get_models():
