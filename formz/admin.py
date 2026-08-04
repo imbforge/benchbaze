@@ -21,7 +21,6 @@ from .models import (
     ProjectUser,
     SequenceFeature,
     SequenceFeatureAlias,
-    Species,
 )
 from .search import SequenceFeatureQLSchema
 from .update_zkbs_records import (
@@ -128,9 +127,7 @@ class FormZAdminSite(admin.AdminSite):
                     else:
                         messages.success(
                             request,
-                            "The {} have been updated successfully.".format(
-                                verbose_model_name_plural
-                            ),
+                            f"The {verbose_model_name_plural} have been updated successfully.",
                         )
 
                     return HttpResponseRedirect(".")
@@ -337,9 +334,7 @@ class SequenceFeatureForm(forms.ModelForm):
         donor_organisms = self.cleaned_data.get("donor_organism", None)
         donor_organisms = donor_organisms.all() if donor_organisms else None
         donor_organisms_names = (
-            donor_organisms.values_list("name_for_search", flat=True)
-            if donor_organisms
-            else []
+            [org.unified_name for org in donor_organisms] if donor_organisms else []
         )
 
         max_risk_group = (
@@ -483,52 +478,12 @@ class HeaderAdmin(admin.ModelAdmin):
             return super().add_view(request)
 
 
-class SpeciesForm(forms.ModelForm):
-    class Meta:
-        model = Species
-        fields = "__all__"
-
-    def clean_latin_name(self):
-        if not self.instance.pk:
-            qs = Species.objects.filter(name_for_search=self.cleaned_data["latin_name"])
-
-            if "common_name" in self.cleaned_data.keys():
-                qs = qs | Species.objects.filter(
-                    name_for_search=self.cleaned_data["common_name"]
-                )
-
-            if qs:
-                raise forms.ValidationError("The name of an organism must be unique")
-            else:
-                return self.cleaned_data["latin_name"]
-        else:
-            return self.cleaned_data["latin_name"]
-
-    def clean_common_name(self):
-        if not self.instance.pk:
-            qs = Species.objects.filter(
-                name_for_search=self.cleaned_data["common_name"]
-            )
-
-            if "latin_name" in self.cleaned_data.keys():
-                qs = qs | Species.objects.filter(
-                    name_for_search=self.cleaned_data["latin_name"]
-                )
-
-            if qs:
-                raise forms.ValidationError("The name of an organism must be unique")
-            else:
-                return self.cleaned_data["common_name"]
-        else:
-            return self.cleaned_data["common_name"]
-
-
 class SpeciesAdmin(admin.ModelAdmin):
     list_display = ("name", "risk_group")
     list_display_links = ("name",)
     list_per_page = 25
-    search_fields = ["name_for_search"]
-    ordering = ["name_for_search"]
+    search_fields = ["latin_name", "common_name"]
+    ordering = ["latin_name", "common_name"]
     fields = [
         "latin_name",
         "common_name",
@@ -536,8 +491,7 @@ class SpeciesAdmin(admin.ModelAdmin):
         "show_for_cell_line",
         "show_for_other_bacterium_strain",
     ]
-    form = SpeciesForm
 
     @admin.display(description="name")
     def name(self, instance):
-        return instance.name_for_search
+        return instance.unified_name

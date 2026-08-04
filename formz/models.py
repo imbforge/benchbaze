@@ -1,6 +1,7 @@
 from django.conf import settings
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db import models
-from django.forms import ValidationError
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from import_export.fields import Field as ImportExportField
@@ -281,7 +282,6 @@ class Species(models.Model):
     risk_group = models.PositiveSmallIntegerField(
         "risk group", choices=((1, 1), (2, 2), (3, 3), (4, 4)), blank=False, null=True
     )
-    name_for_search = models.CharField(max_length=255, null=False, unique=True)
     show_for_cell_line = models.BooleanField(
         "show as organism in 'Cell lines'?", default=False
     )
@@ -301,35 +301,63 @@ class Species(models.Model):
             else self.common_name
         )
 
+    @property
+    def unified_name(self):
+        if self.latin_name and self.common_name:
+            return f"{self.latin_name} ({self.common_name})"
+        return self.latin_name or self.common_name
+
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        # Remove any leading and trailing white spaces
+        self._strip_name_fields()
+
+        super().save(force_insert, force_update, using, update_fields)
+
+    def _strip_name_fields(self):
+        # Remove any leading and trailing white spaces from names before
+        # validation or persistence.
         if self.latin_name:
             self.latin_name = self.latin_name.strip()
         if self.common_name:
             self.common_name = self.common_name.strip()
 
-        self.name_for_search = self.latin_name if self.latin_name else self.common_name
-
-        super().save(force_insert, force_update, using, update_fields)
-
     def clean(self):
-        errors = []
+        errors = {}
 
-        if not self.latin_name and not self.common_name:
-            errors.append(
-                ValidationError("You must enter either a latin name or a common name")
+        self._strip_name_fields()
+
+        if not self.unified_name:
+            errors[NON_FIELD_ERRORS] = errors.get(NON_FIELD_ERRORS, []) + [
+                "You must enter either a latin name or a common name, or both"
+            ]
+        else:
+            msg = "This name is already in use by another species"
+            duplicates = set(
+                Species.objects.exclude(pk=self.pk)
+                .filter(
+                    Q(latin_name=self.latin_name)
+                    | Q(common_name=self.latin_name)
+                    | Q(latin_name=self.common_name)
+                    | Q(common_name=self.common_name)
+                )
+                .values_list("latin_name", "common_name")
             )
+            duplicates = {name for pair in duplicates for name in pair if name}
 
-        if len(errors) > 0:
+            if self.latin_name and self.latin_name in duplicates:
+                errors["latin_name"] = msg
+            if self.common_name and self.common_name in duplicates:
+                errors["common_name"] = msg
+
+        if errors:
             raise ValidationError(errors)
 
     def __str__(self):
         return (
-            "{} - RG {}".format(self.name_for_search, self.risk_group)
+            f"{self.unified_name} - RG {self.risk_group}"
             if self.risk_group
-            else self.name_for_search
+            else self.unified_name
         )
 
 
@@ -457,11 +485,11 @@ class SequenceFeature(models.Model):
     }
 
     def __str__(self):
-        return (
-            str(self.name)
-            if self.common_feature
-            else f"{self.name} - {self.donor_organism.first().name_for_search}"
-        )
+        return str(self.name) if self.common_feature else self._str_non_common_feature()
+
+    def _str_non_common_feature(self):
+        donor = self.donor_organism.first()
+        return f"{self.name} - {donor.unified_name}" if donor else str(self.name)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None

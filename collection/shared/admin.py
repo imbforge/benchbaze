@@ -11,7 +11,8 @@ from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.exceptions import PermissionDenied
-from django.db.models import CharField
+from django.db.models import CharField, Value
+from django.db.models.functions import Coalesce, NullIf
 from django.forms import TextInput
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -685,10 +686,21 @@ class FieldFormZSpecies(StrField):
             return default_option
 
         options = list(
-            Species.objects.filter(**{self.show_for_model: True}).values_list(
-                "name_for_search", flat=True
-            )[: self.limit_options + 1]
+            Species.objects.filter(**{self.show_for_model: True})
+            .annotate(
+                unified_name=Coalesce(
+                    NullIf("latin_name", Value("")),
+                    NullIf("common_name", Value("")),
+                    Value(""),
+                    output_field=CharField(),
+                )
+            )
+            .filter(unified_name__icontains=search)
+            .values_list("unified_name", flat=True)
+            .distinct()
+            .order_by("unified_name")[: self.limit_options + 1]
         )
+        options = [option for option in options if option]
 
         if len(options) > self.limit_options:
             return options[: self.limit_options] + ["..."]
