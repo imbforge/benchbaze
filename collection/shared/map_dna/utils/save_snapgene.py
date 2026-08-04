@@ -347,4 +347,4 @@ def update_snapgene_map_file(map_file_original_sg, map_file_edited_json):
     else:
         sgff_record.primers.clear()
 
-    return SgffWriter.to_bytes(sgff_record)
+    return SgffWriter.to_bytes(sgff_record, preserve=True)

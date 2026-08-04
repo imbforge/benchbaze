@@ -42,7 +42,9 @@ def sgff_to_seqrecord(sgff_record):
     sgff_record.primers.clear()
 
     # Convert the SGFF record to a SeqRecord
-    seq_record = SeqIO.read(BytesIO(SgffWriter.to_bytes(sgff_record)), "snapgene")
+    seq_record = SeqIO.read(
+        BytesIO(SgffWriter.to_bytes(sgff_record, preserve=True)), "snapgene"
+    )
 
     # Annotate features in the SeqRecord with their original SGFF feature information
     for feature in seq_record.features:
