@@ -1,7 +1,7 @@
 """Parity tester for SnapGene parsing: @teselagen/bio-parsers vs BenchBaze.
 
 Usage examples:
-  python collection/shared/map_dna/viewer/test_parity_snapgene.py \
+  python collection/shared/map_dna/parsers/test_parity_snapgene.py \
     --input-dir ./dna_files \
     --output-dir ./dna_files \
     --output-prefix comparison
@@ -18,7 +18,7 @@ import subprocess
 import sys
 import types
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def _load_python_parser(module_path: Path):
@@ -95,7 +95,7 @@ def _stable(value: Any) -> Any:
 
 
 def _collect_diffs(
-    a: Any, b: Any, path: str = "$", out: Optional[List[Dict[str, Any]]] = None
+    a: Any, b: Any, path: str = "$", out: list[dict[str, Any]] | None = None
 ):
     if out is None:
         out = []
@@ -140,35 +140,28 @@ def _collect_diffs(
     return out
 
 
-def _is_representation_only(diff: Dict[str, Any]) -> bool:
+def _is_representation_only(diff: dict[str, Any]) -> bool:
     p = diff.get("path", "")
 
-    if p == "$[0].parsedSequence.isProtein":
-        return True
-    if p == "$[0].messages.length":
+    if p in {"$[0].parsedSequence.isProtein", "$[0].messages.length"}:
         return True
     if p.startswith("$[0].messages["):
         return True
 
-    # undefined/null color formatting drift should not be treated as biological
     if p.startswith("$[0].parsedSequence.features[") and p.endswith(".color"):
         a = diff.get("a")
         b = diff.get("b")
-        if (
-            (a is None and b is None)
-            or (a is None and "missingIn" in diff)
-            or (b is None and "missingIn" in diff)
-        ):
-            return True
+        return (a is None or b is None) and (
+            a is None and b is None or "missingIn" in diff
+        )
 
-    # Ignore notes/sgffFeature/primers differences. These only come from the Python parser
-    if any(token in p for token in (".notes", ".sgff_feature", ".primers")):
+    if any(token in p for token in (".notes", ".sgff_feature", ".primer")):
         return True
 
     return False
 
 
-def _extract_feature_index(path_text: str) -> Optional[int]:
+def _extract_feature_index(path_text: str) -> int | None:
     prefix = "$[0].parsedSequence.features["
     if prefix not in path_text:
         return None
@@ -207,12 +200,18 @@ def main() -> int:
 
     script_dir = Path(__file__).resolve().parent
     parser_path = (
-        Path(args.python_parser) if args.python_parser else script_dir / "parsers.py"
+        Path(args.python_parser) if args.python_parser else script_dir / "snapgene.py"
     )
     ts_path = (
         Path(args.ts_module)
         if args.ts_module
-        else script_dir / "node_modules" / "@teselagen" / "bio-parsers" / "index.js"
+        else script_dir
+        / ".."
+        / "viewer"
+        / "node_modules"
+        / "@teselagen"
+        / "bio-parsers"
+        / "index.js"
     )
 
     if not parser_path.exists():
@@ -246,7 +245,7 @@ def main() -> int:
         "mismatches": [],
     }
 
-    path_counts: Dict[str, int] = {}
+    path_counts: dict[str, int] = {}
 
     for fp in dna_files:
         try:

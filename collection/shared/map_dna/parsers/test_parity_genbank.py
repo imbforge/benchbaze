@@ -1,7 +1,7 @@
 """Parity tester for GenBank parsing: @teselagen/bio-parsers vs BenchBaze.
 
 Usage examples:
-  python collection/shared/map_dna/viewer/test_parity_genbank.py \
+  python collection/shared/map_dna/parsers/test_parity_genbank.py \
     --input-dir ./gbk_files \
     --output-dir ./gbk_files \
     --output-prefix comparison_genbank
@@ -19,7 +19,7 @@ import subprocess
 import sys
 import types
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def _load_python_parser(module_path: Path):
@@ -96,7 +96,7 @@ def _stable(value: Any) -> Any:
 
 
 def _collect_diffs(
-    a: Any, b: Any, path: str = "$", out: Optional[List[Dict[str, Any]]] = None
+    a: Any, b: Any, path: str = "$", out: list[dict[str, Any]] | None = None
 ):
     if out is None:
         out = []
@@ -149,7 +149,7 @@ def _is_subsequence(needle: str, haystack: str) -> bool:
     return idx == len(needle)
 
 
-def _normalize_fragment_note(value: str) -> Optional[tuple[str, str]]:
+def _normalize_fragment_note(value: str) -> tuple[str, str] | None:
     normalized = re.sub(r'^note="?', "", value).strip()
     normalized = normalized.replace('"', "")
     match = re.search(
@@ -198,7 +198,7 @@ def _matches_except_trailing_dot(a: str, b: str) -> bool:
     return a.rstrip(".") == b.rstrip(".")
 
 
-def _is_representation_only(diff: Dict[str, Any]) -> bool:
+def _is_representation_only(diff: dict[str, Any]) -> bool:
     p = diff.get("path", "")
 
     if p == "$[0].parsedSequence.isProtein":
@@ -271,7 +271,7 @@ def _is_representation_only(diff: Dict[str, Any]) -> bool:
     return False
 
 
-def _extract_feature_index(path_text: str) -> Optional[int]:
+def _extract_feature_index(path_text: str) -> int | None:
     prefix = "$[0].parsedSequence.features["
     if prefix not in path_text:
         return None
@@ -312,12 +312,18 @@ def main() -> int:
 
     script_dir = Path(__file__).resolve().parent
     parser_path = (
-        Path(args.python_parser) if args.python_parser else script_dir / "parsers.py"
+        Path(args.python_parser) if args.python_parser else script_dir / "genbank.py"
     )
     ts_path = (
         Path(args.ts_module)
         if args.ts_module
-        else script_dir / "node_modules" / "@teselagen" / "bio-parsers" / "index.js"
+        else script_dir
+        / ".."
+        / "viewer"
+        / "node_modules"
+        / "@teselagen"
+        / "bio-parsers"
+        / "index.js"
     )
 
     if not parser_path.exists():
@@ -357,7 +363,7 @@ def main() -> int:
         "mismatches": [],
     }
 
-    path_counts: Dict[str, int] = {}
+    path_counts: dict[str, int] = {}
 
     for fp in genbank_files:
         try:
