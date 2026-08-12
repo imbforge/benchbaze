@@ -27,7 +27,7 @@ django-modelclone @git+https://github.com/al-beton/django-modelclone/
 djangorestframework==3.16.0
 reportlab==4.4.3
 biopython==1.86
-sgffp==0.20.0
+sgffp==0.22.1
 seguid==0.2.1
 numpy==1.26.4
 pandas==1.5.3
