@@ -535,7 +535,7 @@ function reformatMapFeatures(mapDnaJson) {
 
 export async function getMapFileWithOligos(fileName) {
   // Fetch the map file with oligos from the server
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = getCookie("tenant_csrftoken");
   const formData = new FormData();
   formData.append("map_file_path", fileName);
 
@@ -606,7 +606,7 @@ export async function convertMapToOveJson({
   }
 
   // Send the form data to the server for conversion to OVE JSON
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = getCookie("tenant_csrftoken");
   const response = await fetch("/utils/map_dna/convert_any_to_ove_json/", {
     method: "POST",
     credentials: "same-origin",
@@ -810,7 +810,7 @@ export async function saveToFile(sequenceDataJson, originalFile) {
   }
 
   // Create new file on the server
-  const csrfToken = getCookie("csrftoken");
+  const csrfToken = getCookie("tenant_csrftoken");
   const response = await fetch("/utils/map_dna/create_map_file/", {
     method: "POST",
     credentials: "same-origin",
