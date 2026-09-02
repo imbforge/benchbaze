@@ -1,10 +1,11 @@
 from unittest import skip
 from unittest.mock import MagicMock, patch
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from purchasing.costunit.models import CostUnit
 from purchasing.ghssymbol.models import GhsSymbol
 from purchasing.hazardstatement.models import HazardStatement
@@ -12,6 +13,8 @@ from purchasing.location.models import Location
 from purchasing.msdsform.models import MsdsForm
 from purchasing.order.models import Order, validate_absence_airquotes
 from purchasing.signalword.models import SignalWord
+from django_tenants.test.cases import FastTenantTestCase
+from tenants.utils import TenantAPIClient
 
 User = get_user_model()
 
@@ -39,7 +42,7 @@ def _make_order(user, cost_unit, location, **kwargs):
     return Order.objects.create(**defaults)
 
 
-class ValidateAbsenceAirquotesTest(TestCase):
+class ValidateAbsenceAirquotesTest(FastTenantTestCase):
     def test_valid_string_passes(self):
         validate_absence_airquotes("Sigma-Aldrich")
 
@@ -55,7 +58,7 @@ class ValidateAbsenceAirquotesTest(TestCase):
         validate_absence_airquotes("")
 
 
-class CostUnitModelTest(TestCase):
+class CostUnitModelTest(FastTenantTestCase):
     def test_creation(self):
         cu = _make_cost_unit(name="CU1", description="Unit one")
         self.assertEqual(cu.name, "cu1")
@@ -83,7 +86,7 @@ class CostUnitModelTest(TestCase):
             _make_cost_unit(name="unique", description="Second")
 
 
-class LocationModelTest(TestCase):
+class LocationModelTest(FastTenantTestCase):
     def test_creation(self):
         loc = _make_location("Freezer -80")
         self.assertEqual(str(loc), "freezer -80")
@@ -106,7 +109,7 @@ class LocationModelTest(TestCase):
             _make_location("unique-location")
 
 
-class OrderModelTest(TestCase):
+class OrderModelTest(FastTenantTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="ordertest@example.com", password="password"
@@ -163,16 +166,18 @@ class OrderModelTest(TestCase):
         self.assertFalse(order.delivery_alert)
 
 
-class OrderAPITest(APITestCase):
+class OrderAPITest(FastTenantTestCase, APITestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="orderapitest@example.com", password="password"
         )
-        self.client.force_authenticate(user=self.user)
         self.cu = _make_cost_unit()
         self.loc = _make_location()
         self.order = _make_order(self.user, self.cu, self.loc)
         self.url = "/api/purchasing/order/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_orders_returns_200(self):
         response = self.client.get(self.url)
@@ -230,7 +235,7 @@ class OrderAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class HazardStatementModelTest(TestCase):
+class HazardStatementModelTest(FastTenantTestCase):
     def test_creation(self):
         obj = HazardStatement.objects.create(
             code="H302", description="Harmful if swallowed", is_cmr=False
@@ -281,7 +286,7 @@ class HazardStatementModelTest(TestCase):
         self.assertFalse(obj.is_cmr)
 
 
-class SignalWordModelTest(TestCase):
+class SignalWordModelTest(FastTenantTestCase):
     def test_creation(self):
         obj = SignalWord.objects.create(signal_word="Danger")
         self.assertEqual(obj.signal_word, "Danger")
@@ -303,7 +308,7 @@ class SignalWordModelTest(TestCase):
             SignalWord.objects.create(signal_word="Caution")
 
 
-class GhsSymbolModelTest(TestCase):
+class GhsSymbolModelTest(FastTenantTestCase):
     def test_str_representation(self):
         g = GhsSymbol(code="GHS07", description="Exclamation mark")
         self.assertEqual(str(g), "GHS07 - Exclamation mark")
@@ -368,7 +373,7 @@ class GhsSymbolModelTest(TestCase):
             self.fail("clean() raised unexpectedly when pictogram is absent")
 
 
-class MsdsFormModelTest(TestCase):
+class MsdsFormModelTest(FastTenantTestCase):
     def test_file_name_description_strips_extension_and_underscores(self):
         form = MsdsForm(label="safety_data_sheet.pdf")
         self.assertEqual(form.file_name_description, "safety data sheet")

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django_tenants.utils import get_current_tenant
 from import_export.fields import Field
 
 from common.models import DocFileMixin, DownloadFileNameMixin
@@ -19,7 +20,11 @@ from ..shared.models import (
 )
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
-PLASMID_STORAGE_TYPE = getattr(settings, "PLASMID_STORAGE_TYPE", "")
+PLASMID_STORAGE_TYPE_CHOICES = (
+    ("plasmid", "Purified plasmid"),
+    ("bacteria", "Bacterial stock"),
+    ("both", "Both"),
+)
 
 
 class PlasmidDoc(DocFileMixin):
@@ -76,11 +81,7 @@ class Plasmid(
     reference = models.CharField("reference", max_length=255, blank=True)
     storage_type = models.CharField(
         "storage type",
-        choices=(
-            ("plasmid", "Purified plasmid"),
-            ("bacteria", "Bacterial stock"),
-            ("both", "Both"),
-        ),
+        choices=PLASMID_STORAGE_TYPE_CHOICES,
         max_length=20,
         blank=False,
     )
@@ -254,7 +255,8 @@ class Plasmid(
     ):
         # If a plasmid is kept exclusively as a purified stock and a destroyed
         # date is not set, automatically set it
-        if PLASMID_STORAGE_TYPE == "plasmid" and not self.destroyed_date:
+        tenant = get_current_tenant()
+        if tenant.plasmid_storage_type == "plasmid" and not self.destroyed_date:
             self.destroyed_date = datetime.now().date() + timedelta(
                 days=random.randint(7, 21)
             )

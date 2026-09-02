@@ -45,12 +45,6 @@ from .forms import MassUpdateOrderForm, OrderAdminForm
 from .search import OrderQLSchema
 
 User = get_user_model()
-ORDER_EMAIL_ADDRESSES = getattr(
-    settings, "ORDER_EMAIL_ADDRESSES", ["noreply@example.com"]
-)
-MS_TEAMS_WEBHOOK = getattr(settings, "MS_TEAMS_WEBHOOK", "")
-TIME_ZONE = settings.TIME_ZONE
-SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 ALLOWED_HOSTS = getattr(settings, "ALLOWED_HOSTS", [])
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
 
@@ -441,7 +435,7 @@ class OrderAdmin(
                     f"{reverse('admin:purchasing_order_change', args=(obj.id,))}"
                 )
                 # If MS Teams webhook exists, send urgent order notification to it,
-                if MS_TEAMS_WEBHOOK:
+                if request.tenant.ms_teams_webhook_purchasing:
                     try:
                         message_card = render_to_string(
                             "admin/purchasing/order/order_msteams_card_urgent.json",
@@ -456,7 +450,8 @@ class OrderAdmin(
                         )
                         message_card = json.loads(message_card)
                         post_message = requests.post(
-                            url=MS_TEAMS_WEBHOOK, json=message_card
+                            url=request.tenant.ms_teams_webhook_purchasing,
+                            json=message_card,
                         )
                         post_message_status_code = post_message.status_code
 
@@ -466,14 +461,18 @@ class OrderAdmin(
                 if post_message_status_code != 200:
                     message = render_to_string(
                         "admin/purchasing/order/order_email_urgent.txt",
-                        {"user": request.user, "order": obj, "site_title": SITE_TITLE},
+                        {
+                            "user": request.user,
+                            "order": obj,
+                            "site_title": request.tenant.site_title,
+                        },
                     )
                     try:
                         send_mail(
                             "New urgent order",
                             message,
                             SERVER_EMAIL_ADDRESS,
-                            ORDER_EMAIL_ADDRESSES,
+                            request.tenant.order_email_addresses,
                             fail_silently=False,
                         )
                         messages.success(
@@ -515,7 +514,10 @@ class OrderAdmin(
                             obj.sent_email = True
                             message = render_to_string(
                                 "admin/purchasing/order/order_email_delivered.txt",
-                                {"order": order, "site_title": SITE_TITLE},
+                                {
+                                    "order": order,
+                                    "site_title": request.tenant.site_title,
+                                },
                             )
                             try:
                                 send_mail(

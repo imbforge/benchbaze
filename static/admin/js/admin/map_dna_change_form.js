@@ -80,8 +80,13 @@ function getDirectMapDnaUrl(url) {
   // otherwise return the original URL
   try {
     const parsedUrl = new URL(url, window.location.origin);
-    const fileNameParam = parsedUrl.searchParams.get("file_name");
+    let fileNameParam = parsedUrl.searchParams.get("file_name");
+    let uploadsFolderParam = parsedUrl.searchParams.get("uploads_folder");
+    console.log(url, fileNameParam, uploadsFolderParam);
     if (fileNameParam) {
+      if (uploadsFolderParam) {
+        fileNameParam = `${uploadsFolderParam}${fileNameParam.replace(/^\/+/, "")}`;
+      }
       return new URL(fileNameParam, window.location.origin).href;
     }
     return parsedUrl.href;

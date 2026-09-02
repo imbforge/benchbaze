@@ -1,10 +1,13 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django_tenants.test.cases import FastTenantTestCase
+from tenants.utils import TenantAPIClient
+
 from .models import VirusInsect, VirusInsectDoc, VirusMammalian, VirusMammalianDoc
 
 User = get_user_model()
@@ -34,13 +37,13 @@ def _make_virus_insect(user, name="BV-His6", **kwargs):
     return VirusInsect.objects.create(**defaults)
 
 
-class VirusMammalianModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusMammalianModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="vmtest@example.com", password="password"
         )
-        cls.virus = _make_virus_mammalian(cls.user)
+        self.virus = _make_virus_mammalian(self.user)
 
     def test_virus_creation(self):
         self.assertEqual(self.virus.name, "LV-GFP")
@@ -247,13 +250,13 @@ class VirusMammalianModelTest(TestCase):
         self.assertIn("name", readonly)
 
 
-class VirusMammalianDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusMammalianDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="vmdoctest@example.com", password="password"
         )
-        cls.virus = _make_virus_mammalian(cls.user, name="DocVirus")
+        self.virus = _make_virus_mammalian(self.user, name="DocVirus")
 
     def test_doc_creation(self):
         """Test creating a virus document"""
@@ -294,17 +297,16 @@ class VirusMammalianDocModelTest(TestCase):
         )
 
 
-class VirusMammalianAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusMammalianAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="vmapitest@example.com", password="password"
         )
-        cls.virus = _make_virus_mammalian(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.virus = _make_virus_mammalian(self.user)
         self.url = "/api/collection/virusmammalian/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)
@@ -487,13 +489,13 @@ class VirusMammalianAPITest(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
 
-class VirusInsectModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusInsectModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="vitest@example.com", password="password"
         )
-        cls.virus = _make_virus_insect(cls.user)
+        self.virus = _make_virus_insect(self.user)
 
     def test_virus_creation(self):
         self.assertEqual(self.virus.name, "BV-His6")
@@ -684,13 +686,13 @@ class VirusInsectModelTest(TestCase):
         self.assertIn("name", readonly)
 
 
-class VirusInsectDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusInsectDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="vidoctest@example.com", password="password"
         )
-        cls.virus = _make_virus_insect(cls.user, name="DocInsectVirus")
+        self.virus = _make_virus_insect(self.user, name="DocInsectVirus")
 
     def test_doc_creation(self):
         """Test creating a virus insect document"""
@@ -731,17 +733,16 @@ class VirusInsectDocModelTest(TestCase):
         )
 
 
-class VirusInsectAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class VirusInsectAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="viapitest@example.com", password="password"
         )
-        cls.virus = _make_virus_insect(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.virus = _make_virus_insect(self.user)
         self.url = "/api/collection/virusinsect/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)

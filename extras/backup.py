@@ -3,10 +3,13 @@ import os
 import shutil
 import warnings
 from datetime import datetime
+from pathlib import Path
 from subprocess import run
 
 from django.apps import apps
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django_tenants.utils import get_tenant_model, schema_context
 
 from common.actions import create_export_resource
 
@@ -20,16 +23,15 @@ DB_PORT = str(DB_CONFIG.get("PORT", ""))
 PG_DUMP_BIN = shutil.which("pg_dump") or "/usr/bin/pg_dump"
 RSYNC_BIN = shutil.which("rsync")
 BACKUP_DIR = BASE_DIR / ".backup"
-ENV_DIR = BASE_DIR.parent
-CURRENT_DATE_TIME = datetime.now().strftime("%Y%m%d_%H%M")
 
 # Suppress silly warning "UserWarning: Using a coordinate with ws.cell is deprecated..."
 warnings.simplefilter("ignore")
 
 
-def export_db_table(model, export_resource):
+def export_db_table(model, export_resource, backup_dir=BACKUP_DIR):
     """Export a database table to both XLSX and TSV formats"""
-    file_name_base = BACKUP_DIR / f"excel_tables/{model.__name__}"
+
+    file_name_base = backup_dir / f"excel_tables/{model.__name__}"
 
     if model.objects.exists():
         dataset = export_resource().export(model.objects.all().order_by("-id"))
@@ -43,21 +45,21 @@ def export_db_table(model, export_resource):
             out_handle.write(dataset.tsv)
 
 
-def ensure_backup_directories():
+def ensure_backup_directories(backup_dir=BACKUP_DIR):
     """Ensure that the required backup directories exist"""
     required_dirs = [
-        BACKUP_DIR / "db_dumps",
-        BACKUP_DIR / "excel_tables",
-        BACKUP_DIR / "uploads",
+        backup_dir / "db_dumps",
+        backup_dir / "excel_tables",
+        backup_dir / "uploads",
     ]
     for directory in required_dirs:
         directory.mkdir(parents=True, exist_ok=True)
 
 
-def remove_old_dumps(days=7):
+def remove_old_dumps(days=7, backup_dir=BACKUP_DIR):
     """Remove database dump files older than the specified number of days
     while ensuring at least one recent dump is retained"""
-    dumps_dir = BACKUP_DIR / "db_dumps"
+    dumps_dir = backup_dir / "db_dumps"
     cutoff = datetime.now().timestamp() - days * 24 * 60 * 60
     # Get all dump files sorted by modification time
     dump_files = sorted(
@@ -76,9 +78,10 @@ def remove_old_dumps(days=7):
         remaining_files -= 1
 
 
-def create_db_dump(current_date_time):
+def create_db_dump(backup_dir=BACKUP_DIR, tenant_schema=None):
     """Create a compressed database dump using pg_dump and gzip"""
-    output_path = BACKUP_DIR / "db_dumps" / f"{current_date_time}.sql.gz"
+    dumps_dir = backup_dir / "db_dumps"
+    output_path = dumps_dir / f"{datetime.now().strftime('%Y%m%d_%H%M')}.sql.gz"
     env = os.environ.copy()
     if DB_PASSWORD:
         env["PGPASSWORD"] = DB_PASSWORD
@@ -95,39 +98,45 @@ def create_db_dump(current_date_time):
         "--no-password",
     ]
 
-    with open(output_path, "wb") as output_file:
-        # Use gzip to compress the output of pg_dump directly to the file
-        with gzip.GzipFile(fileobj=output_file, mode="wb") as gz_file:
-            # Try running pg_dump with the provided environment variables,
-            # and if it fails due to authentication issues, try again without PGPASSWORD
-            try:
+    if tenant_schema:
+        pg_dump_cmd.extend(
+            [
+                "--schema",
+                tenant_schema,
+                "--exclude-schema",
+                "public",
+            ]
+        )
+
+    with (
+        open(output_path, "wb") as output_file,
+        gzip.GzipFile(fileobj=output_file, mode="wb") as gz_file,
+    ):
+        try:
+            run(pg_dump_cmd, check=True, stdout=gz_file, env=env)
+        except Exception:
+            if "PGPASSWORD" in env:
+                env.pop("PGPASSWORD", None)
                 run(pg_dump_cmd, check=True, stdout=gz_file, env=env)
-            except Exception:
-                if "PGPASSWORD" in env:
-                    env.pop("PGPASSWORD", None)
-                    run(pg_dump_cmd, check=True, stdout=gz_file, env=env)
-                else:
-                    raise
+            else:
+                raise
 
 
-def export_tables():
+def export_tables(backup_dir=BACKUP_DIR):
     """Export all models that have _backup = True and _export_field_names defined
     to XLSX and TSV formats"""
 
     # Export tables only for models that have _backup = True and _export_field_names defined
     [
-        export_db_table(m, create_export_resource(m))
+        export_db_table(m, create_export_resource(m), backup_dir)
         for m in apps.get_models()
         if getattr(m, "_backup", False) and getattr(m, "_export_field_names", False)
     ]
 
 
-def sync_uploads():
+def sync_uploads(src_dir, dst_dir):
     """Sync the uploads directory to the backup location using
     rsync if available, otherwise fall back to shutil.copytree"""
-
-    src_dir = BASE_DIR / "uploads"
-    dst_dir = BACKUP_DIR / "uploads"
 
     # Use rsync if available for efficient syncing, otherwise fall back to copying
     if RSYNC_BIN:
@@ -148,8 +157,11 @@ def sync_uploads():
             shutil.copy2(src_path, dst_path)
 
 
-ensure_backup_directories()
-remove_old_dumps(days=7)
-create_db_dump(CURRENT_DATE_TIME)
-export_tables()
-sync_uploads()
+for tenant in get_tenant_model().objects.all():
+    with schema_context(tenant.schema_name):
+        backup_dir_tenant = BACKUP_DIR / tenant.schema_name
+        ensure_backup_directories(backup_dir_tenant)
+        create_db_dump(backup_dir_tenant, tenant.schema_name)
+        export_tables(backup_dir_tenant)
+        sync_uploads(Path(default_storage.location), backup_dir_tenant / "uploads")
+        remove_old_dumps(7, backup_dir_tenant)

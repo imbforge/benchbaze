@@ -13,7 +13,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Frame, KeepInFrame, Paragraph
 
-LAB_ABBREVIATION = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "XX")
 BASE_DIR = getattr(settings, "BASE_DIR")
 HORIZONTAL_SCALES = [100, 90, 80, 70]
 
@@ -106,7 +105,7 @@ def find_horizontal_scale_label_breakpoint(frame_width, label, font_name, font_s
     return horizontal_scale, break_index_first, break_index_second
 
 
-def create_labels_zebra_n0jtt(queryset, now):
+def create_labels_zebra_n0jtt(queryset, now, lab_abbreviation_for_files):
     """
     For N0JTT-183C1-2WH Zebra labels
 
@@ -179,7 +178,7 @@ def create_labels_zebra_n0jtt(queryset, now):
             for y, l in zip(
                 [11, 7],
                 [
-                    f"{queryset.model._model_abbreviation}{LAB_ABBREVIATION}",
+                    f"{queryset.model._model_abbreviation}{lab_abbreviation_for_files}",
                     f"{obj.id}",
                 ],
             )
@@ -325,7 +324,7 @@ def create_labels_zebra_n0jtt(queryset, now):
     return buffer
 
 
-def create_labels_action(queryset, label_format):
+def create_labels_action(queryset, lab_abbreviation_for_files, label_format):
     """
     Base action to create labels as PDF
     """
@@ -334,7 +333,7 @@ def create_labels_action(queryset, label_format):
     file_name = f"{queryset.model.__name__}_labels_{label_format}_{now.strftime('%Y%m%d_%H%M%S')}.pdf"
     labels = []
     if label_format == "zebra_n0jtt":
-        labels = create_labels_zebra_n0jtt(queryset, now)
+        labels = create_labels_zebra_n0jtt(queryset, now, lab_abbreviation_for_files)
 
     if labels:
         return FileResponse(labels, as_attachment=True, filename=file_name)
@@ -345,4 +344,6 @@ def create_labels_action(queryset, label_format):
 @admin.action(description="To PDF labels (Zebra N0JTT)")
 def create_n0jtt_zebra_label(modeladmin, request, queryset):
     """Action to create Zebra N0JTT labels as PDF"""
-    return create_labels_action(queryset, "zebra_n0jtt")
+    return create_labels_action(
+        queryset, request.tenant.lab_abbreviation_for_files, "zebra_n0jtt"
+    )

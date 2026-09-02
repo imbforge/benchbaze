@@ -1,12 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.forms import ValidationError
-from django.test import TestCase
+
 from collection.antibody.models import Antibody
 from collection.cellline.models import CellLine
 from collection.inhibitor.models import Inhibitor
 from collection.plasmid.models import Plasmid
 from formz.models import Species
+from django_tenants.test.cases import FastTenantTestCase
+
 from .models import Location, LocationItem, LocationName, Storage
 
 User = get_user_model()
@@ -60,7 +62,7 @@ def _make_location_item(location, content_object, **kwargs):
     return LocationItem.objects.create(**defaults)
 
 
-class LocationNameModelTest(TestCase):
+class LocationNameModelTest(FastTenantTestCase):
     def setUp(self):
         self.loc_name = _make_location_name(name="Room 101 Freezer")
 
@@ -144,7 +146,7 @@ class LocationNameModelTest(TestCase):
         self.assertEqual(names[0], "Alpha Freezer")
 
 
-class StorageModelTest(TestCase):
+class StorageModelTest(FastTenantTestCase):
     def setUp(self):
         self.storage = _make_storage(model_class=Inhibitor)
 
@@ -297,7 +299,7 @@ class StorageModelTest(TestCase):
         self.assertGreater(storage.history.count(), initial_count)
 
 
-class LocationModelTest(TestCase):
+class LocationModelTest(FastTenantTestCase):
     def setUp(self):
         self.storage = _make_storage(model_class=Inhibitor)
         self.loc_name = _make_location_name(name="Freezer -80 A")
@@ -475,7 +477,7 @@ class LocationModelTest(TestCase):
         self.assertTrue(loc.active)
 
 
-class LocationItemModelTest(TestCase):
+class LocationItemModelTest(FastTenantTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="litest@example.com", password="password"

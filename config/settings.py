@@ -9,16 +9,21 @@ from .private_settings import *
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Application definition
-INSTALLED_APPS = [
-    "modelclone",
-    "adminactions",
+SHARED_APPS = [
+    "django_tenants",
+    "tenants",
+    "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
+    "django.contrib.auth",
+    "adminactions",  # Added here to allow its post_migrate hook to complete safely
+]
+
+TENANT_APPS = [
     "django.forms",
     "django.contrib.admin",
     "django.contrib.auth",
-    "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
     "djangoql",
     "simple_history",
     "import_export",
@@ -32,6 +37,18 @@ INSTALLED_APPS = [
     "mozilla_django_oidc",
     "django_better_admin_arrayfield",
     "rest_framework",
+    "adminactions",
+    "modelclone",
+]
+
+# Deduplicate INSTALLED_APPS so Django loads each app config only once
+INSTALLED_APPS = list(SHARED_APPS) + [
+    app for app in TENANT_APPS if app not in SHARED_APPS
+]
+
+# Deduplicate INSTALLED_APPS so Django loads each app config only once
+INSTALLED_APPS = list(SHARED_APPS) + [
+    app for app in TENANT_APPS if app not in SHARED_APPS
 ]
 
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
@@ -39,6 +56,7 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django_tenants.middleware.TenantMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -74,12 +92,21 @@ TEMPLATES = [
     },
 ]
 
+STORAGES = {
+    "default": {
+        "BACKEND": "tenants.storage.TenantFileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django_tenants.postgresql_backend",
         "NAME": DB_NAME,
         "USER": DB_USER,
         "PASSWORD": DB_PASSWORD,
@@ -87,6 +114,24 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
+# Django-tenants settings
+
+MULTITENANT_RELATIVE_MEDIA_ROOT = True
+TENANT_COLOR_ADMIN_APPS = False
+TENANT_MODEL = "tenants.Tenant"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+PUBLIC_SCHEMA_NAME = "public"
+
+# Prevents session cookies from being shared across subdomains
+SESSION_COOKIE_DOMAIN = None
+SESSION_COOKIE_NAME = "tenant_sessionid"
+
+# CSRF settings (apply the same logic to CSRF tokens)
+CSRF_COOKIE_NAME = "tenant_csrftoken"
+CSRF_COOKIE_DOMAIN = None
+
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -155,65 +200,61 @@ for logfile in ("django.log", "db.log"):
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+        "tenant_context": {
+            "()": "tenants.logging.TenantLogFilter",  # <--- Add custom filter
+        },
+    },
     "formatters": {
         "simple": {
-            "format": "[%(levelname)s] [%(asctime)s] %(message)s",
+            # Added [%(tenant_schema)s] to format
+            "format": "[%(levelname)s] [%(asctime)s] [%(tenant_schema)s] %(message)s",
             "datefmt": "%d/%b/%Y %H:%M:%S",
         },
         "verbose": {
-            "format": "[%(levelname)s] [%(asctime)s] [%(pathname)s:%(lineno)s]: %(funcName)s(): %(message)s",
+            # Added [%(tenant_schema)s] to format
+            "format": "[%(levelname)s] [%(asctime)s] [%(tenant_schema)s] [%(pathname)s:%(lineno)s]: %(funcName)s(): %(message)s",
             "datefmt": "%d/%b/%Y %H:%M:%S",
         },
     },
     "handlers": {
         "mail_admins": {
             "level": "ERROR",
-            "filters": ["require_debug_false"],
+            "filters": ["require_debug_false", "tenant_context"],
             "class": "django.utils.log.AdminEmailHandler",
         },
         "console": {
             "level": "INFO",
+            "filters": ["tenant_context"],
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
         "logfile": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "django.log",
+            "filters": ["tenant_context"],  # <--- Apply filter here
             "formatter": "verbose",
-            "maxBytes": 15 * 1024 * 1024,  # 15 MB
+            "maxBytes": 15 * 1024 * 1024,
             "backupCount": 2,
         },
         "dblogfile": {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "db.log",
+            "filters": ["tenant_context"],  # <--- Apply filter here
             "formatter": "verbose",
             "maxBytes": 15 * 1024 * 1024,
             "backupCount": 2,
         },
     },
     "loggers": {
-        "mail_admins": {
-            "level": "ERROR",
-            "handlers": ["mail_admins"],
-        },
-        "console": {
-            "level": "INFO",
-            "handlers": ["console"],
-        },
-        "logfile": {
-            "level": "DEBUG",
-            "handlers": ["logfile"],
-        },
-        "dblogfile": {
-            "level": "DEBUG",
-            "handlers": ["dblogfile"],
-        },
-        "mozilla_django_oidc": {
-            "level": "DEBUG",
-            "handlers": ["logfile"],
-        },
+        # Your loggers remain unchanged
+        "mail_admins": {"level": "ERROR", "handlers": ["mail_admins"]},
+        "console": {"level": "INFO", "handlers": ["console"]},
+        "logfile": {"level": "DEBUG", "handlers": ["logfile"]},
+        "dblogfile": {"level": "DEBUG", "handlers": ["dblogfile"]},
+        "mozilla_django_oidc": {"level": "DEBUG", "handlers": ["logfile"]},
     },
 }
 

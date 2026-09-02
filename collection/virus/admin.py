@@ -1,5 +1,3 @@
-from django.conf import settings
-
 from common.admin import AddDocFileInlineMixin, DocFileInlineMixin
 
 from ..shared.admin import (
@@ -12,13 +10,6 @@ from ..shared.admin import (
 from .forms import VirusInsectForm, VirusMammalianForm
 from .models import VirusInsectDoc, VirusMammalianDoc
 from .search import VirusInsectQLSchema, VirusMammalianQLSchema
-
-DEFAULT_HELPER_ECOLI_VIRUS_INSECT_ID = getattr(
-    settings, "DEFAULT_HELPER_ECOLI_VIRUS_INSECT_ID", None
-)
-DEFAULT_HELPER_CELLLINE_VIRUS_INSECT_ID = getattr(
-    settings, "DEFAULT_HELPER_CELLLINE_VIRUS_INSECT_ID", None
-)
 
 
 class VirusMammalianDocInline(DocFileInlineMixin):
@@ -81,18 +72,18 @@ class VirusInsectAdmin(
         if not obj:
             # Set default E. coli strains
             if (
-                DEFAULT_HELPER_ECOLI_VIRUS_INSECT_ID
+                request.tenant.default_helper_ecoli_virus_insect_id
                 and "helper_ecolistrain" in form.base_fields
             ):
                 form.base_fields[
                     "helper_ecolistrain"
-                ].initial = DEFAULT_HELPER_ECOLI_VIRUS_INSECT_ID
+                ].initial = request.tenant.default_helper_ecoli_virus_insect_id
             # Set storage type
             if (
-                DEFAULT_HELPER_CELLLINE_VIRUS_INSECT_ID
+                request.tenant.default_helper_cellline_virus_insect_id
                 and "helper_cellline" in form.base_fields
             ):
                 form.base_fields[
                     "helper_cellline"
-                ].initial = DEFAULT_HELPER_CELLLINE_VIRUS_INSECT_ID
+                ].initial = request.tenant.default_helper_cellline_virus_insect_id
         return form

@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import CellLine, CellLineDoc
 
 User = get_user_model()
@@ -22,13 +26,13 @@ def _make_cellline(user, name="HeLa", **kwargs):
     return CellLine.objects.create(**defaults)
 
 
-class CellLineModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class CellLineModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="cltest@example.com", password="password"
         )
-        cls.cl = _make_cellline(cls.user)
+        self.cl = _make_cellline(self.user)
 
     def test_cellline_creation(self):
         self.assertEqual(self.cl.name, "HeLa")
@@ -220,13 +224,13 @@ class CellLineModelTest(TestCase):
         self.assertEqual(label_content[1], "HeLa")
 
 
-class CellLineDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class CellLineDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="cldoctest@example.com", password="password"
         )
-        cls.cellline = _make_cellline(cls.user, name="Doc Test CL")
+        self.cellline = _make_cellline(self.user, name="Doc Test CL")
 
     def test_celllinedoc_creation(self):
         """Test creating a CellLineDoc"""
@@ -278,17 +282,16 @@ class CellLineDocModelTest(TestCase):
         self.assertEqual(CellLineDoc._meta.verbose_name, "cell line document")
 
 
-class CellLineAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class CellLineAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="clapitest@example.com", password="password"
         )
-        cls.cl = _make_cellline(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.cl = _make_cellline(self.user)
         self.url = "/api/collection/cellline/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)

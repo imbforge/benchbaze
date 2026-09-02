@@ -10,12 +10,12 @@ from django.core.mail import mail_admins
 from django.db.models.functions import Collate
 
 from collection.models import Oligo
+
 from .pyclasses.client import Client
 from .pyclasses.config import Config
 
 User = get_user_model()
 BASE_DIR = settings.BASE_DIR
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 SNAPGENE_COMMON_FEATURES_PATH = os.path.join(
     BASE_DIR, "collection/shared/map_dna/snapgene/standardCommonFeatures.ftrs"
 )
@@ -89,7 +89,7 @@ def create_map_preview(
                 "title": (
                     kwargs["prefix"]
                     if "prefix" in kwargs
-                    else f"{obj._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}"
+                    else f"{obj._model_abbreviation}"  # {LAB_ABBREVIATION_FOR_FILES} removed during migration to tenant schemas
                     f"{obj.id} - {obj.name}"
                 ),
                 "showEnzymes": True,
@@ -206,7 +206,9 @@ def convert_map_gbk_to_dna(gbk_map_path, dna_map_path, attempt_number=3, message
         raise Exception
 
 
-def find_oligos_in_map_snapgene(map_dna_path, attempt_number=3, messages=None):
+def find_oligos_in_map_snapgene(
+    map_dna_path, attempt_number=3, messages=None, **kwargs
+):
     """Given a path to a plasmid map, use snapegene server to find oligos in the map"""
 
     messages = messages or []
@@ -236,7 +238,7 @@ def find_oligos_in_map_snapgene(map_dna_path, attempt_number=3, messages=None):
                 # Format oligos for SnapGene server
                 oligos = [
                     {
-                        "Name": f"! o{LAB_ABBREVIATION_FOR_FILES}{oligo_id}",
+                        "Name": f"! o{kwargs.get('lab_abbreviation_for_files', '')}{oligo_id}",
                         "Sequence": sequence,
                         "Notes": "",
                     }

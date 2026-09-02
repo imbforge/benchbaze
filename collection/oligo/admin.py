@@ -123,4 +123,6 @@ class OligoAdmin(
 
         # Rename info_sheet
         if rename_doc:
-            rename_info_sheet_save_obj_update_history(obj, new_obj)
+            rename_info_sheet_save_obj_update_history(
+                obj, new_obj, request.tenant.lab_abbreviation_for_files
+            )

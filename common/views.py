@@ -14,7 +14,6 @@ IMPRESSUM_URL = getattr(settings, "IMPRESSUM_URL", "")
 DATA_PROTECTION_URL = getattr(settings, "DATA_PROTECTION_URL", "")
 OIDC_ENABLE = getattr(settings, "OIDC_ENABLE", False)
 OIDC_PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", "")
-LAB_NAME = getattr(settings, "LAB_NAME", "")
 LOGIN_REDIRECT_URL = getattr(settings, "LOGIN_REDIRECT_URL", "")
 LOGOUT_REDIRECT_URL = getattr(settings, "LOGOUT_REDIRECT_URL", "")
 
@@ -24,24 +23,23 @@ class OwnLoginView(LoginView):
         "username_field": getattr(User, "USERNAME_FIELD"),
         "oidc_enable": OIDC_ENABLE,
         "oidc_provider_name": OIDC_PROVIDER_NAME,
-        "lab_name": LAB_NAME,
         "impressum_url": IMPRESSUM_URL,
         "data_protection_url": DATA_PROTECTION_URL,
     }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["lab_name"] = self.request.tenant.lab_name
         redirect_field_name = self.redirect_field_name
         context["next"] = context.get(redirect_field_name) or ""
         return context
 
 
 class OwnLogoutView(LogoutView):
-    extra_context = {
-        "lab_name": LAB_NAME,
-        "impressum_url": IMPRESSUM_URL,
-        "data_protection_url": DATA_PROTECTION_URL,
-    }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["lab_name"] = self.request.tenant.lab_name
+        return context
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
@@ -55,7 +53,7 @@ class SettingsApiView(APIView):
 
     def get(self, request):
         settings = {
-            "lab_name": LAB_NAME,
+            "lab_name": request.tenant.lab_name,
             "login_url": LOGIN_REDIRECT_URL,
             "logout_url": LOGOUT_REDIRECT_URL,
             "docs_url": DOCS_URL,

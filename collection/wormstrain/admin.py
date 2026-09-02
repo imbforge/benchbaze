@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.html import format_html
@@ -11,18 +10,13 @@ from ..shared.admin import (
     CollectionUserProtectionAdmin,
     CustomGuardedModelAdmin,
     LocationInline,
+    OptionalChoiceField,
     SortAutocompleteResultsId,
 )
-from .forms import WormStrainAlleleAdminForm
 from .models import WormStrainAlleleDoc, WormStrainDoc, WormStrainGenotypingAssay
 from .search import WormStrainAlleleQLSchema, WormStrainQLSchema
 
 User = get_user_model()
-MEDIA_ROOT = settings.MEDIA_ROOT
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
-WORM_ALLELE_LAB_ID_DEFAULT = getattr(settings, "WORM_ALLELE_LAB_ID_DEFAULT", "")
-WORM_STRAIN_REGEX = getattr(settings, "WORM_STRAIN_REGEX", r"")
-WORM_STRAIN_LAB_ID_DEFAULT = getattr(settings, "WORM_STRAIN_LAB_ID_DEFAULT", "")
 
 
 class WormStrainGenotypingAssayInline(admin.TabularInline):
@@ -139,15 +133,15 @@ class WormStrainAdmin(
         # Try to get the latest strain ID from name
         if (
             not obj
-            and WORM_STRAIN_REGEX
-            and WORM_STRAIN_LAB_ID_DEFAULT
+            and request.tenant.worm_strain_regex
+            and request.tenant.worm_strain_lab_id_default
             and "name" in form.base_fields
         ):
             strain_greatest_id = (
-                self.model.objects.filter(name__iregex=WORM_STRAIN_REGEX)
+                self.model.objects.filter(name__iregex=request.tenant.worm_strain_regex)
                 .extra(
                     select={
-                        "strain_id": f"CAST((REGEXP_MATCH(name, '{WORM_STRAIN_REGEX}'))[1] AS INTEGER)"
+                        "strain_id": f"CAST((REGEXP_MATCH(name, '{request.tenant.worm_strain_regex}'))[1] AS INTEGER)"
                     }
                 )
                 .order_by("-strain_id")
@@ -156,9 +150,7 @@ class WormStrainAdmin(
             if strain_greatest_id:
                 form.base_fields[
                     "name"
-                ].initial = (
-                    f"{WORM_STRAIN_LAB_ID_DEFAULT}{strain_greatest_id.strain_id + 1}"
-                )
+                ].initial = f"{request.tenant.worm_strain_lab_id_default}{strain_greatest_id.strain_id + 1}"
         return form
 
     def add_view(self, request, form_url="", extra_context=None):
@@ -219,7 +211,6 @@ class WormStrainAlleleAddDocInline(AddDocFileInlineMixin):
 
 class WormStrainAlleleAdmin(PlasmidAdmin):
     djangoql_schema = WormStrainAlleleQLSchema
-    form = WormStrainAlleleAdminForm
     inlines = [WormStrainAlleleDocInline, WormStrainAlleleAddDocInline]
     allele_type = ""
 
@@ -234,9 +225,14 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+
+        # Make a copy of the base_fields to avoid modifying the original form's base_fields
+        form.base_fields = form.base_fields.copy()
+
         allele_type = ""
         required_fields = []
 
+        # Determine the allele type based on the object or the request parameter
         if (obj and obj.typ_e == "t") or self.allele_type == "t":
             allele_type = "t"
             required_fields = ["transgene", "transgene_position", "transgene_plasmids"]
@@ -244,18 +240,33 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
             allele_type = "m"
             required_fields = ["mutation", "mutation_type", "mutation_position"]
 
+        # Set the initial value and disable the 'typ_e' field if it exists in the form
         if "typ_e" in form.base_fields:
             form.base_fields["typ_e"].initial = allele_type
             form.base_fields["typ_e"].disabled = True
         if self.can_change:
             [setattr(form.base_fields[f], "required", True) for f in required_fields]
 
+        # Set the 'lab_identifier' field to an optional choice field when tenant lab IDs exist
+        tenant_lab_ids = request.tenant.worm_allele_lab_ids
+        if tenant_lab_ids and "lab_identifier" in form.base_fields:
+            lab_field = form.base_fields["lab_identifier"]
+            form.base_fields["lab_identifier"] = OptionalChoiceField(
+                choices=[(value, value) for value in tenant_lab_ids],
+                required=lab_field.required,
+                label=getattr(lab_field, "label", None),
+                help_text=getattr(lab_field, "help_text", None),
+            )
+
+        # Set the initial value for the 'lab_identifier' field if it exists in the form
         if (
             not obj
-            and WORM_ALLELE_LAB_ID_DEFAULT
+            and request.tenant.worm_allele_lab_id_default
             and "lab_identifier" in form.base_fields
         ):
-            form.base_fields["lab_identifier"].initial = WORM_ALLELE_LAB_ID_DEFAULT
+            form.base_fields[
+                "lab_identifier"
+            ].initial = request.tenant.worm_allele_lab_id_default
 
         return form
 

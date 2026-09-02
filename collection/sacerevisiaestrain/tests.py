@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import SaCerevisiaeStrain, SaCerevisiaeStrainDoc
 
 User = get_user_model()
@@ -24,8 +28,9 @@ def _make_sacerev(user, name=None, **kwargs):
     return SaCerevisiaeStrain.objects.create(**defaults)
 
 
-class SaCerevisiaeStrainModelTest(TestCase):
+class SaCerevisiaeStrainModelTest(FastTenantTestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="sctest@example.com", password="password"
         )
@@ -246,13 +251,13 @@ class SaCerevisiaeStrainModelTest(TestCase):
         self.assertEqual(label_content[1], "LabelTest")
 
 
-class SaCerevisiaeStrainDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class SaCerevisiaeStrainDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="scdoctest@example.com", password="password"
         )
-        cls.strain = _make_sacerev(cls.user, name="Doc Test Strain")
+        self.strain = _make_sacerev(self.user, name="Doc Test Strain")
 
     def test_strain_doc_creation(self):
         """Test creating a SaCerevisiaeStrainDoc"""
@@ -296,14 +301,16 @@ class SaCerevisiaeStrainDocModelTest(TestCase):
         )
 
 
-class SaCerevisiaeStrainAPITest(APITestCase):
+class SaCerevisiaeStrainAPITest(FastTenantTestCase, APITestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="scapitest@example.com", password="password"
         )
-        self.client.force_authenticate(user=self.user)
         self.strain = _make_sacerev(self.user, name="BY4742-api")
         self.url = "/api/collection/sacerevisiaestrain/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)

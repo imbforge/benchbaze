@@ -24,7 +24,6 @@ from common.actions import export_action
 
 from .forms import MassUpdateOrderForm
 
-SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
 
 
@@ -88,7 +87,7 @@ def change_order_status_to_delivered(modeladmin, request, queryset):
                 order.sent_email = True
                 message = render_to_string(
                     "admin/purchasing/order/order_email_delivered.txt",
-                    {"order": order, "SITE_TITLE": SITE_TITLE},
+                    {"order": order, "SITE_TITLE": request.tenant.site_title},
                 )
                 send_mail(
                     "Delivery notification",

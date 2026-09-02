@@ -1,12 +1,16 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from formz.models import Species
+from django_tenants.test.cases import FastTenantTestCase
+from tenants.utils import TenantAPIClient
+
 from .models import SiRna, SiRnaDoc
 
 User = get_user_model()
@@ -30,13 +34,12 @@ def _make_sirna(user, name="Test siRNA", **kwargs):
     return SiRna.objects.create(**defaults)
 
 
-class SiRnaModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class SiRnaModelTest(FastTenantTestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
             email="sirnatest@example.com", password="password"
         )
-        cls.sirna = _make_sirna(cls.user)
+        self.sirna = _make_sirna(self.user)
 
     def test_sirna_creation(self):
         self.assertEqual(self.sirna.name, "Test siRNA")
@@ -397,13 +400,12 @@ class SiRnaModelTest(TestCase):
             )
 
 
-class SiRnaDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class SiRnaDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
             email="doctest@example.com", password="password"
         )
-        cls.sirna = _make_sirna(cls.user, name="Doc Test siRNA")
+        self.sirna = _make_sirna(self.user, name="Doc Test siRNA")
 
     def test_sirna_doc_creation(self):
         """Test creating a SiRnaDoc"""
@@ -445,17 +447,15 @@ class SiRnaDocModelTest(TestCase):
         self.assertEqual(SiRnaDoc._meta.verbose_name, "siRNA document")
 
 
-class SiRnaAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class SiRnaAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
             email="sirnaapitest@example.com", password="password"
         )
-        cls.sirna = _make_sirna(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.sirna = _make_sirna(self.user)
         self.url = "/api/collection/sirna/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_sirnas_returns_200(self):
         response = self.client.get(self.url)

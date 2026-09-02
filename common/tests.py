@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django_tenants.test.cases import FastTenantTestCase
+from tenants.utils import TenantAPIClient
 
 User = get_user_model()
 
@@ -22,7 +23,7 @@ def make_superuser(email="admin@example.com", password="password"):
 # ---------------------------------------------------------------------------
 
 
-class OwnUserManagerTest(TestCase):
+class OwnUserManagerTest(FastTenantTestCase):
     def test_create_user_sets_email(self):
         user = make_user(email="alice@example.com")
         self.assertEqual(user.email, "alice@example.com")
@@ -73,7 +74,7 @@ class OwnUserManagerTest(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class UserPropertiesTest(TestCase):
+class UserPropertiesTest(FastTenantTestCase):
     def _user_in_group(self, group_name):
         g, _ = Group.objects.get_or_create(name=group_name)
         user = make_user(email=f"{group_name.replace(' ', '')}@example.com")
@@ -138,9 +139,11 @@ class UserPropertiesTest(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class CaseInsensitiveAuthenticationBackendTest(TestCase):
+class CaseInsensitiveAuthenticationBackendTest(FastTenantTestCase):
     def setUp(self):
+        super().setUp()
         self.user = make_user(email="Test@Example.com", password="mypassword")
+        self.client = TenantAPIClient(self.tenant)
 
     def test_login_with_exact_email(self):
         logged_in = self.client.login(email="Test@Example.com", password="mypassword")
@@ -169,7 +172,18 @@ class CaseInsensitiveAuthenticationBackendTest(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class SettingsApiViewTest(APITestCase):
+class SettingsApiViewTest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = make_user(
+            email="vsuser@example.com",
+            password="pass",
+            first_name="Alice",
+            last_name="Smith",
+        )
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
+
     def test_settings_endpoint_returns_200(self):
         response = self.client.get("/api/settings/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -185,9 +199,11 @@ class SettingsApiViewTest(APITestCase):
 # ---------------------------------------------------------------------------
 
 
-class OwnLoginViewTest(TestCase):
+class OwnLoginViewTest(FastTenantTestCase):
     def setUp(self):
+        super().setUp()
         self.user = make_user(email="login@example.com", password="pass1234")
+        self.client = TenantAPIClient(self.tenant)
 
     def test_login_page_loads(self):
         response = self.client.get("/login/")
@@ -210,10 +226,12 @@ class OwnLoginViewTest(TestCase):
         self.assertFalse(response.wsgi_request.user.is_authenticated)
 
 
-class OwnLogoutViewTest(TestCase):
+class OwnLogoutViewTest(FastTenantTestCase):
     def setUp(self):
+        super().setUp()
         self.user = make_user(email="logout@example.com", password="pass1234")
-        self.client.login(email="logout@example.com", password="pass1234")
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_logout_page_loads(self):
         response = self.client.get("/logout/")
@@ -230,14 +248,16 @@ class OwnLogoutViewTest(TestCase):
 # ---------------------------------------------------------------------------
 
 
-class UserViewSetTest(APITestCase):
+class UserViewSetTest(FastTenantTestCase, APITestCase):
     def setUp(self):
+        super().setUp()
         self.user = make_user(
             email="vsuser@example.com",
             password="pass",
             first_name="Alice",
             last_name="Smith",
         )
+        self.client = TenantAPIClient(self.tenant)
         self.client.force_authenticate(user=self.user)
 
     def test_list_users(self):

@@ -1,11 +1,14 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+from tenants.utils import TenantAPIClient
+from django_tenants.test.cases import FastTenantTestCase
+
 from .models import ScPombeStrain, ScPombeStrainDoc
 
 User = get_user_model()
@@ -20,8 +23,9 @@ def _make_scpombe(user, name="h- leu1-32", box_number=None, **kwargs):
     return ScPombeStrain.objects.create(**defaults)
 
 
-class ScPombeStrainModelTest(TestCase):
+class ScPombeStrainModelTest(FastTenantTestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="sptest@example.com", password="password"
         )
@@ -224,13 +228,13 @@ class ScPombeStrainModelTest(TestCase):
         self.assertEqual(s3.box_number, 3)
 
 
-class ScPombeStrainDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class ScPombeStrainDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="spdoctest@example.com", password="password"
         )
-        cls.strain = _make_scpombe(cls.user, name="Doc Test Strain", box_number=1)
+        self.strain = _make_scpombe(self.user, name="Doc Test Strain", box_number=1)
 
     def test_strain_doc_creation(self):
         """Test creating a ScPombeStrainDoc"""
@@ -274,14 +278,16 @@ class ScPombeStrainDocModelTest(TestCase):
         )
 
 
-class ScPombeStrainAPITest(APITestCase):
+class ScPombeStrainAPITest(FastTenantTestCase, APITestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="spapitest@example.com", password="password"
         )
-        self.client.force_authenticate(user=self.user)
         self.strain = _make_scpombe(self.user, name="h- ade6-M210", box_number=10)
         self.url = "/api/collection/scpombestrain/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)

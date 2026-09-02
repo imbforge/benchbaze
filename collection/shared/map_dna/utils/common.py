@@ -3,6 +3,7 @@ from io import StringIO
 
 import requests
 from Bio import SeqIO
+from django.core.files.storage import default_storage
 
 
 def get_feature_label(feature):
@@ -60,7 +61,9 @@ def process_genbank_map_file(map_file_edited):
 def get_map_dna_seqrecord(path):
     """Returns a SeqRecord object for the map_dna file, or None if not available or invalid"""
 
-    if not os.path.exists(path):
+    exists = default_storage.exists(path)
+
+    if not exists:
         raise FileNotFoundError(f"Map DNA file not found at path: {path}")
 
     try:
@@ -142,7 +145,9 @@ def get_map_dna_feature_names(seq_record):
 def convert_map_dna_to_svg(path, title):
     """Convert the map_dna file to svg format for display in the frontend"""
 
-    if not os.path.exists(path):
+    exists = default_storage.exists(path)
+
+    if not exists:
         raise FileNotFoundError(f"Map DNA file not found at path: {path}")
 
     # Get the map_dna file as an SVG string from the conversion service

@@ -19,10 +19,10 @@ const user = await getLoggedUser();
 const navigationTree = await getNavigationTree();
 
 // Set csrfToken app-wide, this is necessary for form submission
-// app.provide("csrfToken", getCookie("csrftoken"));
+// app.provide("csrfToken", getCookie("tenant_csrftoken"));
 axios.defaults.withCredentials = true;
 axios.defaults.credentials = "same-origin";
-axios.defaults.headers.common["X-CSRFToken"] = getCookie("csrftoken");
+axios.defaults.headers.common["X-CSRFToken"] = getCookie("tenant_csrftoken");
 
 const app = createApp(App);
 

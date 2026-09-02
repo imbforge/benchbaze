@@ -10,9 +10,7 @@ from django.urls import reverse
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 User = get_user_model()
-OIDC_ALLOWED_GROUPS = getattr(settings, "OIDC_ALLOWED_GROUPS", [])
-OIDC_ALLOWED_USER_EMAILS = getattr(settings, "OIDC_ALLOWED_USER_EMAILS", [])
-SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
+
 SITE_ADMIN_EMAIL_ADDRESSES = getattr(settings, "SITE_ADMIN_EMAIL_ADDRESSES", [])
 OIDC_UPN_FIELD_NAME = getattr(settings, "OIDC_UPN_FIELD_NAME", "upn")
 OIDC_PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", "")
@@ -61,12 +59,14 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user_email = user_info.get("email", "").lower()
         user_groups = user_info.get("role", [])
         if not (
-            self.user_belongs_to_groups(user_groups, OIDC_ALLOWED_GROUPS)
-            or user_email in OIDC_ALLOWED_USER_EMAILS
+            self.user_belongs_to_groups(
+                user_groups, self.request.tenant.oidc_allowed_groups
+            )
+            or user_email in self.request.tenant.oidc_allowed_user_emails
         ):
             messages.warning(
                 self.request,
-                f"Your user is valid but not yet allowed to access {SITE_TITLE}.",
+                f"Your user is valid but not yet allowed to access {self.request.tenant.site_title}.",
             )
             user = AnonymousUser()
             user.email = user_email
@@ -112,7 +112,7 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
                 "user": user,
                 "url": user_admin_change_url,
                 "provider": OIDC_PROVIDER_NAME,
-                "site_title": SITE_TITLE,
+                "site_title": self.request.tenant.site_title,
             },
         )
 

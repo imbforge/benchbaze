@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
 from django.utils import timezone
+from django_tenants.test.cases import FastTenantTestCase
+
 from collection.antibody.models import Antibody
 from collection.oligo.models import Oligo
 from collection.plasmid.models import Plasmid
+
 from .models import Approval
 
 User = get_user_model()
@@ -46,14 +48,15 @@ def _make_approval(activity_user, content_object, activity_type="created", **kwa
     return Approval.objects.create(**defaults)
 
 
-class ApprovalModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class ApprovalModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user = User.objects.create_user(
             email="approval@example.com", password="password"
         )
-        cls.plasmid = _make_plasmid(cls.user)
-        cls.approval = _make_approval(cls.user, cls.plasmid)
+        self.plasmid = _make_plasmid(self.user)
+        self.approval = _make_approval(self.user, self.plasmid)
 
     def test_approval_creation(self):
         """Test basic approval creation"""
@@ -227,13 +230,14 @@ class ApprovalModelTest(TestCase):
         self.assertIsNotNone(approval2.created_date_time)
 
 
-class ApprovalEdgeCasesTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class ApprovalEdgeCasesTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user = User.objects.create_user(
             email="edgecase@example.com", password="password"
         )
-        cls.plasmid = _make_plasmid(cls.user)
+        self.plasmid = _make_plasmid(self.user)
 
     def test_approval_with_deleted_object(self):
         """Test approval behavior when content_object is deleted"""

@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import Inhibitor, InhibitorDoc
 
 User = get_user_model()
@@ -30,13 +34,13 @@ def _make_inhibitor(user, name="Test Inhibitor", **kwargs):
     return Inhibitor.objects.create(**defaults)
 
 
-class InhibitorModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class InhibitorModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="ibtest@example.com", password="password"
         )
-        cls.inhibitor = _make_inhibitor(cls.user)
+        self.inhibitor = _make_inhibitor(self.user)
 
     def test_inhibitor_creation(self):
         self.assertEqual(self.inhibitor.name, "Test Inhibitor")
@@ -240,13 +244,13 @@ class InhibitorModelTest(TestCase):
         self.assertEqual(inh.l_ocation, "Lab A, Freezer 3, Rack 2, Box 15, Position A1")
 
 
-class InhibitorDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class InhibitorDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="doctest@example.com", password="password"
         )
-        cls.inhibitor = _make_inhibitor(cls.user, name="Doc Test Inhibitor")
+        self.inhibitor = _make_inhibitor(self.user, name="Doc Test Inhibitor")
 
     def test_inhibitor_doc_creation(self):
         """Test creating an InhibitorDoc"""
@@ -288,17 +292,16 @@ class InhibitorDocModelTest(TestCase):
         self.assertEqual(InhibitorDoc._meta.verbose_name, "inhibitor document")
 
 
-class InhibitorAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class InhibitorAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="ibapitest@example.com", password="password"
         )
-        cls.inhibitor = _make_inhibitor(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.inhibitor = _make_inhibitor(self.user)
         self.url = "/api/collection/inhibitor/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_inhibitors_returns_200(self):
         response = self.client.get(self.url)

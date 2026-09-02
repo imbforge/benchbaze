@@ -5,12 +5,12 @@ from urllib.parse import quote as urlquote
 from background_task import background
 from django import forms
 from django.apps import apps
-from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.exceptions import PermissionDenied
+from django.core.files.base import ContentFile
 from django.db.models import CharField, Value
 from django.db.models.functions import Coalesce, NullIf
 from django.forms import TextInput
@@ -51,11 +51,6 @@ from ..storage.models import LocationItem
 from .forms import LocationCheckNumberInlineFormSet
 
 User = get_user_model()
-MEDIA_ROOT = settings.MEDIA_ROOT
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
-
-SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", False)
-
 
 ################################################
 #                Custom classes                #
@@ -66,24 +61,26 @@ class BBGuardianUserManage(GuardianUserManage):
     """Add drop-down menu to select user to whom to
     give additonal permissions"""
 
-    # Added this try block because if user_auth table not present in DB
-    # (e.g. very first migration) the following code runs and throws an
-    # exception
-    try:
-        user = forms.ChoiceField(
-            choices=[("------", "------")]
-            + [
+    user = forms.ChoiceField(
+        choices=[("------", "------")],
+        label="User",
+        error_messages={"does_not_exist": "This user is not valid"},
+    )
+    is_permanent = forms.BooleanField(required=False, label="Grant indefinitely?")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.fields["user"].choices = [("------", "------")] + [
                 (getattr(u, u.USERNAME_FIELD), u)
                 for u in User.objects.filter(
                     groups__name="Regular lab member", is_active=True
                 ).order_by("last_name")
-            ],
-            label="User",
-            error_messages={"does_not_exist": "This user is not valid"},
-        )
-        is_permanent = forms.BooleanField(required=False, label="Grant indefinitely?")
-    except Exception:
-        pass
+            ]
+        except Exception:
+            # Fallback to the base form behavior if the user queryset cannot
+            # be built during tenant/db initialization.
+            self.fields["user"].choices = [("------", "------")]
 
 
 class SortAutocompleteResultsId(admin.ModelAdmin):
@@ -105,33 +102,37 @@ def delete_obj_perm_after_24h(perm, user_id, obj_id, app_label, model_name):
     remove_perm(perm, user, obj)
 
 
-def rename_info_sheet_save_obj_update_history(obj, new_obj):
-    doc_dir_path = os.path.join(MEDIA_ROOT, obj._model_upload_to)
-    old_file_name_abs_path = os.path.join(MEDIA_ROOT, obj.info_sheet.name)
-    _, ext = os.path.splitext(os.path.basename(old_file_name_abs_path))
-    now = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
-    new_file_name = os.path.join(
-        obj._model_upload_to,
-        f"{obj._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}"
-        f"{obj.id}_{now}{ext.lower()}",
-    )
-    new_file_name_abs_path = os.path.join(MEDIA_ROOT, new_file_name)
+def rename_info_sheet_save_obj_update_history(obj, new_obj, lab_abbreviation_for_files):
+    if obj.info_sheet:
+        storage = obj.info_sheet.storage
+        old_storage_name = obj.info_sheet.name
 
-    # Create destination folder if it doesn't exist
-    if not os.path.exists(doc_dir_path):
-        os.makedirs(doc_dir_path)
+        # Determine file extension and build new relative path
+        _, ext = os.path.splitext(old_storage_name)
+        now = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
 
-    # Rename file
-    os.rename(old_file_name_abs_path, new_file_name_abs_path)
+        new_storage_name = os.path.join(
+            obj._model_upload_to,
+            f"{obj._model_abbreviation}{lab_abbreviation_for_files}"
+            f"{obj.id}_{now}{ext.lower()}",
+        )
 
-    obj.info_sheet.name = new_file_name
+        if old_storage_name != new_storage_name:
+            # Read existing file
+            with storage.open(old_storage_name, "rb") as f:
+                content = ContentFile(f.read())
+
+            # Save under new path (Storage creates folders automatically)
+            saved_path = storage.save(new_storage_name, content)
+
+            # Update model field and remove old file
+            obj.info_sheet.name = saved_path
+            storage.delete(old_storage_name)
+
+    # Save the updated model instance
     obj.save()
 
-    # For new records, delete first history record, which contains the
-    # unformatted info_sheet name, and change the newer history record's
-    # history_type from changed (~) to created (+). This gets rid of a
-    # duplicate history record created when automatically generating an
-    # info_sheet name
+    # Preserve historical record cleanup logic
     if new_obj:
         obj.history.last().delete()
         history_obj = obj.history.first()
@@ -193,7 +194,7 @@ class CollectionBaseAdmin(
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        extra_context["snapgene_enabled"] = SNAPGENE_ENABLED
+        extra_context["snapgene_enabled"] = request.tenant.snapgene_enabled
 
         return super().change_view(request, object_id, form_url, extra_context)
 
@@ -258,7 +259,9 @@ class CollectionSimpleAdmin(CollectionBaseAdmin):
 
         # Rename info_sheet
         if rename_doc:
-            rename_info_sheet_save_obj_update_history(obj, new_obj)
+            rename_info_sheet_save_obj_update_history(
+                obj, new_obj, request.tenant.lab_abbreviation_for_files
+            )
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         self.fieldsets = self.change_view_fieldsets.copy()
@@ -483,8 +486,8 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
         if request.method == "POST" and "submit_manage_user" in request.POST:
             user_form = self.get_obj_perms_user_select_form(request)(request.POST)
             if user_form.is_valid():
-                perm = "{}.change_{}".format(
-                    self.model._meta.app_label, self.model._meta.model_name
+                perm = (
+                    f"{self.model._meta.app_label}.change_{self.model._meta.model_name}"
                 )
                 user = User.objects.get(**{User.USERNAME_FIELD: request.POST["user"]})
                 assign_perm(perm, user, obj)
@@ -531,9 +534,7 @@ class CustomGuardedModelAdmin(GuardedModelAdmin):
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
 
         remove_perm(
-            "{}.change_{}".format(
-                self.model._meta.app_label, self.model._meta.model_name
-            ),
+            f"{self.model._meta.app_label}.change_{self.model._meta.model_name}",
             user,
             obj,
         )
@@ -566,7 +567,8 @@ class OptionalChoiceField(forms.MultiValueField):
         # Set the two fields as not required, but enforce that,
         # at least, one is set in compress
 
-        choices = choices + (("", "Other"),)
+        required = kwargs.pop("required", False)
+        choices = choices + [("", "Other")]
 
         fields = (
             forms.ChoiceField(choices=choices, required=False),
@@ -578,7 +580,7 @@ class OptionalChoiceField(forms.MultiValueField):
 
         self.widget = OptionalChoiceWidget(widgets=[f.widget for f in fields])
 
-        super().__init__(required=False, fields=fields, *args, **kwargs)
+        super().__init__(required=required, fields=fields, *args, **kwargs)
 
     def compress(self, data_list):
         # Return the choicefield value if selected or charfield value

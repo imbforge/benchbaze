@@ -13,10 +13,11 @@ from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
+from django_tenants.utils import get_current_tenant
+
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
 MAX_UPLOAD_FILE_SIZE_MB = getattr(settings, "MAX_UPLOAD_FILE_SIZE_MB", 2)
 ALLOWED_DOC_FILE_EXTS = getattr(settings, "ALLOWED_DOC_FILE_EXTS", ["pdf"])
@@ -196,8 +197,9 @@ class DocFileMixin(models.Model, RenameFileField):
     def download_file_name(self):
         parent_field_name = self._mixin_props.get("parent_field_name")
         parent = getattr(self, parent_field_name)
+        tenant = get_current_tenant()
         return (
-            f"{parent._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{parent}, "
+            f"{parent._model_abbreviation}{tenant.lab_abbreviation_for_files}{parent}, "
             f"Doc# {self.id}, {self.description.title()}"
         )
 
@@ -208,9 +210,10 @@ class DocFileMixin(models.Model, RenameFileField):
         # after the corresponding entry has been created
         super().save(force_insert, force_update, using, update_fields)
         parent = getattr(self, self._mixin_props.get("parent_field_name"))
+        tenant = get_current_tenant()
         new_file_name = (
             f"{self._mixin_props.get('file_prefix')}"
-            f"{LAB_ABBREVIATION_FOR_FILES}{parent.id}_"
+            f"{tenant.lab_abbreviation_for_files}{parent.id}_"
             f"{timezone.now().strftime('%Y%m%d_%H%M%S_%f')}_{self.id}"
         )
         self.rename_file(
@@ -260,7 +263,8 @@ class DocFileMixin(models.Model, RenameFileField):
 class DownloadFileNameMixin:
     @property
     def download_file_name(self):
-        return f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self}"
+        tenant = get_current_tenant()
+        return f"{self._model_abbreviation}{tenant.lab_abbreviation_for_files}{self}"
 
 
 class HistoryFieldMixin(models.Model):

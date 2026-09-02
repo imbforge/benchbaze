@@ -1,7 +1,7 @@
 import os
 from io import BytesIO
 
-from django.conf import settings
+from django.core.files.storage import default_storage
 from django.http import FileResponse, HttpResponse, JsonResponse
 
 from collection.shared.map_dna.snapgene.utils import find_oligos_in_map_snapgene
@@ -16,8 +16,6 @@ from .utils.common import (
 from .utils.detect_features import detect_map_dna_features
 from .utils.save_snapgene import update_snapgene_map_file
 
-BASE_DIR = getattr(settings, "BASE_DIR", "")
-
 
 def _method_not_allowed():
     return JsonResponse(
@@ -29,29 +27,6 @@ def _bad_request(message):
     return JsonResponse({"success": False, "error": message}, status=400)
 
 
-def _resolve_map_file_path(file_path):
-    """Resolve the map file path, ensuring it is within the allowed directory"""
-
-    if not file_path:
-        raise ValueError(
-            "Missing required file or parameter: map_file_path or map_file_content"
-        )
-
-    # Prevent directory traversal by normalizing the path and ensuring it is within BASE_DIR
-    if os.path.isabs(file_path):
-        file_path = file_path.lstrip(os.sep)
-    file_path = file_path.lstrip("/\\")
-
-    normalized_path = os.path.normpath(os.path.join(BASE_DIR, file_path))
-    base_dir_norm = os.path.normpath(BASE_DIR)
-    if os.path.commonpath([base_dir_norm, normalized_path]) != base_dir_norm:
-        raise ValueError("Invalid map_file_path")
-    if not os.path.isfile(normalized_path):
-        raise ValueError("Map file not found")
-
-    return normalized_path
-
-
 def find_oligos_in_map(request):
     """Find oligos in the map file and return the processed content"""
     file_path = request.POST.get("map_file_path")
@@ -59,11 +34,24 @@ def find_oligos_in_map(request):
         return _bad_request(
             "Missing required file or parameter: map_file_path or map_file_content"
         )
-    normalized_path = _resolve_map_file_path(file_path)
+
+    try:
+        if not default_storage.exists(file_path):
+            return _bad_request("Map file not found")
+    except Exception:
+        return _bad_request("Error occurred while checking file existence")
+
+    normalized_path = default_storage.path(file_path)
     file_name = os.path.splitext(file_path)[0] + ".dna"
 
     return FileResponse(
-        BytesIO(find_oligos_in_map_snapgene(normalized_path)), filename=file_name
+        BytesIO(
+            find_oligos_in_map_snapgene(
+                normalized_path,
+                lab_abbreviation_for_files=request.tenant.lab_abbreviation_for_files,
+            )
+        ),
+        filename=file_name,
     )
 
 
@@ -104,8 +92,12 @@ def convert_any_to_ove_json(request):
 
         # Otherwise read it from the provided file path
         else:
-            normalized_path = _resolve_map_file_path(file_name)
-            with open(normalized_path, "rb") as content_file:
+            try:
+                if not default_storage.exists(file_name):
+                    return _bad_request("Map file not found")
+            except Exception:
+                return _bad_request("Error occurred while checking file existence")
+            with default_storage.open(file_name, "rb") as content_file:
                 map_file = content_file.read()
 
         # If detect_features flag is set, process the map file to detect features

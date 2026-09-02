@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
+from django_tenants.utils import get_current_tenant
 
 from approval.models import Approval
 from collection.shared.map_dna.utils.common import (
@@ -32,10 +33,8 @@ from .actions import create_n0jtt_zebra_label
 
 FILE_SIZE_LIMIT_MB = getattr(settings, "FILE_SIZE_LIMIT_MB", 2)
 OVE_URL = getattr(settings, "OVE_URL", "")
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 MEDIA_URL = settings.MEDIA_URL
 AUTH_USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")
-SNAPGENE_ENABLED = getattr(settings, "SNAPGENE_ENABLED", False)
 
 
 class ApprovalFieldsMixin(models.Model):
@@ -108,11 +107,13 @@ class OwnershipFieldsMixin(models.Model):
 
         can_change = False
 
-        if request.user == self.created_by or request.user.is_elevated_user:
-            can_change = True
-
-        elif getattr(self, "_is_guarded_model", False) and request.user.has_perm(
-            f"{self._meta.app_label}.change_{self._meta.model_name}", self
+        if (
+            request.user == self.created_by
+            or request.user.is_elevated_user
+            or getattr(self, "_is_guarded_model", False)
+            and request.user.has_perm(
+                f"{self._meta.app_label}.change_{self._meta.model_name}", self
+            )
         ):
             can_change = True
 
@@ -430,7 +431,8 @@ class MapFileCheckPropertiesMixin:
         """Returns the url to view the map in OVE"""
 
         params = {
-            "file_name": self.map_dna.url,
+            "file_name": self.map_dna,
+            "uploads_folder": MEDIA_URL,
             "title": self.full_title,
         }
 
@@ -440,12 +442,14 @@ class MapFileCheckPropertiesMixin:
     def full_title(self):
         """Returns the full title for the map, used in OVE and as alt text for the image"""
 
-        return f"{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.__str__()}"
+        tenant = get_current_tenant()
+        return f"{self._model_abbreviation}{tenant.lab_abbreviation_for_files}{self.__str__()}"
 
     def map_formatted(self):
+        tenant = get_current_tenant()
         if self.map_dna:
             return mark_safe(
-                f'<a class="magnific-popup-iframe-map-dna viewlink" title="Map viewer" href="{self.map_dna_preview_url}{ "&snapgene_enabled=1" if SNAPGENE_ENABLED else "" }"></a>'
+                f'<a class="magnific-popup-iframe-map-dna viewlink" title="Map viewer" href="{self.map_dna_preview_url}{"&snapgene_enabled=1" if tenant.snapgene_enabled else ""}"></a>'
             )
         else:
             return ""
@@ -576,8 +580,9 @@ class ZebraLabelFieldsMixin:
 
     @property
     def zebra_n0jtt_label_content(self):
+        tenant = get_current_tenant()
         return [
-            f"<b>{self._model_abbreviation}{LAB_ABBREVIATION_FOR_FILES}{self.id}</b>",
+            f"<b>{self._model_abbreviation}{tenant.lab_abbreviation_for_files}{self.id}</b>",
             self.name,
             "",
             "",

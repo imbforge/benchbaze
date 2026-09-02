@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import EColiStrain, EColiStrainDoc
 
 User = get_user_model()
@@ -17,13 +21,13 @@ def _make_ecolistrain(user, name="DH5alpha", **kwargs):
     return EColiStrain.objects.create(**defaults)
 
 
-class EColiStrainModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class EColiStrainModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="ectest@example.com", password="password"
         )
-        cls.strain = _make_ecolistrain(cls.user)
+        self.strain = _make_ecolistrain(self.user)
 
     def test_ecolistrain_creation(self):
         self.assertEqual(self.strain.name, "DH5alpha")
@@ -232,13 +236,13 @@ class EColiStrainModelTest(TestCase):
         self.assertTrue(self.strain._is_guarded_model)
 
 
-class EColiStrainDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class EColiStrainDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="ecdoctest@example.com", password="password"
         )
-        cls.strain = _make_ecolistrain(cls.user, name="Doc Test Strain")
+        self.strain = _make_ecolistrain(self.user, name="Doc Test Strain")
 
     def test_ecolistraindoc_creation(self):
         """Test creating an EColiStrainDoc"""
@@ -280,17 +284,16 @@ class EColiStrainDocModelTest(TestCase):
         self.assertEqual(EColiStrainDoc._meta.verbose_name, "e. coli strain document")
 
 
-class EColiStrainAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class EColiStrainAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="ecapitest@example.com", password="password"
         )
-        cls.strain = _make_ecolistrain(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.strain = _make_ecolistrain(self.user)
         self.url = "/api/collection/ecolistrain/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)

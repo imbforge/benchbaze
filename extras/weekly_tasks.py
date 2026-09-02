@@ -1,6 +1,7 @@
 import inspect
 import os
 from datetime import timedelta
+from pathlib import Path
 
 from background_task.models import CompletedTask
 from django.apps import apps
@@ -9,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils import timezone
+from django_tenants.utils import get_tenant_model, schema_context
 
 from approval.models import Approval
 
@@ -16,6 +18,7 @@ User = get_user_model()
 SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 ALLOWED_HOSTS = getattr(settings, "ALLOWED_HOSTS", [])
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
+NOW_MINUS_8DAYS = timezone.now() - timedelta(days=8)
 
 
 def get_formz_project_leader_emails(qs):
@@ -44,37 +47,6 @@ def get_formz_project_leader_emails(qs):
     )
 
     return list(project_leader_emails)
-
-
-RECORDS_TO_BE_APPROVED = Approval.objects.all()
-
-if (
-    RECORDS_TO_BE_APPROVED.exists()
-):  # Check if there are records to be be approved at all
-    PROJECT_LEADER_EMAILS = get_formz_project_leader_emails(RECORDS_TO_BE_APPROVED)
-    APPROVAL_URL = reverse("admin:approval_approval_changelist")
-    EMAIL_MESSAGE_TXT = inspect.cleandoc(
-        f"""Hello there,
-
-    There are records that need your approval.
-
-    You can visit https://{ALLOWED_HOSTS[0]}{APPROVAL_URL} to check for new or modified records that need to be approved.
-
-    Best wishes,
-    {SITE_TITLE}
-    """
-    )
-
-    send_mail(
-        f"{SITE_TITLE} weekly notification",
-        EMAIL_MESSAGE_TXT,
-        SERVER_EMAIL_ADDRESS,
-        PROJECT_LEADER_EMAILS,
-    )
-
-# Delete all completed tasks
-
-CompletedTask.objects.all().delete()
 
 
 def delete_dup_hist_rec_ids(model, time_delta):
@@ -115,31 +87,67 @@ def delete_dup_hist_rec_ids(model, time_delta):
 def cleanup_temp_files(temp_dir, days=8):
     """Delete all files in the temp directory that are older than days"""
 
-    now = timezone.now()
+    cutoff = timezone.now() - timedelta(days=days)
+    temp_dir_path = Path(temp_dir)
 
-    for filename in os.listdir(temp_dir):
-        file_path = os.path.join(temp_dir, filename)
-        if os.path.isfile(file_path):
-            file_age = now - timezone.datetime.fromtimestamp(
-                os.path.getmtime(file_path), tz=timezone.utc
-            )
-            if file_age > timedelta(days=days):
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    pass
-
-
-cleanup_temp_files(os.path.join(settings.MEDIA_ROOT, "temp"))
+    if temp_dir_path.is_dir():
+        for file_path in temp_dir_path.iterdir():
+            if file_path.is_file():
+                file_mtime = timezone.datetime.fromtimestamp(
+                    file_path.stat().st_mtime, tz=timezone.utc
+                )
+                if file_mtime < cutoff:
+                    try:
+                        file_path.unlink()
+                    except OSError:
+                        pass
 
 
-NOW_MINUS_8DAYS = timezone.now() - timedelta(days=8)
-for model in [
-    m
-    for m in apps.get_models()
-    if getattr(m, "history", False) and getattr(m, "last_changed_date_time", False)
-]:
-    ids_to_delete = delete_dup_hist_rec_ids(model, NOW_MINUS_8DAYS)
-    if ids_to_delete:
-        history_records = model.history.filter(history_id__in=ids_to_delete)
-        history_records.delete()
+def check_and_notify_approval_records():
+    """Check for approval records that need to be approved and notify project leaders via email"""
+
+    records_to_be_approved = Approval.objects.all()
+
+    if (
+        records_to_be_approved.exists()
+    ):  # Check if there are records to be be approved at all
+        PROJECT_LEADER_EMAILS = get_formz_project_leader_emails(records_to_be_approved)
+        APPROVAL_URL = reverse("admin:approval_approval_changelist")
+        EMAIL_MESSAGE_TXT = inspect.cleandoc(
+            f"""Hello there,
+
+        There are records that need your approval.
+
+        You can visit https://{ALLOWED_HOSTS[0]}{APPROVAL_URL} to check for new or modified records that need to be approved.
+
+        Best wishes,
+        {SITE_TITLE}
+        """
+        )
+
+        send_mail(
+            f"{SITE_TITLE} weekly notification",
+            EMAIL_MESSAGE_TXT,
+            SERVER_EMAIL_ADDRESS,
+            PROJECT_LEADER_EMAILS,
+        )
+
+
+for tenant in get_tenant_model().objects.all():
+    with schema_context(tenant.schema_name):
+        check_and_notify_approval_records()
+        cleanup_temp_files(os.path.join(settings.MEDIA_ROOT, "temp"))
+        # Delete all completed tasks
+        CompletedTask.objects.all().delete()
+
+        # Delete history records that differ only by last_changed_date_time
+        for model in [
+            m
+            for m in apps.get_models()
+            if getattr(m, "history", False)
+            and getattr(m, "last_changed_date_time", False)
+        ]:
+            ids_to_delete = delete_dup_hist_rec_ids(model, NOW_MINUS_8DAYS)
+            if ids_to_delete:
+                history_records = model.history.filter(history_id__in=ids_to_delete)
+                history_records.delete()

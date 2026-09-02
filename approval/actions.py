@@ -12,7 +12,6 @@ from purchasing.models import Order
 from .models import Approval
 
 User = get_user_model()
-SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "email@example.com")
 
 
@@ -171,7 +170,7 @@ def notify_user_edits_required(modeladmin, request, queryset):
                     "recipient": user,
                     "sender": request.user,
                     "objs_str": message_txt,
-                    "site_title": SITE_TITLE,
+                    "site_title": request.tenant.site_title,
                 },
             )
 
@@ -181,7 +180,7 @@ def notify_user_edits_required(modeladmin, request, queryset):
                     "recipient": user,
                     "sender": request.user,
                     "objs": objs,
-                    "site_title": SITE_TITLE,
+                    "site_title": request.tenant.site_title,
                 },
             )
 

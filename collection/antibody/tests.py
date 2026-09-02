@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django_tenants.test.cases import FastTenantTestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import Antibody, AntibodyDoc
 
 User = get_user_model()
@@ -28,13 +32,13 @@ def _make_antibody(user, name="Anti-GAPDH", **kwargs):
     return Antibody.objects.create(**defaults)
 
 
-class AntibodyModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class AntibodyModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="abtest@example.com", password="password"
         )
-        cls.antibody = _make_antibody(cls.user)
+        self.antibody = _make_antibody(self.user)
 
     def test_antibody_creation(self):
         self.assertEqual(self.antibody.name, "Anti-GAPDH")
@@ -214,13 +218,13 @@ class AntibodyModelTest(TestCase):
         self.assertEqual(ab.name, "Spaced Name")
 
 
-class AntibodyDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class AntibodyDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="doctest@example.com", password="password"
         )
-        cls.antibody = _make_antibody(cls.user, name="Doc Test Ab")
+        self.antibody = _make_antibody(self.user, name="Doc Test Ab")
 
     def test_antibody_doc_creation(self):
         """Test creating an AntibodyDoc"""
@@ -262,17 +266,16 @@ class AntibodyDocModelTest(TestCase):
         self.assertEqual(AntibodyDoc._meta.verbose_name, "antibody document")
 
 
-class AntibodyAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class AntibodyAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="abapitest@example.com", password="password"
         )
-        cls.antibody = _make_antibody(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.antibody = _make_antibody(self.user)
         self.url = "/api/collection/antibody/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_antibodies_returns_200(self):
         response = self.client.get(self.url)

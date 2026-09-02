@@ -1,16 +1,13 @@
 import os
 
-from django.conf import settings
 from django.contrib import admin
+from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from djangoql.admin import DjangoQLSearchMixin
 
 from .forms import MsdsFormForm
 from .search import MsdsFormQLSchema
-
-MEDIA_ROOT = settings.MEDIA_ROOT
-LAB_ABBREVIATION_FOR_FILES = getattr(settings, "LAB_ABBREVIATION_FOR_FILES", "")
 
 
 class MsdsFormAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
@@ -50,15 +47,23 @@ class MsdsFormAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         if rename or obj.name.name != saved_obj.name.name:
             obj.save()
             obj.label = os.path.basename(obj.name.name)
-            new_file_name = os.path.join(
+            storage = obj.name.storage
+            old_name = obj.name.name
+            _, ext = os.path.splitext(old_name)
+            now = timezone.now().strftime("%Y%m%d_%H%M%S_%f")
+            new_storage_name = os.path.join(
                 self.model._model_upload_to,
-                f"msds{LAB_ABBREVIATION_FOR_FILES}{obj.id}_"
-                f"{timezone.now().strftime('%Y%m%d_%H%M%S_%f')}"
-                f"{obj.name.name.split('.')[-1].lower()}",
+                f"msds{request.tenant.lab_abbreviation_for_files}{obj.id}_"
+                f"{now}{ext.lower()}",
             )
-            new_file_path = os.path.join(MEDIA_ROOT, new_file_name)
-            os.rename(obj.name.path, new_file_path)
-            obj.name.name = new_file_name
+
+            if old_name != new_storage_name:
+                with storage.open(old_name, "rb") as f:
+                    content = ContentFile(f.read())
+
+                saved_path = storage.save(new_storage_name, content)
+                obj.name.name = saved_path
+                storage.delete(old_name)
 
         return super().save_model(request, obj, form, change)
 

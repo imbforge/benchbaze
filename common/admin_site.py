@@ -7,7 +7,6 @@ import urllib.request
 from background_task.admin import CompletedTaskAdmin, TaskAdmin
 from background_task.models import CompletedTask, Task
 from django.apps import apps
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import GroupAdmin
@@ -110,23 +109,22 @@ from purchasing.models import (
 from .admin import OwnUserAdmin
 
 User = get_user_model()
-SITE_TITLE = getattr(settings, "SITE_TITLE", "BenchBaze")
 
 
 class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
     """Create a custom admin site called OwnAdminSite"""
-
-    # Text to put at the end of each page's <title>.
-    site_title = SITE_TITLE
-
-    # Text to put in each page's <h1>.
-    site_header = SITE_TITLE
 
     # Text to put at the top of the admin index page.
     index_title = "Home"
 
     # URL for the "View site" link at the top of each admin page.
     site_url = "/"
+
+    def each_context(self, request):
+        context = super().each_context(request)
+        context["site_title"] = request.tenant.site_title
+        context["site_header"] = request.tenant.site_title
+        return context
 
     def get_urls(self):
         urls = super().get_urls()
@@ -148,59 +146,66 @@ class OwnAdminSite(OrderAdminSite, FormZAdminSite, admin.AdminSite):
         return urls
 
     def uploads(self, request, *args, **kwargs):
-        """Protected view for uploads/media files"""
+        """Protected view for uploads/media files (Clean, schema-agnostic URLs)"""
 
-        url_path = str(kwargs["url_path"])
+        # Get the relative path of the file requested (without the tenant schema prefix)
+        relative_path = str(kwargs["url_path"])
+        # Get the current tenant schema name (if any)
+        current_tenant_schema = (
+            getattr(request, "tenant", None) and request.tenant.schema_name
+        )
 
-        if default_storage.exists(url_path):  # check if file exists
-            # Create HttpResponse and add Content Type and, if present, Encoding
+        # default_storage automatically searches inside MEDIA_ROOT/<current_tenant_schema>/
+        # Check if the file exists in the current tenant's media directory
+        try:
+            if not default_storage.exists(relative_path):
+                raise Http404
+        except Exception:
+            raise Http404
+
+        if default_storage.exists(relative_path):
             response = HttpResponse()
-            mimetype, encoding = mimetypes.guess_type(url_path)
+            mimetype, encoding = mimetypes.guess_type(relative_path)
             mimetype = mimetype if mimetype else "application/octet-stream"
             response["Content-Type"] = mimetype
             if encoding:
                 response["Content-Encoding"] = encoding
 
-            download_file_name = os.path.basename(url_path)
+            download_file_name = os.path.basename(relative_path)
 
             # Try creating pretty file name
             try:
-                # Get app and model names
-                url_path_split = url_path.split("/")
+                url_path_split = relative_path.split("/")
                 app_name = url_path_split[0]
                 model_name = url_path_split[1]
 
-                # Get file name and extension
                 file_name, file_ext = os.path.splitext(url_path_split[-1])
 
-                # Get object
                 if model_name.endswith("doc"):
                     obj_id = int(file_name.split("_")[-1])
                 else:
                     obj_id = int(re.findall(r"\d+(?=_)", file_name + "_")[0])
-                obj = apps.get_model(app_name, model_name).objects.get(id=obj_id)
 
-                # Create file name
+                obj = apps.get_model(app_name, model_name).objects.get(id=obj_id)
                 download_file_name = f"{obj.download_file_name}{file_ext}"
             except Exception:
                 pass
 
-            # Needed for file names that include special, non ascii, characters
-            file_expr = "filename*=utf-8''{}".format(
-                urllib.parse.quote(download_file_name)
-            )
+            # Needed for file names that include special, non-ascii characters
+            file_expr = f"filename*=utf-8''{urllib.parse.quote(download_file_name)}"
 
             # Set content disposition based on file type
             if "pdf" in mimetype.lower():
-                response["Content-Disposition"] = "inline; {}".format(file_expr)
+                response["Content-Disposition"] = f"inline; {file_expr}"
             elif "png" in mimetype.lower():
-                response["Content-Disposition"] = "{}".format(file_expr)
+                response["Content-Disposition"] = f"{file_expr}"
             else:
-                response["Content-Disposition"] = "attachment; {}".format(file_expr)
+                response["Content-Disposition"] = f"attachment; {file_expr}"
 
-            response["X-Accel-Redirect"] = "/secret/{url_path}".format(
-                url_path=url_path
-            )
+            # Append the tenant schema internally so web server finds the file at /uploads/<schema_name>/...
+            internal_file_path = f"{current_tenant_schema}/{relative_path}"
+            response["X-Accel-Redirect"] = f"/secret/{internal_file_path}"
+
             return response
 
         else:

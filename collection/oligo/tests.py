@@ -1,11 +1,15 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
-from django.test import TestCase
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from tenants.utils import TenantAPIClient
+
 from .models import Oligo, OligoDoc
 
 User = get_user_model()
@@ -26,13 +30,13 @@ def _make_oligo(user, name="Test Oligo", sequence="ATGCATGC", **kwargs):
     return Oligo.objects.create(**defaults)
 
 
-class OligoModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OligoModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="oligotest@example.com", password="password"
         )
-        cls.oligo = _make_oligo(cls.user)
+        self.oligo = _make_oligo(self.user)
 
     def test_oligo_creation(self):
         self.assertEqual(self.oligo.name, "Test Oligo")
@@ -303,13 +307,13 @@ class OligoModelTest(TestCase):
         self.assertIn("created_date_time", readonly)
 
 
-class OligoDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OligoDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="oligodoctest@example.com", password="password"
         )
-        cls.oligo = _make_oligo(cls.user, name="Doc Test Oligo", sequence="AACCGGTT")
+        self.oligo = _make_oligo(self.user, name="Doc Test Oligo", sequence="AACCGGTT")
 
     def test_oligo_doc_creation(self):
         """Test creating an OligoDoc"""
@@ -351,17 +355,16 @@ class OligoDocModelTest(TestCase):
         self.assertEqual(OligoDoc._meta.verbose_name, "oligo document")
 
 
-class OligoAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OligoAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="oligoapitest@example.com", password="password"
         )
-        cls.oligo = _make_oligo(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.oligo = _make_oligo(self.user)
         self.url = "/api/collection/oligo/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_oligos_returns_200(self):
         response = self.client.get(self.url)

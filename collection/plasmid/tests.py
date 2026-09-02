@@ -1,15 +1,19 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase, override_settings
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from collection.shared.admin import FieldSequenceFeature
 from common.admin_site import admin_site
 from common.model_clone import CustomClonableModelAdmin
-from collection.shared.admin import FieldSequenceFeature
 from formz.models import SequenceFeature
+from tenants.utils import TenantAPIClient
+
 from .models import Plasmid, PlasmidDoc
 
 User = get_user_model()
@@ -26,13 +30,13 @@ def _make_plasmid(user, name="pUC19", **kwargs):
     return Plasmid.objects.create(**defaults)
 
 
-class PlasmidModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class PlasmidModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="plasmidtest@example.com", password="password"
         )
-        cls.plasmid = _make_plasmid(cls.user)
+        self.plasmid = _make_plasmid(self.user)
 
     def test_plasmid_creation(self):
         self.assertEqual(self.plasmid.name, "pUC19")
@@ -61,27 +65,22 @@ class PlasmidModelTest(TestCase):
         self.assertIsNone(self.plasmid.vector_zkbs)
 
     def test_destroyed_date_not_set_by_default(self):
-        import collection.plasmid.models as _pm
-
-        original = _pm.PLASMID_STORAGE_TYPE
-        _pm.PLASMID_STORAGE_TYPE = ""
+        original = self.tenant.plasmid_storage_type
+        self.tenant.plasmid_storage_type = ""
         try:
             p = _make_plasmid(self.user, name="pNeverDestroyed")
             self.assertIsNone(p.destroyed_date)
         finally:
-            _pm.PLASMID_STORAGE_TYPE = original
+            self.tenant.plasmid_storage_type = original
 
-    @override_settings(PLASMID_STORAGE_TYPE="plasmid")
     def test_destroyed_date_auto_set_when_storage_type_is_plasmid(self):
-        import collection.plasmid.models as plasmid_module
-
-        original = plasmid_module.PLASMID_STORAGE_TYPE
-        plasmid_module.PLASMID_STORAGE_TYPE = "plasmid"
+        original = self.tenant.plasmid_storage_type
+        self.tenant.plasmid_storage_type = "plasmid"
         try:
             p = _make_plasmid(self.user, name="pAutoDestroy")
             self.assertIsNotNone(p.destroyed_date)
         finally:
-            plasmid_module.PLASMID_STORAGE_TYPE = original
+            self.tenant.plasmid_storage_type = original
 
     def test_timestamps_set_automatically(self):
         self.assertIsNotNone(self.plasmid.created_date_time)
@@ -286,13 +285,13 @@ class PlasmidModelTest(TestCase):
         self.assertEqual(len(p.note), 300)
 
 
-class PlasmidDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class PlasmidDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="pdoctest@example.com", password="password"
         )
-        cls.plasmid = _make_plasmid(cls.user, name="Doc Test Plasmid")
+        self.plasmid = _make_plasmid(self.user, name="Doc Test Plasmid")
 
     def test_plasmid_doc_creation(self):
         """Test creating a PlasmidDoc"""
@@ -334,17 +333,16 @@ class PlasmidDocModelTest(TestCase):
         self.assertEqual(PlasmidDoc._meta.verbose_name, "plasmid document")
 
 
-class PlasmidAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class PlasmidAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="plasmidaspitest@example.com", password="password"
         )
-        cls.plasmid = _make_plasmid(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.plasmid = _make_plasmid(self.user)
         self.url = "/api/collection/plasmid/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_retrieve_returns_200(self):
         response = self.client.get(f"{self.url}{self.plasmid.id}/")

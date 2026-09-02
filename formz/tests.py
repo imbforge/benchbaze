@@ -1,10 +1,11 @@
 import io
 from datetime import date
 from unittest import skip
+
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
-from django.test import TestCase
 from openpyxl import Workbook
+
 from .models import (
     GenTechMethod,
     Header,
@@ -23,6 +24,7 @@ from .update_zkbs_records import (
     update_zkbs_oncogenes,
     update_zkbs_plasmids,
 )
+from django_tenants.test.cases import FastTenantTestCase
 
 User = get_user_model()
 
@@ -63,7 +65,7 @@ def _excel_bytes(header_row, data_rows, skip_first_row=True):
     return buf
 
 
-class NucleicAcidPurityModelTest(TestCase):
+class NucleicAcidPurityModelTest(FastTenantTestCase):
     def test_creation_and_str(self):
         obj = NucleicAcidPurity.objects.create(
             english_name="Genomic DNA", german_name="Genomische DNA"
@@ -71,13 +73,13 @@ class NucleicAcidPurityModelTest(TestCase):
         self.assertEqual(str(obj), "Genomic DNA")
 
 
-class NucleicAcidRiskModelTest(TestCase):
+class NucleicAcidRiskModelTest(FastTenantTestCase):
     def test_creation_and_str(self):
         obj = NucleicAcidRisk.objects.create(english_name="High", german_name="Hoch")
         self.assertEqual(str(obj), "High")
 
 
-class GenTechMethodModelTest(TestCase):
+class GenTechMethodModelTest(FastTenantTestCase):
     def test_creation_and_str(self):
         obj = GenTechMethod.objects.create(
             english_name="CRISPR-Cas9", german_name="CRISPR-Cas9"
@@ -85,7 +87,7 @@ class GenTechMethodModelTest(TestCase):
         self.assertEqual(str(obj), "CRISPR-Cas9")
 
 
-class ZkbsPlasmidModelTest(TestCase):
+class ZkbsPlasmidModelTest(FastTenantTestCase):
     def setUp(self):
         self.plasmid = ZkbsPlasmid.objects.create(
             name="pUC19", source="ATCC", purpose="Cloning vector"
@@ -101,7 +103,7 @@ class ZkbsPlasmidModelTest(TestCase):
         self.assertEqual(self.plasmid.description, "")
 
 
-class ZkbsOncogeneModelTest(TestCase):
+class ZkbsOncogeneModelTest(FastTenantTestCase):
     def setUp(self):
         self.oncogene = ZkbsOncogene.objects.create(
             name="KRAS",
@@ -119,7 +121,7 @@ class ZkbsOncogeneModelTest(TestCase):
         self.assertEqual(str(self.oncogene), "KRAS")
 
 
-class ZkbsCellLineModelTest(TestCase):
+class ZkbsCellLineModelTest(FastTenantTestCase):
     def setUp(self):
         self.cell_line = ZkbsCellLine.objects.create(
             name="HeLa",
@@ -141,7 +143,7 @@ class ZkbsCellLineModelTest(TestCase):
         self.assertFalse(self.cell_line.genetically_modified)
 
 
-class SpeciesModelTest(TestCase):
+class SpeciesModelTest(FastTenantTestCase):
     def setUp(self):
         self.species = _make_species()
 
@@ -226,7 +228,7 @@ class SpeciesModelTest(TestCase):
             existing.clean()
 
 
-class SequenceFeatureModelTest(TestCase):
+class SequenceFeatureModelTest(FastTenantTestCase):
     def setUp(self):
         self.feat = _make_sequence_feature(name="AmpR", common_feature=True)
 
@@ -268,7 +270,7 @@ class SequenceFeatureModelTest(TestCase):
         self.assertEqual(self.feat.donor_species_max_risk_group(), 1)
 
 
-class SequenceFeatureAliasModelTest(TestCase):
+class SequenceFeatureAliasModelTest(FastTenantTestCase):
     def setUp(self):
         self.feat = _make_sequence_feature(name="GFP-alias-test", common_feature=True)
         self.alias = SequenceFeatureAlias.objects.create(
@@ -297,7 +299,7 @@ class SequenceFeatureAliasModelTest(TestCase):
             )
 
 
-class ProjectModelTest(TestCase):
+class ProjectModelTest(FastTenantTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="projtest@example.com", password="password"
@@ -356,7 +358,7 @@ class ProjectModelTest(TestCase):
             self.fail("clean() raised unexpectedly")
 
 
-class HeaderModelTest(TestCase):
+class HeaderModelTest(FastTenantTestCase):
     def setUp(self):
         self.header = Header.objects.create(
             operator="Lab Institute",
@@ -386,7 +388,7 @@ _CELLLINE_HEADER = [
 ]
 
 
-class UpdateZkbsCellLinesTest(TestCase):
+class UpdateZkbsCellLinesTest(FastTenantTestCase):
     def _make_excel(self, data_rows):
         return _excel_bytes(_CELLLINE_HEADER, data_rows)
 
@@ -445,7 +447,7 @@ class UpdateZkbsCellLinesTest(TestCase):
 _PLASMID_HEADER = ["Name", "Funktion", "Herkunft", "AZ ZKBS", "Kurzbeschreibung"]
 
 
-class UpdateZkbsPlasmidsTest(TestCase):
+class UpdateZkbsPlasmidsTest(FastTenantTestCase):
     def _make_excel(self, data_rows):
         return _excel_bytes(_PLASMID_HEADER, data_rows)
 
@@ -500,7 +502,7 @@ _ONCOGENE_HEADER = [
 ]
 
 
-class UpdateZkbsOncogenesTest(TestCase):
+class UpdateZkbsOncogenesTest(FastTenantTestCase):
     def _make_excel(self, data_rows):
         return _excel_bytes(_ONCOGENE_HEADER, data_rows)
 

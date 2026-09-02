@@ -1,12 +1,17 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from formz.models import GenTechMethod
+
 from .models import WormStrain, WormStrainAllele, WormStrainAlleleDoc, WormStrainDoc
+from tenants.utils import TenantAPIClient
+from django_tenants.test.cases import FastTenantTestCase
+
 
 User = get_user_model()
 
@@ -37,13 +42,13 @@ def _make_allele(user, method, lab_identifier="SB", typ_e="m", **kwargs):
     return WormStrainAllele.objects.bulk_create([allele])[0]
 
 
-class WormStrainModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class WormStrainModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="wstest@example.com", password="password"
         )
-        cls.strain = _make_wormstrain(cls.user)
+        self.strain = _make_wormstrain(self.user)
 
     def test_strain_creation(self):
         self.assertEqual(self.strain.name, "N2")
@@ -377,13 +382,13 @@ class WormStrainModelTest(TestCase):
         self.assertEqual(WormStrain._meta.verbose_name_plural, "strains - Worm")
 
 
-class WormStrainDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class WormStrainDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="wsdoctest@example.com", password="password"
         )
-        cls.strain = _make_wormstrain(cls.user, name="DocStrain")
+        self.strain = _make_wormstrain(self.user, name="DocStrain")
 
     def test_doc_creation(self):
         """Test creating a worm strain document"""
@@ -421,17 +426,16 @@ class WormStrainDocModelTest(TestCase):
         self.assertEqual(WormStrainDoc._meta.verbose_name, "worm strain document")
 
 
-class WormStrainAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class WormStrainAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="wsapitest@example.com", password="password"
         )
-        cls.strain = _make_wormstrain(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.strain = _make_wormstrain(self.user)
         self.url = "/api/collection/wormstrain/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)
@@ -670,7 +674,7 @@ class WormStrainAPITest(APITestCase):
         self.assertGreaterEqual(response.data["count"], 2)
 
 
-class WormStrainAlleleModelTest(TestCase):
+class WormStrainAlleleModelTest(FastTenantTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="watest@example.com", password="password"
@@ -958,7 +962,7 @@ class WormStrainAlleleModelTest(TestCase):
         self.assertIn("transgene", WormStrainAllele._export_field_names)
 
 
-class WormStrainAlleleDocModelTest(TestCase):
+class WormStrainAlleleDocModelTest(FastTenantTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="wadoctest@example.com", password="password"
@@ -1010,17 +1014,19 @@ class WormStrainAlleleDocModelTest(TestCase):
         )
 
 
-class WormStrainAlleleAPITest(APITestCase):
+class WormStrainAlleleAPITest(FastTenantTestCase, APITestCase):
     def setUp(self):
+        super().setUp()
         self.user = User.objects.create_user(
             email="waapitest@example.com", password="password"
         )
-        self.client.force_authenticate(user=self.user)
         self.method = _make_gentech_method(
             english_name="CRISPR-api", german_name="CRISPR-api"
         )
         self.allele = _make_allele(self.user, self.method)
         self.url = "/api/collection/wormstrainallele/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     @skip(
         "WormStrainAllele._list_display contains 'map_formatted' which the viewset strips to 'map', but the field was renamed to 'map_dna' — list serializer crashes."

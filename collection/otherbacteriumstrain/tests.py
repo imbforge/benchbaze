@@ -1,11 +1,14 @@
 from unittest import skip
 from unittest.mock import Mock
+
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import ValidationError
-from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+from tenants.utils import TenantAPIClient
+from django_tenants.test.cases import FastTenantTestCase
+
 from .models import OtherBacteriumStrain, OtherBacteriumStrainDoc
 
 User = get_user_model()
@@ -17,13 +20,13 @@ def _make_otherbacteriumstrain(user, name="Bacillus subtilis", **kwargs):
     return OtherBacteriumStrain.objects.create(**defaults)
 
 
-class OtherBacteriumStrainModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OtherBacteriumStrainModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="bactest@example.com", password="password"
         )
-        cls.strain = _make_otherbacteriumstrain(cls.user)
+        self.strain = _make_otherbacteriumstrain(self.user)
 
     def test_otherbacteriumstrain_creation(self):
         self.assertEqual(self.strain.name, "Bacillus subtilis")
@@ -216,13 +219,13 @@ class OtherBacteriumStrainModelTest(TestCase):
                 _ = self.strain.formz_species
 
 
-class OtherBacteriumStrainDocModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OtherBacteriumStrainDocModelTest(FastTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="bacdoctest@example.com", password="password"
         )
-        cls.strain = _make_otherbacteriumstrain(cls.user, name="Doc Test Strain")
+        self.strain = _make_otherbacteriumstrain(self.user, name="Doc Test Strain")
 
     def test_otherbacteriumstraindoc_creation(self):
         """Test creating an OtherBacteriumStrainDoc"""
@@ -273,17 +276,16 @@ class OtherBacteriumStrainDocModelTest(TestCase):
         )
 
 
-class OtherBacteriumStrainAPITest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
+class OtherBacteriumStrainAPITest(FastTenantTestCase, APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
             email="bacapitest@example.com", password="password"
         )
-        cls.strain = _make_otherbacteriumstrain(cls.user)
-
-    def setUp(self):
-        self.client.force_authenticate(user=self.user)
+        self.strain = _make_otherbacteriumstrain(self.user)
         self.url = "/api/collection/otherbacteriumstrain/"
+        self.client = TenantAPIClient(self.tenant)
+        self.client.force_authenticate(user=self.user)
 
     def test_list_returns_200(self):
         response = self.client.get(self.url)
