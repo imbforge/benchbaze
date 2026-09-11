@@ -16,6 +16,10 @@ from django.utils import timezone
 from django.utils.safestring import mark_safe
 from djangoql.admin import DjangoQLSearchMixin
 
+from common.actions import (
+    export_action_tsv,
+    export_action_xlsx,
+)
 from common.admin import (
     AdminChangeFormWithNavigation,
     SimpleHistoryWithSummaryAdmin,
@@ -28,24 +32,18 @@ from ..models import (
     Order,
     OrderExtraDoc,
 )
-from common.actions import (
-    export_action_xlsx,
-    export_action_tsv,
-)
-
 from .actions import (
     change_order_status_to_arranged,
     change_order_status_to_delivered,
     change_order_status_to_used_up,
-    export_action_chemical_xlsx,
     export_action_chemical_tsv,
+    export_action_chemical_xlsx,
     mass_update,
 )
 from .forms import MassUpdateOrderForm, OrderAdminForm
 from .search import OrderQLSchema
 
 User = get_user_model()
-ALLOWED_HOSTS = getattr(settings, "ALLOWED_HOSTS", [])
 SERVER_EMAIL_ADDRESS = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
 
 
@@ -429,9 +427,8 @@ class OrderAdmin(
             # Send email to Lab Managers if an order is urgent
             if obj.urgent:
                 post_message_status_code = 0
-                current_site = ALLOWED_HOSTS[0]
                 order_change_url = (
-                    f"{request.scheme + '://' if request.scheme else ''}{current_site}"
+                    f"{request.scheme + '://' if request.scheme else ''}{request.get_host()}"
                     f"{reverse('admin:purchasing_order_change', args=(obj.id,))}"
                 )
                 # If MS Teams webhook exists, send urgent order notification to it,
