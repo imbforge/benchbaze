@@ -50,6 +50,7 @@ class Tenant(TenantMixin):
         default=list,
         blank=True,
     )
+    docs_url = models.URLField(max_length=500, blank=False, default="")
 
     created_on = models.DateTimeField(auto_now_add=True)
     trial = models.BooleanField(default=False)
