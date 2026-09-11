@@ -1,4 +1,4 @@
-{% load i18n static settings_value %}<!DOCTYPE html>
+{% load i18n static %}<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
@@ -48,11 +48,9 @@
                 <strong>{% firstof user.get_short_name user.get_username %}</strong>.
             {% endblock %}
             {% block userlinks %}
-                {% settings_value "DOCS_URL" as DOCS_URL %}
                 {% if DOCS_URL %}
                 <a href="{{ DOCS_URL }}" target="_blank" title="Documentation"><img class='bb-icon-svg' src="{% static 'admin/icons/book-svgrepo-com.svg' %}" alt="{% translate 'Documentation' %}"></a> /
                 {% endif %}
-                {% settings_value "SUPPORT_TICKET_URL" as SUPPORT_TICKET_URL %}
                 {% if SUPPORT_TICKET_URL %}
                 <a href="{{ SUPPORT_TICKET_URL }}" title="{% translate 'Submit a support ticket' %}" target="_blank"><img class='bb-icon-svg' src="{% static 'admin/icons/bug-svgrepo-com.svg' %}" alt="{% translate 'Support Ticket' %}"></a> /
                 {% endif %}

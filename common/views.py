@@ -8,8 +8,6 @@ from rest_framework.views import APIView
 
 User = get_user_model()
 
-
-DOCS_URL = getattr(settings, "DOCS_URL", "")
 IMPRESSUM_URL = getattr(settings, "IMPRESSUM_URL", "")
 DATA_PROTECTION_URL = getattr(settings, "DATA_PROTECTION_URL", "")
 OIDC_ENABLE = getattr(settings, "OIDC_ENABLE", False)
@@ -20,7 +18,7 @@ LOGOUT_REDIRECT_URL = getattr(settings, "LOGOUT_REDIRECT_URL", "")
 
 class OwnLoginView(LoginView):
     extra_context = {
-        "username_field": getattr(User, "USERNAME_FIELD"),
+        "username_field": User.USERNAME_FIELD,
         "oidc_enable": OIDC_ENABLE,
         "oidc_provider_name": OIDC_PROVIDER_NAME,
         "impressum_url": IMPRESSUM_URL,
@@ -56,7 +54,7 @@ class SettingsApiView(APIView):
             "lab_name": request.tenant.lab_name,
             "login_url": LOGIN_REDIRECT_URL,
             "logout_url": LOGOUT_REDIRECT_URL,
-            "docs_url": DOCS_URL,
+            "docs_url": request.tenant.docs_url,
             "impressum_url": IMPRESSUM_URL,
             "data_protection_url": DATA_PROTECTION_URL,
         }

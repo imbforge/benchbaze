@@ -32,8 +32,6 @@ from .serializers import (
 
 User = get_user_model()
 
-
-DOCS_URL = getattr(settings, "DOCS_URL", "")
 IMPRESSUM_URL = getattr(settings, "IMPRESSUM_URL", "")
 DATA_PROTECTION_URL = getattr(settings, "DATA_PROTECTION_URL", "")
 

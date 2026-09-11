@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.template import RequestContext, Template
+from django.test import RequestFactory
+from django_tenants.test.cases import FastTenantTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django_tenants.test.cases import FastTenantTestCase
+
 from tenants.utils import TenantAPIClient
 
 User = get_user_model()
@@ -192,6 +195,25 @@ class SettingsApiViewTest(FastTenantTestCase, APITestCase):
         response = self.client.get("/api/settings/")
         for key in ("lab_name", "login_url", "logout_url"):
             self.assertIn(key, response.data)
+
+
+class SettingsContextProcessorTest(FastTenantTestCase):
+    def test_global_admin_settings_are_available_in_template_context(self):
+        from django.conf import settings
+
+        from common.context_processors import global_settings
+
+        request = RequestFactory().get("/admin/")
+        context = global_settings(request)
+
+        for key in ("OIDC_PROVIDER_NAME", "DOCS_URL", "SUPPORT_TICKET_URL", "OVE_URL"):
+            self.assertIn(key, context)
+            self.assertEqual(context[key], getattr(settings, key, ""))
+
+        rendered = Template("{% if DOCS_URL %}{{ DOCS_URL }}{% endif %}").render(
+            RequestContext(request, context)
+        )
+        self.assertIn(getattr(settings, "DOCS_URL", ""), rendered)
 
 
 # ---------------------------------------------------------------------------
