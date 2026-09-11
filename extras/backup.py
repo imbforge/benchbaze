@@ -9,6 +9,7 @@ from subprocess import run
 from django.apps import apps
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.db import connection
 from django_tenants.utils import get_tenant_model, schema_context
 
 from common.actions import create_export_resource
@@ -157,11 +158,13 @@ def sync_uploads(src_dir, dst_dir):
             shutil.copy2(src_path, dst_path)
 
 
-for tenant in get_tenant_model().objects.all():
-    with schema_context(tenant.schema_name):
-        backup_dir_tenant = BACKUP_DIR / tenant.schema_name
-        ensure_backup_directories(backup_dir_tenant)
-        create_db_dump(backup_dir_tenant, tenant.schema_name)
-        export_tables(backup_dir_tenant)
-        sync_uploads(Path(default_storage.location), backup_dir_tenant / "uploads")
-        remove_old_dumps(7, backup_dir_tenant)
+tenant_schema = connection.schema_name
+tenant = get_tenant_model().objects.get(schema_name=tenant_schema)
+
+with schema_context(tenant.schema_name):
+    backup_dir_tenant = BACKUP_DIR / tenant.schema_name
+    ensure_backup_directories(backup_dir_tenant)
+    create_db_dump(backup_dir_tenant, tenant.schema_name)
+    export_tables(backup_dir_tenant)
+    sync_uploads(Path(default_storage.location), backup_dir_tenant / "uploads")
+    remove_old_dumps(7, backup_dir_tenant)
