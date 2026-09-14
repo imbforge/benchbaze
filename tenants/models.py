@@ -1,22 +1,24 @@
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import RegexValidator
 from django.db import models
 from django_tenants.models import DomainMixin, TenantMixin
+
 from collection.plasmid.models import PLASMID_STORAGE_TYPE_CHOICES
 
 
 class Tenant(TenantMixin):
-    lab_name = models.CharField(max_length=50, default="Smith")
+    lab_name = models.CharField(max_length=50, default="Smith", blank=False)
     site_title = models.CharField(max_length=255, default="BenchBaze - Smith")
-    lab_abbreviation_for_files = models.CharField(max_length=10, default="AS")
-    worm_strain_regex = models.CharField(max_length=255, default="")
-    worm_strain_lab_id_default = models.CharField(max_length=50, default="as")
+    lab_abbreviation_for_files = models.CharField(
+        max_length=10, default="", blank=False
+    )
+    worm_strain_regex = models.CharField(max_length=255, default="", blank=True)
+    worm_strain_lab_id_default = models.CharField(max_length=50, default="", blank=True)
     worm_allele_lab_ids = ArrayField(
         base_field=models.CharField(max_length=50),
         default=list,
         blank=True,
     )
-    worm_allele_lab_id_default = models.CharField(max_length=50, default="as")
+    worm_allele_lab_id_default = models.CharField(max_length=50, default="")
     default_ecoli_strain_ids = ArrayField(
         base_field=models.PositiveIntegerField(),
         default=list,
@@ -27,18 +29,17 @@ class Tenant(TenantMixin):
         choices=PLASMID_STORAGE_TYPE_CHOICES,
         default="plasmid",
     )
-    snapgene_enabled = models.BooleanField(default=False)
-    ms_teams_webhook_purchasing = models.URLField(
-        max_length=500, blank=True, default=""
+    helper_ecoli_virus_insect_id_default = models.PositiveIntegerField(
+        null=True, blank=True, default=None
+    )
+    helper_cellline_virus_insect_id_default = models.PositiveIntegerField(
+        null=True, blank=True, default=None
     )
     order_email_addresses = ArrayField(
         base_field=models.EmailField(max_length=255),
         default=list,
         blank=True,
     )
-    ms_teams_webhook_logger = models.URLField(max_length=500, blank=True, default="")
-    default_helper_ecoli_virus_insect_id = models.PositiveIntegerField(default=20)
-    default_helper_cellline_virus_insect_id = models.PositiveIntegerField(default=34)
     oidc_allowed_groups = ArrayField(
         base_field=models.CharField(max_length=100),
         default=list,
@@ -50,6 +51,11 @@ class Tenant(TenantMixin):
         default=list,
         blank=True,
     )
+    ms_teams_webhook_logger = models.URLField(max_length=500, blank=True, default="")
+    ms_teams_webhook_purchasing = models.URLField(
+        max_length=500, blank=True, default=""
+    )
+    snapgene_enabled = models.BooleanField(default=False)
     docs_url = models.URLField(max_length=500, blank=False, default="")
 
     created_on = models.DateTimeField(auto_now_add=True)
