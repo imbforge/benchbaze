@@ -19,7 +19,7 @@ class Tenant(TenantMixin):
         blank=True,
     )
     worm_allele_lab_id_default = models.CharField(max_length=50, default="")
-    default_ecoli_strain_ids = ArrayField(
+    ecoli_strain_ids_default = ArrayField(
         base_field=models.PositiveIntegerField(),
         default=list,
         blank=True,

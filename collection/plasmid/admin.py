@@ -437,7 +437,7 @@ class PlasmidAdmin(
             if "formz_ecoli_strains" in form.base_fields:
                 form.base_fields[
                     "formz_ecoli_strains"
-                ].initial = request.tenant.default_ecoli_strain_ids
+                ].initial = request.tenant.ecoli_strain_ids_default
             # Set storage type
             if (
                 "storage_type" in form.base_fields
