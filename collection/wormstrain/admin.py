@@ -134,7 +134,7 @@ class WormStrainAdmin(
         if (
             not obj
             and request.tenant.worm_strain_regex
-            and request.tenant.worm_strain_lab_id_default
+            and request.tenant.worm_strain_lab_id
             and "name" in form.base_fields
         ):
             strain_greatest_id = (
@@ -150,7 +150,7 @@ class WormStrainAdmin(
             if strain_greatest_id:
                 form.base_fields[
                     "name"
-                ].initial = f"{request.tenant.worm_strain_lab_id_default}{strain_greatest_id.strain_id + 1}"
+                ].initial = f"{request.tenant.worm_strain_lab_id}{strain_greatest_id.strain_id + 1}"
         return form
 
     def add_view(self, request, form_url="", extra_context=None):
@@ -261,12 +261,12 @@ class WormStrainAlleleAdmin(PlasmidAdmin):
         # Set the initial value for the 'lab_identifier' field if it exists in the form
         if (
             not obj
-            and request.tenant.worm_allele_lab_id_default
+            and request.tenant.worm_allele_lab_id
             and "lab_identifier" in form.base_fields
         ):
             form.base_fields[
                 "lab_identifier"
-            ].initial = request.tenant.worm_allele_lab_id_default
+            ].initial = request.tenant.worm_allele_lab_id
 
         return form
 

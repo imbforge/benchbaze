@@ -72,18 +72,18 @@ class VirusInsectAdmin(
         if not obj:
             # Set default E. coli strains
             if (
-                request.tenant.helper_ecoli_virus_insect_id_default
+                request.tenant.helper_ecoli_virus_insect_id
                 and "helper_ecolistrain" in form.base_fields
             ):
                 form.base_fields[
                     "helper_ecolistrain"
-                ].initial = request.tenant.helper_ecoli_virus_insect_id_default
+                ].initial = request.tenant.helper_ecoli_virus_insect_id
             # Set storage type
             if (
-                request.tenant.helper_cellline_virus_insect_id_default
+                request.tenant.helper_cellline_virus_insect_id
                 and "helper_cellline" in form.base_fields
             ):
                 form.base_fields[
                     "helper_cellline"
-                ].initial = request.tenant.helper_cellline_virus_insect_id_default
+                ].initial = request.tenant.helper_cellline_virus_insect_id
         return form

@@ -12,14 +12,14 @@ class Tenant(TenantMixin):
         max_length=10, default="", blank=False
     )
     worm_strain_regex = models.CharField(max_length=255, default="", blank=True)
-    worm_strain_lab_id_default = models.CharField(max_length=50, default="", blank=True)
+    worm_strain_lab_id = models.CharField(max_length=50, default="", blank=True)
     worm_allele_lab_ids = ArrayField(
         base_field=models.CharField(max_length=50),
         default=list,
         blank=True,
     )
-    worm_allele_lab_id_default = models.CharField(max_length=50, default="")
-    ecoli_strain_ids_default = ArrayField(
+    worm_allele_lab_id = models.CharField(max_length=50, default="")
+    ecoli_strain_ids = ArrayField(
         base_field=models.PositiveIntegerField(),
         default=list,
         blank=True,
@@ -29,10 +29,10 @@ class Tenant(TenantMixin):
         choices=PLASMID_STORAGE_TYPE_CHOICES,
         default="plasmid",
     )
-    helper_ecoli_virus_insect_id_default = models.PositiveIntegerField(
+    helper_ecoli_virus_insect_id = models.PositiveIntegerField(
         null=True, blank=True, default=None
     )
-    helper_cellline_virus_insect_id_default = models.PositiveIntegerField(
+    helper_cellline_virus_insect_id = models.PositiveIntegerField(
         null=True, blank=True, default=None
     )
     order_email_addresses = ArrayField(
