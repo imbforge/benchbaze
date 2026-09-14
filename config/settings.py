@@ -204,17 +204,15 @@ LOGGING = {
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
         "tenant_context": {
-            "()": "tenants.logging.TenantLogFilter",  # <--- Add custom filter
+            "()": "tenants.logging.TenantLogFilter",
         },
     },
     "formatters": {
         "simple": {
-            # Added [%(tenant_schema)s] to format
             "format": "[%(levelname)s] [%(asctime)s] [%(tenant_schema)s] %(message)s",
             "datefmt": "%d/%b/%Y %H:%M:%S",
         },
         "verbose": {
-            # Added [%(tenant_schema)s] to format
             "format": "[%(levelname)s] [%(asctime)s] [%(tenant_schema)s] [%(pathname)s:%(lineno)s]: %(funcName)s(): %(message)s",
             "datefmt": "%d/%b/%Y %H:%M:%S",
         },
@@ -234,7 +232,7 @@ LOGGING = {
         "logfile": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "django.log",
-            "filters": ["tenant_context"],  # <--- Apply filter here
+            "filters": ["tenant_context"],
             "formatter": "verbose",
             "maxBytes": 15 * 1024 * 1024,
             "backupCount": 2,
@@ -243,14 +241,13 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "db.log",
-            "filters": ["tenant_context"],  # <--- Apply filter here
+            "filters": ["tenant_context"],
             "formatter": "verbose",
             "maxBytes": 15 * 1024 * 1024,
             "backupCount": 2,
         },
     },
     "loggers": {
-        # Your loggers remain unchanged
         "mail_admins": {"level": "ERROR", "handlers": ["mail_admins"]},
         "console": {"level": "INFO", "handlers": ["console"]},
         "logfile": {"level": "DEBUG", "handlers": ["logfile"]},
