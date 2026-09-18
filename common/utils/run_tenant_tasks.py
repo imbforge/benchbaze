@@ -36,6 +36,13 @@ def notify_failure(command_name, schema, error_msg, stack_trace):
         f"Traceback:\n{stack_trace}"
     )
 
+    # Resolve from_email cleanly (fallback to webmaster@localhost if empty or missing)
+    from_email = (
+        getattr(settings, "SERVER_EMAIL_ADDRESS", None)
+        or getattr(settings, "DEFAULT_FROM_EMAIL", None)
+        or "webmaster@localhost"
+    )
+
     # First attempt to email configured Django ADMINS
     if getattr(settings, "ADMINS", None):
         try:
@@ -45,19 +52,34 @@ def notify_failure(command_name, schema, error_msg, stack_trace):
         except Exception as mail_err:
             logging.error(f"Failed to send email to ADMINS: {str(mail_err)}")
 
-    # Fallback to SERVER_EMAIL_ADDRESS if ADMINS isn't set or fails
-    server_email = getattr(settings, "SERVER_EMAIL_ADDRESS", "noreply@example.com")
-    recipient_list = [server_email]
+    # Fallback to sending email to SERVER_EMAIL_ADDRESS or DEFAULT_FROM_EMAIL if ADMINS is not configured or fails
+    # Extract recipient emails from ADMINS list if present
+    recipients = []
+    admins = getattr(settings, "ADMINS", [])
+    if admins:
+        recipients = [email for _, email in admins if email]
+
+    # If ADMINS has no emails, fallback to SERVER_EMAIL_ADDRESS or DEFAULT_FROM_EMAIL if valid
+    if not recipients:
+        fallback_email = getattr(settings, "SERVER_EMAIL_ADDRESS", None) or getattr(
+            settings, "DEFAULT_FROM_EMAIL", None
+        )
+        if fallback_email:
+            recipients = [fallback_email]
+
+    if not recipients:
+        logging.error("No valid recipient email addresses found in ADMINS or settings.")
+        return
 
     try:
         send_mail(
-            subject,
-            body,
-            server_email,
-            recipient_list,
-            fail_silently=True,
+            subject=subject,
+            message=body,
+            from_email=from_email,
+            recipient_list=recipients,
+            fail_silently=False,
         )
-        logging.info(f"Sent failure alert email to {recipient_list}")
+        logging.info(f"Sent failure alert email to {recipients}")
     except Exception as mail_err:
         logging.error(f"Failed to send fallback alert email: {str(mail_err)}")
 
