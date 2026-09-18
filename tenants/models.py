@@ -67,7 +67,7 @@ class Tenant(TenantMixin):
     auto_create_schema = True
 
     def save(self, *args, **kwargs):
-        self.site_title = f"BenchBaze - {self.lab_name.title()}"
+        self.site_title = f"BenchBaze @ {self.lab_name.title()}"
         super().save(*args, **kwargs)
 
     def __str__(self):
