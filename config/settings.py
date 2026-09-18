@@ -198,6 +198,8 @@ for logfile in ("django.log", "db.log"):
     except OSError:
         pass
 
+LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -238,7 +240,7 @@ LOGGING = {
             "backupCount": 2,
         },
         "dblogfile": {
-            "level": "DEBUG",
+            "level": LOG_LEVEL,
             "class": "logging.handlers.RotatingFileHandler",
             "filename": LOG_DIR / "db.log",
             "filters": ["tenant_context"],
@@ -250,9 +252,9 @@ LOGGING = {
     "loggers": {
         "mail_admins": {"level": "ERROR", "handlers": ["mail_admins"]},
         "console": {"level": "INFO", "handlers": ["console"]},
-        "logfile": {"level": "DEBUG", "handlers": ["logfile"]},
-        "dblogfile": {"level": "DEBUG", "handlers": ["dblogfile"]},
-        "mozilla_django_oidc": {"level": "DEBUG", "handlers": ["logfile"]},
+        "logfile": {"level": LOG_LEVEL, "handlers": ["logfile"]},
+        "dblogfile": {"level": LOG_LEVEL, "handlers": ["dblogfile"]},
+        "mozilla_django_oidc": {"level": LOG_LEVEL, "handlers": ["logfile"]},
     },
 }
 
