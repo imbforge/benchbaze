@@ -580,7 +580,12 @@ class OptionalChoiceField(forms.MultiValueField):
 
         self.widget = OptionalChoiceWidget(widgets=[f.widget for f in fields])
 
-        super().__init__(required=required, fields=fields, *args, **kwargs)
+        # require_all_fields=False: otherwise, since each sub-field is itself
+        # not required, Django raises "required" whenever only one of the two
+        # is filled in, before compress() ever gets a chance to combine them
+        super().__init__(
+            required=required, fields=fields, require_all_fields=False, *args, **kwargs
+        )
 
     def compress(self, data_list):
         # Return the choicefield value if selected or charfield value
