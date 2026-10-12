@@ -33,4 +33,3 @@ numpy==1.26.4
 pandas==1.5.3
 PyYAML==6.0.3
 django-tenants==3.13.0
-uwsGI==2.0.21

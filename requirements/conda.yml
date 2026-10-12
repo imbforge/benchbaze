@@ -11,3 +11,4 @@ dependencies:
   - blast=2.16.0
   - diamond=2.1.10
   - trnascan-se=2.0.12
+  - uwsgi=2.0.21
