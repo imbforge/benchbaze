@@ -47,6 +47,10 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         in a list of groups, -> groups, which should be a str of comma
         separated group names"""
 
+        # If "all" is in the list of groups, then any user is allowed to log in
+        if groups and "all" in groups:
+            return True
+
         return any(g in user_groups for g in groups)
 
     def get_or_create_user(self, access_token, id_token, payload):
@@ -203,9 +207,10 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         # Get username from upn => e.g. 'username@Uni-Mainz.De', default to regular
         # behaviour when upn is not available
         upn = claims.get(OIDC_UPN_FIELD_NAME)
-        username = upn.split("@")[0].lower()
-        if username:
-            return username
+        if upn:
+            username = upn.split("@")[0].lower()
+            if username:
+                return username
 
         return super().get_username(claims)
 
