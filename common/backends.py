@@ -47,8 +47,8 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         in a list of groups, -> groups, which should be a str of comma
         separated group names"""
 
-        # If "all" is in the list of groups, then any user is allowed to log in
-        if groups and "all" in groups:
+        # If "allow_all_users" is in the list of groups, then any user is allowed to log in
+        if groups and "allow_all_users" in groups:
             return True
 
         return any(g in user_groups for g in groups)
