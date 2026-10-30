@@ -1,8 +1,13 @@
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_tenants.models import DomainMixin, TenantMixin
 
 from collection.plasmid.models import PLASMID_STORAGE_TYPE_CHOICES
+
+
+def get_default_oidc_groups():
+    return [settings.GUEST_GROUP]
 
 
 class Tenant(TenantMixin):
@@ -50,6 +55,11 @@ class Tenant(TenantMixin):
         base_field=models.EmailField(max_length=255),
         help_text="All emails should be in lowercase.",
         default=list,
+        blank=True,
+    )
+    oidc_new_user_groups = ArrayField(
+        base_field=models.CharField(max_length=100),
+        default=get_default_oidc_groups,
         blank=True,
     )
     ms_teams_webhook_logger = models.URLField(max_length=500, blank=True, default="")

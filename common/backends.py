@@ -15,7 +15,6 @@ SITE_ADMIN_EMAIL_ADDRESSES = getattr(settings, "SITE_ADMIN_EMAIL_ADDRESSES", [])
 OIDC_UPN_FIELD_NAME = getattr(settings, "OIDC_UPN_FIELD_NAME", "upn")
 OIDC_PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", "")
 LAB_MANAGER_GROUP = getattr(settings, "LAB_MANAGER_GROUP")
-GUEST_GROUP = getattr(settings, "GUEST_GROUP")
 User = get_user_model()
 
 create_anonymous_user = lambda email: AnonymousUser()
@@ -174,8 +173,10 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
         # A user must have at least one group. Therefore assign
         # the group with the fewest permissions, Guest, to the user
-        guest_group = Group.objects.filter(name=GUEST_GROUP)
-        user.groups.add(*guest_group)
+        guest_groups = Group.objects.filter(
+            name__in=self.request.tenant.oidc_new_user_groups
+        )
+        user.groups.add(*guest_groups)
 
         self.send_email_new_user(user)
 
