@@ -18,6 +18,8 @@ LAB_MANAGER_GROUP = getattr(settings, "LAB_MANAGER_GROUP")
 GUEST_GROUP = getattr(settings, "GUEST_GROUP")
 User = get_user_model()
 
+create_anonymous_user = lambda email: AnonymousUser()
+
 
 class CaseInsensitiveAuthenticationBackend(ModelBackend):
     """
@@ -47,10 +49,6 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         in a list of groups, -> groups, which should be a str of comma
         separated group names"""
 
-        # If "allow_all_users" is in the list of groups, then any user is allowed to log in
-        if groups and "allow_all_users" in groups:
-            return True
-
         return any(g in user_groups for g in groups)
 
     def get_or_create_user(self, access_token, id_token, payload):
@@ -61,19 +59,23 @@ class OwnOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user_info = self.get_userinfo(access_token, id_token, payload)
         user_email = user_info.get("email", "").lower()
         user_groups = user_info.get("role", [])
-        if not (
-            self.user_belongs_to_groups(
-                user_groups, self.request.tenant.oidc_allowed_groups
+        tenant = getattr(self.request, "tenant", None)
+        if not tenant:
+            messages.warning(
+                self.request,
+                "Your user is valid but the tenant could not be determined.",
             )
-            or user_email in self.request.tenant.oidc_allowed_user_emails
+            return create_anonymous_user(user_email)
+        if not (
+            tenant.oidc_allow_all_groups
+            or self.user_belongs_to_groups(user_groups, tenant.oidc_allowed_groups)
+            or user_email in tenant.oidc_allowed_user_emails
         ):
             messages.warning(
                 self.request,
-                f"Your user is valid but not yet allowed to access {self.request.tenant.site_title}.",
+                f"Your user is valid but not yet allowed to access {tenant.site_title}.",
             )
-            user = AnonymousUser()
-            user.email = user_email
-            return user
+            return create_anonymous_user(user_email)
 
         return super().get_or_create_user(access_token, id_token, payload)
 

@@ -40,6 +40,7 @@ class Tenant(TenantMixin):
         default=list,
         blank=True,
     )
+    oidc_allow_all_groups = models.BooleanField(default=False)
     oidc_allowed_groups = ArrayField(
         base_field=models.CharField(max_length=100),
         default=list,
